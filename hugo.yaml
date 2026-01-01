@@ -1,0 +1,76 @@
+baseURL: "https://RisingInsight.github.io/"
+languageCode: "zh-cn"
+title: "RisingInsight's Blog"
+theme: "PaperMod"
+
+enableInlineShortcodes: true
+
+params:
+  env: production
+  title: "RisingInsight"
+  description: "学习笔记 | 技术分享 | 自我介绍"
+  author: "RisingInsight"
+  # 默认主题颜色 (auto=跟随系统, light=浅色, dark=深色)
+  defaultTheme: auto
+  
+  # 关键：开启数学公式支持 (MathJax/KaTeX)
+  math: true
+  
+  # 首页显示的社交图标
+  socialIcons:
+    - name: github
+      url: "https://github.com/RisingInsight"
+  
+  # 首页中间的介绍文字
+  homeInfoParams:
+    Title: "Hi there 👋"
+    Content: >
+      欢迎来到我的个人博客。
+      
+      这里主要记录我的 **学习笔记**、**数学推导** 以及 **代码实践**。
+      
+      Design for reading.
+
+  # 顶部导航栏配置
+  assets:
+    disableHLJS: false # 必须为 false 才能开启代码高亮
+    
+menu:
+  main:
+    - identifier: search
+      name: 🔍 搜索
+      url: /search/
+      weight: 10
+    - identifier: archives
+      name: 📂 归档
+      url: /archives/
+      weight: 20
+
+# 渲染器配置
+markup:
+  # 1. 保护数学公式不被 Markdown 破坏
+  goldmark:
+    extensions:
+      passthrough:
+        enable: true
+        delimiters:
+          block:
+          - - $$
+            - $$
+          - - \\[
+            - \\]
+          inline:
+          - - $
+            - $
+          - - \\(
+            - \\)
+  
+  # 2. 代码高亮配置
+  highlight:
+    noClasses: false
+    anchorLineNos: true
+    codeFences: true
+    guessSyntax: true
+    lineNos: true
+    style: monokai
+    tabWidth: 4
