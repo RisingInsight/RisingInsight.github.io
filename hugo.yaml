@@ -5,51 +5,87 @@ theme: "PaperMod"
 
 enableInlineShortcodes: true
 
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
+# [修改 1] 针对 Hugo 新版本的分页配置
+pagination:
+  pagerSize: 5
+
 params:
   env: production
   title: "RisingInsight"
   description: "学习笔记 | 技术分享 | 自我介绍"
   author: "RisingInsight"
-  # 默认主题颜色 (auto=跟随系统, light=浅色, dark=深色)
   defaultTheme: auto
-  
-  # 关键：开启数学公式支持 (MathJax/KaTeX)
   math: true
-  
-  # 首页显示的社交图标
-  socialIcons:
-    - name: github
-      url: "https://github.com/RisingInsight"
-  
-  # 首页中间的介绍文字
-  homeInfoParams:
-    Title: "Hi there 👋"
-    Content: >
-      欢迎来到我的个人博客。
-      
-      这里主要记录我的 **学习笔记**、**数学推导** 以及 **代码实践**。
-      
-      Design for reading.
+  comments: true
 
-  # 顶部导航栏配置
+  profileMode:
+    enabled: false 
+
+  homeInfoParams:
+    Title: ""
+    Content: >
+      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
+        <img src="home-bg.gif" style="display: block; margin: 0 auto 20px auto; max-width: 300px;" alt="Hero">
+        <div style="font-family: monospace; font-size: 1.5rem; color: #333;">
+           <span id="typeit-header"></span>_
+        </div>
+      </div>
+
+  displayFullWidth: false
+  ShowReadingTime: true
+  ShowDate: true
+  hideSummary: true 
+
+  label:
+    text: "RisingInsight"
+    icon: "avatar.jpg"
+    iconHeight: 35
+
+  # socialIcons:
+  #   - name: github
+  #     url: "https://github.com/RisingInsight"
+  #   - name: email
+  #     url: "mailto:your-email@example.com"
+
   assets:
-    disableHLJS: false # 必须为 false 才能开启代码高亮
-    
+    disableHLJS: false
+    favicon: "avatar.jpg"
+    customCSS: ["css/extended.css"]
+
 menu:
   main:
+    - identifier: home
+      name: 🏠 首页
+      url: /
+      weight: 10
     - identifier: search
       name: 🔍 搜索
       url: /search/
-      weight: 10
+      weight: 20
     - identifier: archives
       name: 📂 归档
       url: /archives/
-      weight: 20
+      weight: 30
+    - identifier: about
+      name: 🙋‍♂️ 关于
+      url: /about/
+      weight: 40
+    - identifier: github
+      name: 🐙 GitHub
+      url: "https://github.com/RisingInsight"
+      weight: 50
 
-# 渲染器配置
 markup:
-  # 1. 保护数学公式不被 Markdown 破坏
   goldmark:
+    # [修改 2] 开启 unsafe 模式以支持 HTML
+    renderer:
+      unsafe: true
     extensions:
       passthrough:
         enable: true
@@ -64,8 +100,6 @@ markup:
             - $
           - - \\(
             - \\)
-  
-  # 2. 代码高亮配置
   highlight:
     noClasses: false
     anchorLineNos: true
@@ -74,3 +108,4 @@ markup:
     lineNos: true
     style: monokai
     tabWidth: 4
+    

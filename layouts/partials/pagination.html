@@ -1,0 +1,32 @@
+{{- if gt .Paginator.TotalPages 1 }}
+<!-- 分页容器：强制居中 -->
+<div style="width:100%;text-align:center;padding:30px 0;margin:0 auto;">
+  <!-- 按钮组：统一排列+间距 -->
+  <nav style="display:inline-flex;gap:8px;align-items:center;justify-content:center;">
+    <!-- 上一页 -->
+    {{- if .Paginator.HasPrev }}
+    <a href="{{ .Paginator.Prev.URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">« 上一页</a>
+    {{- else }}
+    <span style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#9ca3af;font-size:15px;cursor:not-allowed;">« 上一页</span>
+    {{- end }}
+
+    <!-- 数字页码 -->
+    {{- range .Paginator.Pagers }}
+      {{- if eq . $.Paginator }}
+        <!-- 当前页：高亮 -->
+        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-size:15px;font-weight:500;">{{ .PageNumber }}</span>
+      {{- else }}
+        <!-- 其他页 -->
+        <a href="{{ .URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">{{ .PageNumber }}</a>
+      {{- end }}
+    {{- end }}
+
+    <!-- 下一页 -->
+    {{- if .Paginator.HasNext }}
+    <a href="{{ .Paginator.Next.URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">下一页 »</a>
+    {{- else }}
+    <span style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#9ca3af;font-size:15px;cursor:not-allowed;">下一页 »</span>
+    {{- end }}
+  </nav>
+</div>
+{{- end }}
