@@ -10,14 +10,80 @@
     <span style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#9ca3af;font-size:15px;cursor:not-allowed;">« 上一页</span>
     {{- end }}
 
-    <!-- 数字页码 -->
-    {{- range .Paginator.Pagers }}
-      {{- if eq . $.Paginator }}
-        <!-- 当前页：高亮 -->
-        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-size:15px;font-weight:500;">{{ .PageNumber }}</span>
+    <!-- 数字页码：固定显示5个（修复首尾页高亮） -->
+    {{- $paginator := .Paginator }}
+    {{- $currentPage := $paginator.PageNumber }}
+    {{- $totalPages := $paginator.TotalPages }}
+    {{- $displayCount := 3 }} <!-- 固定5个数字页码 -->
+    {{- $pagesToShow := slice }} <!-- 存储要显示的5个页码 -->
+
+    {{- if le $totalPages $displayCount }}
+      <!-- 场景1：总页数≤3，直接显示所有页码 -->
+      {{- $pagesToShow = seq 1 $totalPages }}
+    {{- else }}
+      <!-- 场景2：总页数>3，计算“中心3个页码” -->
+      {{- $half := math.Floor (div $displayCount 2) }} <!-- 5的一半是2 -->
+      <!-- 初始计算：避开首尾页（留作单独显示），保证中间是5个 -->
+      {{- $start := math.Max 2 (sub $currentPage $half) }} <!-- 至少从2开始 -->
+      {{- $end := math.Min (sub $totalPages 1) (add $currentPage $half) }} <!-- 至多到总页数-1 -->
+
+      <!-- 调整：确保start到end刚好是3个页码 -->
+      {{- if lt (sub $end $start) (sub $displayCount 1) }}
+        {{- if gt $currentPage (div $totalPages 2) }}
+          <!-- 靠近尾页：从后往前取3个 -->
+          {{- $end = sub $totalPages 1 }}
+          {{- $start = math.Max 2 (sub $end (sub $displayCount 1)) }}
+        {{- else }}
+          <!-- 靠近首页：从前往后取3个 -->
+          {{- $start = 2 }}
+          {{- $end = add $start (sub $displayCount 1) }}
+        {{- end }}
+      {{- end }}
+
+      {{- $pagesToShow = seq $start $end }}
+    {{- end }}
+
+    <!-- 1. 显示“首页（1）”+省略（仅总页数>3时） -->
+    {{- if gt $totalPages $displayCount }}
+      {{- $firstPage := index $paginator.Pagers 0 }} <!-- 获取第一页的Paginator对象 -->
+      {{- if eq $firstPage $paginator }}
+        <!-- 当前页是第一页：高亮样式 -->
+        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-size:15px;font-weight:500;">1</span>
       {{- else }}
-        <!-- 其他页 -->
-        <a href="{{ .URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">{{ .PageNumber }}</a>
+        <!-- 非当前页：普通样式 -->
+        <a href="{{ $firstPage.URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">1</a>
+      {{- end }}
+      <!-- 中间有间隔时显示省略 -->
+      {{- if gt (index $pagesToShow 0) 2 }}
+        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;font-size:15px;color:#9ca3af;">...</span>
+      {{- end }}
+    {{- end }}
+
+    <!-- 2. 显示核心3个数字页码 -->
+    {{- range $pagesToShow }}
+      {{- $page := index $paginator.Pagers (sub . 1) }} <!-- Pagers是0开始的数组 -->
+      {{- if eq $page $paginator }}
+        <!-- 当前页：高亮样式 -->
+        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-size:15px;font-weight:500;">{{ . }}</span>
+      {{- else }}
+        <!-- 其他页：普通样式 -->
+        <a href="{{ $page.URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">{{ . }}</a>
+      {{- end }}
+    {{- end }}
+
+    <!-- 3. 显示“省略+尾页”（仅总页数>3时） -->
+    {{- if gt $totalPages $displayCount }}
+      <!-- 中间有间隔时显示省略 -->
+      {{- if lt (index $pagesToShow (sub (len $pagesToShow) 1)) (sub $totalPages 1) }}
+        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;font-size:15px;color:#9ca3af;">...</span>
+      {{- end }}
+      {{- $lastPage := index $paginator.Pagers (sub $totalPages 1) }} <!-- 获取最后一页的Paginator对象 -->
+      {{- if eq $lastPage $paginator }}
+        <!-- 当前页是最后一页：高亮样式 -->
+        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-size:15px;font-weight:500;">{{ $totalPages }}</span>
+      {{- else }}
+        <!-- 非当前页：普通样式 -->
+        <a href="{{ $lastPage.URL }}" style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">{{ $totalPages }}</a>
       {{- end }}
     {{- end }}
 

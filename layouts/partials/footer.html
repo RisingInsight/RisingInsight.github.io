@@ -1,11 +1,16 @@
 {{- if not (.Param "hideFooter") }}
 <footer class="footer">
+    <!-- 新增：第一行 - 本站访问量 + 访客数（单独一行，位于原有内容上方） -->
+    <div style="text-align: center; margin-bottom: 6px;">
+        本站总访问量 <span id="busuanzi_value_site_pv"></span> 次 | 本站访客数 <span id="busuanzi_value_site_uv"></span> 人
+    </div>
+
     {{- if not site.Params.footer.hideCopyright }}
         {{- if site.Copyright }}
         <span>{{ site.Copyright | markdownify }}</span>
         {{- else }}
-        <!-- 改这里：自定义版权文字，比如「© 2026 RisingInsight 技术博客」 -->
-        <span> <a href="{{ "" | absLangURL }}"> Powered by RisingInsight</a> | Copyright&copy; 2026.1.1 ~ {{ now.Format "2006.1.2" }} | </span>
+        <!-- 已修改：将固定构建时间替换为JS动态填充的占位符 -->
+        <span> Powered by <a href="{{ "" | absLangURL }}"> RisingInsight</a> | Copyright&copy; 2026.1.1 ~ <span id="footer-end-date"></span> | </span>
         {{- end }}
         <!-- {{- print " · "}} -->
     {{- end }}
@@ -15,11 +20,11 @@
         {{- print " · "}}
     {{- end }}
 
-    <!-- 改这里：调整Powered by的文字/链接（可选） -->
+    <!-- 原有Powered by信息保持不变 -->
     <span>
         基于
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> 构建 &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a> 主题
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a>  &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a> 搭建
     </span>
 </footer>
 {{- end }}
@@ -33,6 +38,29 @@
 {{- end }}
 
 {{- partial "extend_footer.html" . }}
+
+<!-- 引入不蒜子统计脚本（新增：用于访问量/访客数统计） -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<!-- 新增：动态填充页脚结束日期的JS（放在原有脚本之前，确保优先执行） -->
+<script>
+    // 获取客户端当前日期，并格式化为 "年.月.日" 格式（与原有格式一致）
+    const getFormattedCurrentDate = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1; // JavaScript月份从0开始，需+1
+        const day = now.getDate();
+        return `${year}.${month}.${day}`;
+    };
+
+    // 页面加载完成后，替换占位符内容
+    document.addEventListener('DOMContentLoaded', () => {
+        const dateElement = document.getElementById('footer-end-date');
+        if (dateElement) {
+            dateElement.textContent = getFormattedCurrentDate();
+        }
+    });
+</script>
 
 <script>
     let menu = document.getElementById('menu');

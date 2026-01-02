@@ -47,7 +47,7 @@
 
 {{- $paginator := .Paginate $pages }}
 
-{{- if and .IsHome site.Params.homeInfoParams (eq $paginator.PageNumber 1) }}
+{{- if and .IsHome site.Params.homeInfoParams }}  <!-- 去掉了页码为1的限制 -->
 {{- partial "home_info.html" . }}
 {{- end }}
 

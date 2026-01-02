@@ -154,3 +154,30 @@ article.first-entry.home-info .entry-footer {
         gap: 6px !important;
     }
 }
+
+/* =================================================================
+   页脚样式：两行字体大小一致 + 缩小间距
+   ================================================================= */
+/* 1. 统一页脚所有元素字体大小（确保两行一致） */
+.footer {
+    font-size: 14px !important; /* 统一字体大小，可按需调整为13px/15px */
+    line-height: 1.4 !important; /* 统一行高，让文字更紧凑 */
+}
+/* 强制页脚内所有文本（div、span、a）字体大小与.footer一致，避免差异 */
+.footer div,
+.footer span,
+.footer a {
+    font-size: inherit !important; /* 继承.footer的字体大小，确保两行一致 */
+    margin: 0 !important; /* 清除默认间距 */
+    padding: 0 !important;
+}
+
+/* 2. 缩小统计行（第一行）与原有页脚行（第二行）的间距 */
+.footer > div:first-child {
+    margin-bottom: 3px !important; /* 关键：缩小两行间距，默认6px改为3px，可按需调整2px-4px */
+}
+
+/* 3. 保留原有页脚文字清晰性（可选，无需修改） */
+.footer span {
+    line-height: 1.5 !important;
+}

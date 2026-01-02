@@ -14,23 +14,23 @@
 
 ​	一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。
 
-![image-20251222152235572](./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222152235572.png)
+![image-20251222152235572](./index.assets/image-20251222152235572.png)
 
 ​	对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==
 
 ​	image-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后**图片生成都是一排一排生成出来的**。
 
-<img src="./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222153436840.png" alt="image-20251222153436840" style="zoom:25%;" /><img src="./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222153534658.png" alt="image-20251222153534658" style="zoom:25%;" />、
+<img src="./index.assets/image-20251222153436840.png" alt="image-20251222153436840" style="zoom:25%;" /><img src="./../../../../Study/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B.assets/image-20251222153534658.png" alt="image-20251222153534658" style="zoom:25%;" />、
 
 
 
 ​	一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，....）
 
-<img src="./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222164736119.png" alt="image-20251222164736119" style="zoom: 67%;" />
+<img src="./index.assets/image-20251222164736119.png" alt="image-20251222164736119" style="zoom: 67%;" />
 
 ​	为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。
 
-<img src="./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222165314430.png" alt="image-20251222165314430" style="zoom: 67%;" />
+<img src="./index.assets/image-20251222165314430.png" alt="image-20251222165314430" style="zoom: 67%;" />
 
 
 
@@ -38,7 +38,7 @@
 
 ​	把Normal Distribution采样得到的向量放进Decoder中
 
-![image-20251222170720742](./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222170720742.png)
+![image-20251222170720742](./index.assets/image-20251222170720742.png)
 
 ## AE和VAE结构
 
@@ -53,7 +53,7 @@ AE（自编码器）的核心是**编码-解码-重建**，结构如下：
 
 ​	**核心需求**：给隐空间 $z$ 加**分布约束**，让 $z$ 服从已知概率分布（如标准正态分布 $\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。
 
-<img src="./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251231194942578.png" alt="image-20251231194942578" style="zoom: 33%;" /><img src="./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251231194958673.png" alt="image-20251231194958673" style="zoom: 50%;" />
+<img src="./index.assets/image-20251231194942578.png" alt="image-20251231194942578" style="zoom: 33%;" /><img src="./../../../../Study/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B.assets/image-20251231194958673.png" alt="image-20251231194958673" style="zoom: 50%;" />
 
 
 
@@ -94,16 +94,16 @@ $$
   - **$q_\phi(z|X)$**：变分后验分布，给定$X$时，$z$的近似后验分布，编码器建模。多元高斯分布$$q_\phi(z|X) = \mathcal{N}(z; \mu_\phi(X), \text{diag}(\sigma^2_\phi(X)))$$
     - 编码器输出两个向量：$\mu_\phi(x) \in \mathbb{R}^d$均值向量，$\log\sigma^2_\phi(x) \in \mathbb{R}^d$对数方差向量
   - **$\log p_\theta(X|z)$**：**对数条件似然函数 **（在给定$z$的条件下，数据$X$出现的"可能性"的对数，越大表示重建效果越好）
-  -  **$p_\theta(x|z)$**：**条件似然函数**（给定隐变量$z$时，生成观测数据$X$的概率，由**解码器**建模），为二值数据或者连续数据
+  - **$p_\theta(x|z)$**：**条件似然函数**（给定隐变量$z$时，生成观测数据$X$的概率，由**解码器**建模），为二值数据或者连续数据
     - **二值数据**（如MNIST二值图）：伯努利分布$$p_\theta(X|z) = \prod_{i=1}^D [\pi_i(z)]^{x_i}[1-\pi_i(z)]^{1-x_i}$$，其中$\pi_i(z) \in [0,1]$是解码器第$i$个输出（sigmoid激活）。$$\log p_\theta(X|z) = \sum_{i=1}^D [X_i \log \pi_i(z) + (1-X_i)\log(1-\pi_i(z))]$$，这就是**交叉熵损失**！
     - **连续数据**（如灰度图）：高斯分布$$p_\theta(X|z) = \prod_{i=1}^D \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(X_i - \mu_i(z))^2}{2\sigma^2}\right)$$, 通常固定$\sigma=1$，解码器输出均值$\mu(z)$。$$\log p_\theta(X|z) = -\frac{1}{2}\sum_{i=1}^D (X_i - \mu_i(z))^2 + \text{常数}$$，这就是**均方误差（MSE）** 的负值！
 
 - **第二项        $D_{\text{KL}}(q_\phi(z|x) \parallel p(z))$（KL散度）**：
 
   -  KL散度定义：$ D_{\text{KL}}(q \parallel p) = \int q(z) \log\frac{q(z)}{p(z)} dz $，衡量两个概率分布$q$和$p$之间的"差异"或"距离"。
-  - 衡量解码器输出分布 $q(z|X) = \mathcal{N}(\mu, \sigma^2)$ 与目标先验分布 $p(z) = \mathcal{N}(0,1)$ 差距，KL越小分布越近，隐空间越符合正态分布。
-    - **$q_\phi(z|x) = \mathcal{N}(z; \mu, \text{diag}(\sigma^2))$**：编码器输出的分布，其中$\mu = \mu_\phi(x)$，$\sigma^2 = \sigma^2_\phi(x)$
-    - $p(z) = \mathcal{N}(z; 0, I)$：先验分布，标准多元正态分布
+  -  衡量解码器输出分布 $q(z|X) = \mathcal{N}(\mu, \sigma^2)$ 与目标先验分布 $p(z) = \mathcal{N}(0,1)$ 差距，KL越小分布越近，隐空间越符合正态分布。
+     - **$q_\phi(z|x) = \mathcal{N}(z; \mu, \text{diag}(\sigma^2))$**：编码器输出的分布，其中$\mu = \mu_\phi(x)$，$\sigma^2 = \sigma^2_\phi(x)$
+     - $p(z) = \mathcal{N}(z; 0, I)$：先验分布，标准多元正态分布
 
 - **负号**：最大化重建（$\log p(X|z)$ 越大越好）+ 最小化KL散度，合并后为"重建项-KL项"，整体目标是最大化Loss/最小化其负值。
 
@@ -167,21 +167,23 @@ $$
 
 ​	很多照片输入，输出是Normal Distribution
 
-![image-20251222170843651](./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222170843651.png)
+![image-20251222170843651](./index.assets/image-20251222170843651.png)
 
 
 
 # Generative Adversarial Network(GAN)
 
-![image-20251222171609033](./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222171609033.png)
+![image-20251222171609033](./index.assets/image-20251222171609033.png)
 
-![image-20251222171947177](./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222171947177.png)
+![image-20251222171947177](./index.assets/image-20251222171947177.png)
 
 
 
 # Diffusion Model
 
-![image-20251222171343954](./%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B.assets/image-20251222171343954.png)
+![image-20251222171343954](./index.assets/image-20251222171343954.png)
+
+
 
 
 

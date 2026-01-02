@@ -1,0 +1,144 @@
+<header class="header" style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999; max-width: 100%; width: 100%; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <nav class="nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: var(--content-width); margin: 0 auto; padding: 0.5rem 1rem;">
+        <div class="logo">
+            {{- $label_text := (site.Params.label.text | default site.Title) }}
+            {{- if site.Title }}
+            <a href="{{ "" | absLangURL }}" accesskey="h" title="{{ $label_text }} (Alt + H)">
+                {{- if site.Params.label.icon }}
+                {{- $img := resources.Get site.Params.label.icon }}
+                {{- if $img }}
+                    {{- $processableFormats := (slice "jpg" "jpeg" "png" "tif" "bmp" "gif") -}}
+                    {{- if hugo.IsExtended -}}
+                        {{- $processableFormats = $processableFormats | append "webp" -}}
+                    {{- end -}}
+                    {{- $prod := (hugo.IsProduction | or (eq site.Params.env "production")) }}
+                    {{- if and (in $processableFormats $img.MediaType.SubType) (eq $prod true)}}
+                        {{- if site.Params.label.iconHeight }}
+                            {{- $img = $img.Resize (printf "x%d" site.Params.label.iconHeight) }}
+                        {{ else }}
+                            {{- $img = $img.Resize "x30" }}
+                        {{- end }}
+                    {{- end }}
+                    <img src="{{ $img.Permalink }}" alt="" aria-label="logo"
+                        height="{{- site.Params.label.iconHeight | default "30" -}}">
+                {{- else }}
+                <img src="{{- site.Params.label.icon | absURL -}}" alt="" aria-label="logo"
+                    height="{{- site.Params.label.iconHeight | default "30" -}}">
+                {{- end -}}
+                {{- else if hasPrefix site.Params.label.iconSVG "<svg" }}
+                    {{ site.Params.label.iconSVG | safeHTML }}
+                {{- end -}}
+                {{- $label_text -}}
+            </a>
+            {{- end }}
+            <div class="logo-switches">
+                {{- if (not site.Params.disableThemeToggle) }}
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                {{- end }}
+            </div>
+        </div>
+        {{- $currentPage := . }}
+        <ul id="menu" style="display: flex; align-items: center; list-style: none; margin: 0; padding: 0; gap: 0;">
+            {{- /* 1. 渲染：首页、归档、关于（按顺序） */}}
+            {{- $mainMenu := site.Menus.main }}
+            {{- range (slice "home" "archives" "about") }}
+                {{- $menuItem := index (where $mainMenu "Identifier" .) 0 }}
+                {{- if $menuItem }}
+                    {{- $menu_item_url := (cond (strings.HasSuffix $menuItem.URL "/") $menuItem.URL (printf "%s/" $menuItem.URL) ) | absLangURL }}
+                    {{- $page_url:= $currentPage.Permalink | absLangURL }}
+                    <li style="margin: 0 8px;">
+                        <a href="{{ $menuItem.URL | absLangURL }}" title="{{ $menuItem.Title | default $menuItem.Name }}"
+                           style="text-decoration: none; color: inherit; display: inline-block;">
+                            <span {{- if eq $menu_item_url $page_url }} class="active" style="font-weight: 500; color: #10b981;" {{- end }}>
+                                {{- $menuItem.Pre }}
+                                {{- $menuItem.Name -}}
+                                {{ $menuItem.Post -}}
+                            </span>
+                        </a>
+                    </li>
+                {{- end }}
+            {{- end }}
+
+            {{- /* 2. 插入第一个分隔符 | */}}
+            <li style="margin: 0 8px; color: #9ca3af; font-size: inherit;">|</li>
+
+            {{- /* 3. 渲染：搜索 */}}
+            {{- $searchItem := index (where $mainMenu "Identifier" "search") 0 }}
+            {{- if $searchItem }}
+                {{- $menu_item_url := (cond (strings.HasSuffix $searchItem.URL "/") $searchItem.URL (printf "%s/" $searchItem.URL) ) | absLangURL }}
+                {{- $page_url:= $currentPage.Permalink | absLangURL }}
+                {{- $is_search := eq (site.GetPage $searchItem.KeyName).Layout `search` }}
+                <li style="margin: 0 8px;">
+                    <a href="{{ $searchItem.URL | absLangURL }}" title="{{ $searchItem.Title | default $searchItem.Name }} {{- cond $is_search (" (Alt + /)" | safeHTMLAttr) ("" | safeHTMLAttr ) }}"
+                       {{- cond $is_search (" accesskey=/" | safeHTMLAttr) ("" | safeHTMLAttr ) }}
+                       style="text-decoration: none; color: inherit; display: inline-block;">
+                        <span {{- if eq $menu_item_url $page_url }} class="active" style="font-weight: 500; color: #10b981;" {{- end }}>
+                            {{- $searchItem.Pre }}
+                            {{- $searchItem.Name -}}
+                            {{ $searchItem.Post -}}
+                        </span>
+                    </a>
+                </li>
+            {{- end }}
+
+            {{- /* 4. 插入第二个分隔符 | */}}
+            <li style="margin: 0 8px; color: #9ca3af; font-size: inherit;">|</li>
+
+            {{- /* 5. 渲染：GitHub */}}
+            {{- $githubItem := index (where $mainMenu "Identifier" "github") 0 }}
+            {{- if $githubItem }}
+                {{- $menu_item_url := (cond (strings.HasSuffix $githubItem.URL "/") $githubItem.URL (printf "%s/" $githubItem.URL) ) | absLangURL }}
+                {{- $page_url:= $currentPage.Permalink | absLangURL }}
+                <li style="margin: 0 8px;">
+                    <a href="{{ $githubItem.URL | absLangURL }}" title="{{ $githubItem.Title | default $githubItem.Name }}"
+                       style="text-decoration: none; color: inherit; display: inline-block;">
+                        <span {{- if eq $menu_item_url $page_url }} class="active" style="font-weight: 500; color: #10b981;" {{- end }}>
+                            {{- $githubItem.Pre }}
+                            {{- $githubItem.Name -}}
+                            {{ $githubItem.Post -}}
+                        </span>
+                        {{- if (findRE "://" $githubItem.URL) }}&nbsp;
+                        <svg fill="none" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" height="12" width="12">
+                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path>
+                            <path d="M15 3h6v6"></path>
+                            <path d="M10 14L21 3"></path>
+                        </svg>
+                        {{- end }}
+                    </a>
+                </li>
+            {{- end }}
+        </ul>
+    </nav>
+</header>
+
+<!-- 新增：页面主体顶部内边距，避免内容被固定导航栏遮挡 -->
+<style>
+    body {
+        padding-top: 70px !important;
+    }
+    @media (max-width: 768px) {
+        body {
+            padding-top: 60px !important;
+        }
+    }
+</style>

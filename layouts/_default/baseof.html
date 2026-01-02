@@ -15,6 +15,31 @@
 <head>
     {{- partial "head.html" . }}
     
+    <!-- 核心新增：动态设置页面标题（匹配你的需求） -->
+    <title>
+        {{- /* 1. 根据页面类型定义标题前缀 */ -}}
+        {{- $titlePrefix := "" -}}
+        {{- if .IsHome -}}
+            {{- /* 首页：前缀为“首页” */ -}}
+            {{- $titlePrefix = "首页" -}}
+        {{- else if eq .Layout "archives" -}}
+            {{- /* 归档页：前缀为“归档” */ -}}
+            {{- $titlePrefix = "归档" -}}
+        {{- else if and (isset . "File") (eq .File.BaseFileName "about") -}}
+            {{- /* 关于页：前缀改为“关于我”（匹配你的需求） */ -}}
+            {{- $titlePrefix = "关于我" -}}
+        {{- else if eq .Layout "search" -}}
+            {{- /* 搜索页：前缀为“搜索” */ -}}
+            {{- $titlePrefix = "搜索" -}}
+        {{- else -}}
+            {{- /* 其他页面（文章/标签页）：保留原有标题 */ -}}
+            {{- $titlePrefix = .Title -}}
+        {{- end -}}
+
+        {{- /* 2. 拼接前缀 + 固定后缀，生成最终标题 */ -}}
+        {{- printf "%s | RisingInsight" $titlePrefix | safeHTML -}}
+    </title>
+
     <!-- 核心新增：强制加载自定义CSS（extended.css），优先级高于主题样式 -->
     {{- $customCSS := resources.Get "css/extended.css" }}
     {{- if $customCSS }}

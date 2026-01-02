@@ -1,5 +1,5 @@
 baseURL: "https://RisingInsight.github.io/"
-languageCode: "zh-cn"
+languageCode: "zh-cn"  # 恢复顶层单语言配置（无需多语言）
 title: "RisingInsight's Blog"
 theme: "PaperMod"
 
@@ -11,7 +11,7 @@ outputs:
     - RSS
     - JSON
 
-# [修改 1] 针对 Hugo 新版本的分页配置
+# 移除多语言配置（无需中英文切换）
 pagination:
   pagerSize: 5
 
@@ -31,7 +31,7 @@ params:
     Title: ""
     Content: >
       <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
-        <img src="home-bg.gif" style="display: block; margin: 0 auto 20px auto; max-width: 300px;" alt="Hero">
+        <img src="/home-bg.gif" style="display: block; margin: 0 auto 20px auto; max-width: 300px;" alt="Hero">
         <div style="font-family: monospace; font-size: 1.5rem; color: #333;">
            <span id="typeit-header"></span>_
         </div>
@@ -47,34 +47,29 @@ params:
     icon: "avatar.jpg"
     iconHeight: 35
 
-  # socialIcons:
-  #   - name: github
-  #     url: "https://github.com/RisingInsight"
-  #   - name: email
-  #     url: "mailto:your-email@example.com"
-
   assets:
     disableHLJS: false
     favicon: "avatar.jpg"
     customCSS: ["css/extended.css"]
 
+# 导航顺序：首页→归档→关于→搜索→GitHub（保留修正后的weight）
 menu:
   main:
     - identifier: home
       name: 🏠 首页
       url: /
       weight: 10
-    - identifier: search
-      name: 🔍 搜索
-      url: /search/
-      weight: 20
     - identifier: archives
       name: 📂 归档
       url: /archives/
-      weight: 30
+      weight: 20
     - identifier: about
       name: 🙋‍♂️ 关于
       url: /about/
+      weight: 30
+    - identifier: search
+      name: 🔍 搜索
+      url: /search/
       weight: 40
     - identifier: github
       name: 🐙 GitHub
@@ -83,7 +78,6 @@ menu:
 
 markup:
   goldmark:
-    # [修改 2] 开启 unsafe 模式以支持 HTML
     renderer:
       unsafe: true
     extensions:
