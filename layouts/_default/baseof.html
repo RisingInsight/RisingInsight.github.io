@@ -14,41 +14,26 @@
 
 <head>
     {{- partial "head.html" . }}
-    
-    <!-- 核心新增：动态设置页面标题（匹配你的需求） -->
+    <!-- 手动引入Font Awesome图标库（解决图标不显示） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>
-        {{- /* 1. 根据页面类型定义标题前缀 */ -}}
         {{- $titlePrefix := "" -}}
         {{- if .IsHome -}}
-            {{- /* 首页：前缀为“首页” */ -}}
             {{- $titlePrefix = "首页" -}}
         {{- else if eq .Layout "archives" -}}
-            {{- /* 归档页：前缀为“归档” */ -}}
             {{- $titlePrefix = "归档" -}}
         {{- else if and (isset . "File") (eq .File.BaseFileName "about") -}}
-            {{- /* 关于页：前缀改为“关于我”（匹配你的需求） */ -}}
             {{- $titlePrefix = "关于我" -}}
         {{- else if eq .Layout "search" -}}
-            {{- /* 搜索页：前缀为“搜索” */ -}}
             {{- $titlePrefix = "搜索" -}}
         {{- else -}}
-            {{- /* 其他页面（文章/标签页）：保留原有标题 */ -}}
             {{- $titlePrefix = .Title -}}
         {{- end -}}
-
-        {{- /* 2. 拼接前缀 + 固定后缀，生成最终标题 */ -}}
         {{- printf "%s | RisingInsight" $titlePrefix | safeHTML -}}
     </title>
-
-    <!-- 核心新增：强制加载自定义CSS（extended.css），优先级高于主题样式 -->
     {{- $customCSS := resources.Get "css/extended.css" }}
     {{- if $customCSS }}
-        {{- /* 压缩CSS + 生成指纹，保证缓存刷新 + 样式优先级 */}}
         {{- $customCSS = $customCSS | minify | fingerprint }}
-        <style>
-            {{ $customCSS.Content | safeCSS }}
-        </style>
-        <!-- 兜底：同时通过link加载，双重保障 -->
         <link rel="stylesheet" href="{{ $customCSS.RelPermalink }}" integrity="{{ $customCSS.Data.Integrity }}" />
     {{- end }}
 </head>
@@ -59,10 +44,197 @@
 <body id="top">
 {{- end }}
     {{ partialCached "header.html" . .Page -}}
-    <main class="main">
-        {{- block "main" . }}{{ end }}
-    </main>
-    {{ partialCached "footer.html" . .Layout .Kind (.Param "hideFooter") (.Param "ShowCodeCopyButtons") -}}
-</body>
 
+    <!-- 全宽布局：左-中-右（恢复原布局结构，确保左侧栏显示） -->
+    <main class="full-width-container" style="display: flex; gap: 2rem; padding: 20px 0;">
+        {{- /* 左侧归档（恢复调用+确保样式生效） */ -}}
+        <aside class="sidebar sidebar-left">
+            {{- partial "sidebar/archive.html" . }}
+        </aside>
+
+        {{- /* 中间内容区 */ -}}
+        <div class="content-area" style="flex: 1; max-width: 1200px;">
+            {{- block "main" . }}{{ end }}
+        </div>
+
+        {{- /* 右侧目录 */ -}}
+        <aside class="sidebar sidebar-right">
+            {{- partial "sidebar/toc.html" . }}
+        </aside>
+    </main>
+
+    {{- /* 页脚（放到main外面，恢复原结构） */ -}}
+    {{ partial "footer.html" . }}
+
+    {{- partial "extend_footer.html" . }}
+
+    <!-- 不蒜子统计脚本 -->
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <!-- 动态填充页脚日期 -->
+    <script>
+        const getFormattedCurrentDate = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            return `${year}.${month}.${day}`;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateElement = document.getElementById('footer-end-date');
+            if (dateElement) {
+                dateElement.textContent = getFormattedCurrentDate();
+            }
+        });
+    </script>
+
+    <!-- 左侧栏折叠交互JS（恢复+确保DOM加载后执行） -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. 年份折叠逻辑
+            const yearToggles = document.querySelectorAll('.year-toggle');
+            yearToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const yearGroup = this.closest('.year-group');
+                    const yearContent = yearGroup.querySelector('.year-content');
+                    yearContent.style.display = yearContent.style.display === 'none' ? 'block' : 'none';
+                    yearGroup.classList.toggle('expanded');
+                });
+            });
+
+            // 2. 月份折叠逻辑
+            const monthToggles = document.querySelectorAll('.month-toggle');
+            monthToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const monthGroup = this.closest('.month-group');
+                    const monthContent = monthGroup.querySelector('.month-content');
+                    monthContent.style.display = monthContent.style.display === 'none' ? 'block' : 'none';
+                    monthGroup.classList.toggle('expanded');
+                });
+            });
+
+            // 3. 默认展开最新年份+月份
+            if (yearToggles.length > 0) {
+                yearToggles[0].click();
+                const firstMonthToggle = yearToggles[0].closest('.year-group').querySelector('.month-toggle');
+                if (firstMonthToggle) firstMonthToggle.click();
+            }
+        });
+    </script>
+
+    <!-- 菜单滚动/锚点跳转JS -->
+    <script>
+        let menu = document.getElementById('menu');
+        if (menu) {
+            const scrollPosition = localStorage.getItem("menu-scroll-position");
+            if (scrollPosition) {
+                menu.scrollLeft = parseInt(scrollPosition, 10);
+            }
+            
+            menu.onscroll = function () {
+                localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+            }
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                var id = this.getAttribute("href").substr(1);
+                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                        behavior: "smooth"
+                    });
+                } else {
+                    document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+                }
+                if (id === "top") {
+                    history.replaceState(null, null, " ");
+                } else {
+                    history.pushState(null, null, `#${id}`);
+                }
+            });
+        });
+    </script>
+
+    {{- if (not site.Params.disableScrollToTop) }}
+    <!-- 回到顶部JS -->
+    <script>
+        var mybutton = document.getElementById("top-link");
+        window.onscroll = function () {
+            if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+                mybutton.style.visibility = "visible";
+                mybutton.style.opacity = "1";
+            } else {
+                mybutton.style.visibility = "hidden";
+                mybutton.style.opacity = "0";
+            }
+        };
+    </script>
+    {{- end }}
+
+    {{- if (not site.Params.disableThemeToggle) }}
+    <!-- 主题切换JS -->
+    <script>
+        document.getElementById("theme-toggle").addEventListener("click", () => {
+            const html = document.querySelector("html");
+            if (html.dataset.theme === "dark") {
+                html.dataset.theme = 'light';
+                localStorage.setItem("pref-theme", 'light');
+            } else {
+                html.dataset.theme = 'dark';
+                localStorage.setItem("pref-theme", 'dark');
+            }
+        })
+    </script>
+    {{- end }}
+
+    {{- if (and (eq .Kind "page") (ne .Layout "archives") (ne .Layout "search") (.Param "ShowCodeCopyButtons")) }}
+    <!-- 代码复制按钮JS -->
+    <script>
+        document.querySelectorAll('pre > code').forEach((codeblock) => {
+            const container = codeblock.parentNode.parentNode;
+
+            const copybutton = document.createElement('button');
+            copybutton.classList.add('copy-code');
+            copybutton.innerHTML = '{{- i18n "code_copy" | default "copy" }}';
+
+            function copyingDone() {
+                copybutton.innerHTML = '{{- i18n "code_copied" | default "copied!" }}';
+                setTimeout(() => {
+                    copybutton.innerHTML = '{{- i18n "code_copy" | default "copy" }}';
+                }, 2000);
+            }
+
+            copybutton.addEventListener('click', (cb) => {
+                if ('clipboard' in navigator) {
+                    navigator.clipboard.writeText(codeblock.textContent);
+                    copyingDone();
+                    return;
+                }
+
+                const range = document.createRange();
+                range.selectNodeContents(codeblock);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                try {
+                    document.execCommand('copy');
+                    copyingDone();
+                } catch (e) { };
+                selection.removeRange(range);
+            });
+
+            if (container.classList.contains("highlight")) {
+                container.appendChild(copybutton);
+            } else if (container.parentNode.firstChild == container) {
+            } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+                codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+            } else {
+                codeblock.parentNode.appendChild(copybutton);
+            }
+        });
+    </script>
+    {{- end }}
+</body>
 </html>

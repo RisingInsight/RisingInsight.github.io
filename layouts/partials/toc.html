@@ -1,0 +1,43 @@
+{{- /* 修复正则转义+锚点跳转的TOC模板 */ -}}
+{{- /* 简化正则：去掉反向引用，避免转义错误 */ -}}
+{{- $headers := findRE "<h([1-6])\\s+[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</h[1-6]>" .Content -1 -}}
+{{- $hasTOC := ge (len $headers) 1 -}}
+{{- if $hasTOC -}}
+  <ul class="custom-toc-list">
+    {{- $currentLevel := 0 -}}
+    {{- range $header := $headers -}}
+      {{- /* 提取标题层级、真实ID、文本 */ -}}
+      {{- $matches := findRESubmatch "<h([1-6])\\s+[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</h[1-6]>" $header 1 -}}
+      {{- $level := index $matches 0 1 | int -}}
+      {{- $headerID := index $matches 0 2 | safeURL -}} {{/* 文章标题的真实ID（确保跳转匹配） */}}
+      {{- $headerText := index $matches 0 3 | plainify | htmlUnescape | safeHTML -}}
+      
+      {{- /* 处理层级折叠容器 */ -}}
+      {{- if gt $level $currentLevel -}}
+        {{- range seq (sub $level $currentLevel) -}}
+          <div class="toc-collapse-container" style="display: block;">
+            <ul class="custom-toc-sublist">
+        {{- end -}}
+      {{- else if lt $level $currentLevel -}}
+        {{- range seq (sub $currentLevel $level) -}}
+          </ul>
+        </div>
+        {{- end -}}
+      {{- end -}}
+      {{- $currentLevel = $level -}}
+      
+      {{- /* 生成可跳转的锚点 */ -}}
+      <li class="custom-toc-item level-{{ $level }}">
+        <a href="#{{ $headerID }}" class="custom-toc-link">{{ $headerText }}</a>
+      </li>
+    {{- end -}}
+    
+    {{- /* 关闭剩余容器 */ -}}
+    {{- range seq $currentLevel -}}
+      </ul>
+    </div>
+    {{- end -}}
+  </ul>
+{{- else -}}
+  <div class="toc-empty">暂无目录</div>
+{{- end -}}

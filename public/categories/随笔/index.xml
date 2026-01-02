@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>随笔 on RisingInsight&#39;s Blog</title>
+    <link>http://localhost:1313/categories/%E9%9A%8F%E7%AC%94/</link>
+    <description>Recent content in 随笔 on RisingInsight&#39;s Blog</description>
+    <generator>Hugo -- 0.154.0</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/%E9%9A%8F%E7%AC%94/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>你的文章标题</title>
+      <link>http://localhost:1313/posts/2026/01/%E4%BD%A0%E7%9A%84%E6%96%87%E7%AB%A0%E6%A0%87%E9%A2%98/</link>
+      <pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/2026/01/%E4%BD%A0%E7%9A%84%E6%96%87%E7%AB%A0%E6%A0%87%E9%A2%98/</guid>
+      <description>这里写一段吸引人的摘要，会显示在文章列表页。</description>
+    </item>
+  </channel>
+</rss>

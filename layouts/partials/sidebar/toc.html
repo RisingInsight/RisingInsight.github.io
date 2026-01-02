@@ -1,0 +1,9 @@
+{{- /* 简化条件：只要是文章页就显示目录 */ -}}
+{{- if and .IsPage (eq .Type "posts") }}
+<aside class="sidebar sidebar-right">
+    <div class="sidebar-content">
+        <h3 class="sidebar-title">{{ .Title }}</h3>
+        {{- partial "toc.html" . }}
+    </div>
+</aside>
+{{- end }}

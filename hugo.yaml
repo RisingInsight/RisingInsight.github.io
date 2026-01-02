@@ -1,32 +1,47 @@
 baseURL: "https://RisingInsight.github.io/"
-languageCode: "zh-cn"  # 恢复顶层单语言配置（无需多语言）
+languageCode: "zh-cn"  # 单语言配置
 title: "RisingInsight's Blog"
 theme: "PaperMod"
 
 enableInlineShortcodes: true
+enableRobotsTXT: true  # 新增：允许搜索引擎抓取
+enableEmoji: true      # 新增：支持Markdown emoji
 
+# 站点输出格式（保留原有）
 outputs:
   home:
     - HTML
     - RSS
     - JSON
 
-# 移除多语言配置（无需中英文切换）
+# 分页配置（保留原有）
 pagination:
   pagerSize: 5
 
+# 核心参数配置（分组整理+新增关键项）
 params:
   env: production
   title: "RisingInsight"
   description: "学习笔记 | 技术分享 | 自我介绍"
   author: "RisingInsight"
-  defaultTheme: auto
-  math: true
-  comments: true
+  defaultTheme: auto  # 自动跟随系统深色/浅色模式
+  math: true          # 支持MathJax公式
+  comments: true      # 开启评论功能
 
+  # ========== 新增：目录(TOC)相关配置（右侧目录必需） ==========
+  ShowToc: true               # 强制开启文章目录
+  TocOpen: false              # 目录默认折叠，点击展开
+  TocSide: right              # 目录显示在右侧（配合模板布局）
+  TocNested: true             # 支持多级目录（h2/h3/h4）
+  hideToc: false              # 全局不隐藏目录
+
+  # ========== 归档相关配置（左侧年月归档必需） ==========
+  mainSections: ["posts"]     # 指定文章存放目录（默认content/posts）
+  ShowArchiveCount: true      # 归档页显示文章数量
+
+  # ========== 首页配置（保留原有） ==========
   profileMode:
     enabled: false 
-
   homeInfoParams:
     Title: ""
     Content: >
@@ -37,22 +52,41 @@ params:
         </div>
       </div>
 
+  # ========== 界面显示优化（保留+微调） ==========
   displayFullWidth: false
-  ShowReadingTime: true
-  ShowDate: true
-  hideSummary: true 
+  ShowReadingTime: true       # 显示阅读时长（已修改为带标签）
+  ShowDate: true              # 显示发布日期
+  hideSummary: true           # 列表页隐藏自动摘要（使用front matter的summary）
+  ShowPostNavLinks: true      # 新增：文章底部显示上一篇/下一篇
+  ShowShareButtons: true      # 新增：显示分享按钮
+  ShowCodeCopyButtons: true   # 新增：代码块显示复制按钮
 
+  # ========== 导航栏配置（保留原有） ==========
   label:
     text: "RisingInsight"
     icon: "avatar.jpg"
     iconHeight: 35
 
+  # ========== 静态资源配置（保留原有） ==========
   assets:
     disableHLJS: false
     favicon: "avatar.jpg"
-    customCSS: ["css/extended.css"]
+    customCSS: ["css/extended.css"]  # 加载自定义样式
+    # 新增：图片懒加载（提升性能）
+    imglylazy: true
 
-# 导航顺序：首页→归档→关于→搜索→GitHub（保留修正后的weight）
+  # 左侧侧边栏：独立配置
+  sidebar:
+    left:
+      enabled: true          # 单独开关左侧栏
+      title: "文章归档"       # 左侧栏标题（可自定义）
+      showOn: "posts"        # 显示范围：all=所有页面/posts=仅文章页
+    right:
+      enabled: true          # 单独开关右侧栏
+      title: "本页目录"       # 右侧栏标题（可自定义）
+      showOn: "posts"        # 显示范围：all=所有页面/posts=仅文章页
+      
+# 导航菜单（保留原有）
 menu:
   main:
     - identifier: home
@@ -76,10 +110,11 @@ menu:
       url: "https://github.com/RisingInsight"
       weight: 50
 
+# 标记语言配置（保留原有，支持公式+代码高亮）
 markup:
   goldmark:
     renderer:
-      unsafe: true
+      unsafe: true  # 允许HTML标签在Markdown中生效
     extensions:
       passthrough:
         enable: true
@@ -100,6 +135,9 @@ markup:
     codeFences: true
     guessSyntax: true
     lineNos: true
-    style: monokai
+    style: monokai  # 代码高亮主题
     tabWidth: 4
-    
+
+# ========== 新增：permalinks优化（自定义文章URL格式） ==========
+permalinks:
+  posts: /posts/:year/:month/:title/  # 文章URL格式：年/月/标题

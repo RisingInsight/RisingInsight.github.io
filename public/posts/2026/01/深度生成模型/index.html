@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+
+
+<meta name="keywords" content="">
+<meta name="description" content="图片
+​	对于一张彩色图片而言，它有RGB三通道。R通道：记录图像中每个像素的红色分量强度（通常用0~255的数值表示，0表示无红色，255表示红色最亮）。G通道：记录绿色分量强度。B通道：记录蓝色分量强度。对于图片中的某一个像素而言，它有256x256x256种颜色，RGB三个通道组合而成。
+深度生成模型
+​	文本生成，图片生成，视频生成。
+​	对于一个输入，可以有多种，甚至无穷种回答。输出可能比输入更加复杂且高纬
+​	一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。
+
+​	对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==
+​	image-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后图片生成都是一排一排生成出来的。
+、
+​	一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，&hellip;.）
+
+​	为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。
+
+Variational Auto-encoder(VAE)
+​	把Normal Distribution采样得到的向量放进Decoder中
+
+AE和VAE结构
+AE（自编码器）的核心是编码-解码-重建，结构如下：
+
+输入：原始图像 $X$（高维数据）
+Encoder（编码器）：将 $X$ 降维到低维隐空间（Latent Space），得到一个确定的隐向量 $z$（$z = \text{Encoder}(X)$）
+Decoder（解码器）：将隐向量 $z$ 升维，还原回高维图像 $\hat{X}$（$\hat{X} = \text{Decoder}(z)$）
+训练目标：最小化重建误差（比如像素级MSE），即让 $\hat{X} \approx X$
+
+​	AE能做好降维&#43;重建，但没法生成新数据——因为训练后，每个 $X_i$ 和 $z_i$ 是一一对应的（隐空间是&quot;离散点&quot;分布）。如果随机采样一个不在训练集中的 $z$，Decoder会生成无意义的垃圾数据（隐空间缺乏&quot;连续性&quot;和&quot;分布规律&quot;）。点到点的映射（像是一个死记硬背的学生记住了全部的问题和答案（Xᵢ ↔ zᵢ），考试时只出原题就能答对（重建），但稍微变化一下题目，就完全不会了（无法生成））。
+​	核心需求：给隐空间 $z$ 加分布约束，让 $z$ 服从已知概率分布（如标准正态分布 $\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。">
+<meta name="author" content="RisingInsight">
+<link rel="canonical" href="http://localhost:1313/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/avatar.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+
+    <link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet">
+    
+    
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.8/katex.min.js"></script>
+    
+    
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        });"></script>
+、
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<meta property="og:url" content="http://localhost:1313/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">
+  <meta property="og:site_name" content="RisingInsight&#39;s Blog">
+  <meta property="og:title" content="深度生成模型">
+  <meta property="og:description" content="图片 ​	对于一张彩色图片而言，它有RGB三通道。R通道：记录图像中每个像素的红色分量强度（通常用0~255的数值表示，0表示无红色，255表示红色最亮）。G通道：记录绿色分量强度。B通道：记录蓝色分量强度。对于图片中的某一个像素而言，它有256x256x256种颜色，RGB三个通道组合而成。
+深度生成模型 ​	文本生成，图片生成，视频生成。
+​	对于一个输入，可以有多种，甚至无穷种回答。输出可能比输入更加复杂且高纬
+​	一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。
+​	对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==
+​	image-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后图片生成都是一排一排生成出来的。
+、
+​	一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，….）
+​	为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。
+Variational Auto-encoder(VAE) ​	把Normal Distribution采样得到的向量放进Decoder中
+AE和VAE结构 AE（自编码器）的核心是编码-解码-重建，结构如下：
+输入：原始图像 $X$（高维数据） Encoder（编码器）：将 $X$ 降维到低维隐空间（Latent Space），得到一个确定的隐向量 $z$（$z = \text{Encoder}(X)$） Decoder（解码器）：将隐向量 $z$ 升维，还原回高维图像 $\hat{X}$（$\hat{X} = \text{Decoder}(z)$） 训练目标：最小化重建误差（比如像素级MSE），即让 $\hat{X} \approx X$ ​	AE能做好降维&#43;重建，但没法生成新数据——因为训练后，每个 $X_i$ 和 $z_i$ 是一一对应的（隐空间是&#34;离散点&#34;分布）。如果随机采样一个不在训练集中的 $z$，Decoder会生成无意义的垃圾数据（隐空间缺乏&#34;连续性&#34;和&#34;分布规律&#34;）。点到点的映射（像是一个死记硬背的学生记住了全部的问题和答案（Xᵢ ↔ zᵢ），考试时只出原题就能答对（重建），但稍微变化一下题目，就完全不会了（无法生成））。
+​	核心需求：给隐空间 $z$ 加分布约束，让 $z$ 服从已知概率分布（如标准正态分布 $\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。">
+  <meta property="og:locale" content="zh-cn">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-01-02T20:04:55+08:00">
+    <meta property="article:modified_time" content="2026-01-02T20:04:55+08:00">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深度生成模型">
+<meta name="twitter:description" content="图片
+​	对于一张彩色图片而言，它有RGB三通道。R通道：记录图像中每个像素的红色分量强度（通常用0~255的数值表示，0表示无红色，255表示红色最亮）。G通道：记录绿色分量强度。B通道：记录蓝色分量强度。对于图片中的某一个像素而言，它有256x256x256种颜色，RGB三个通道组合而成。
+深度生成模型
+​	文本生成，图片生成，视频生成。
+​	对于一个输入，可以有多种，甚至无穷种回答。输出可能比输入更加复杂且高纬
+​	一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。
+
+​	对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==
+​	image-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后图片生成都是一排一排生成出来的。
+、
+​	一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，&hellip;.）
+
+​	为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。
+
+Variational Auto-encoder(VAE)
+​	把Normal Distribution采样得到的向量放进Decoder中
+
+AE和VAE结构
+AE（自编码器）的核心是编码-解码-重建，结构如下：
+
+输入：原始图像 $X$（高维数据）
+Encoder（编码器）：将 $X$ 降维到低维隐空间（Latent Space），得到一个确定的隐向量 $z$（$z = \text{Encoder}(X)$）
+Decoder（解码器）：将隐向量 $z$ 升维，还原回高维图像 $\hat{X}$（$\hat{X} = \text{Decoder}(z)$）
+训练目标：最小化重建误差（比如像素级MSE），即让 $\hat{X} \approx X$
+
+​	AE能做好降维&#43;重建，但没法生成新数据——因为训练后，每个 $X_i$ 和 $z_i$ 是一一对应的（隐空间是&quot;离散点&quot;分布）。如果随机采样一个不在训练集中的 $z$，Decoder会生成无意义的垃圾数据（隐空间缺乏&quot;连续性&quot;和&quot;分布规律&quot;）。点到点的映射（像是一个死记硬背的学生记住了全部的问题和答案（Xᵢ ↔ zᵢ），考试时只出原题就能答对（重建），但稍微变化一下题目，就完全不会了（无法生成））。
+​	核心需求：给隐空间 $z$ 加分布约束，让 $z$ 服从已知概率分布（如标准正态分布 $\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "http://localhost:1313/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "深度生成模型",
+      "item": "http://localhost:1313/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "深度生成模型",
+  "name": "深度生成模型",
+  "description": "图片 ​\t对于一张彩色图片而言，它有RGB三通道。R通道：记录图像中每个像素的红色分量强度（通常用0~255的数值表示，0表示无红色，255表示红色最亮）。G通道：记录绿色分量强度。B通道：记录蓝色分量强度。对于图片中的某一个像素而言，它有256x256x256种颜色，RGB三个通道组合而成。\n深度生成模型 ​\t文本生成，图片生成，视频生成。\n​\t对于一个输入，可以有多种，甚至无穷种回答。输出可能比输入更加复杂且高纬\n​\t一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。\n​\t对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==\n​\timage-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后图片生成都是一排一排生成出来的。\n、\n​\t一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，\u0026hellip;.）\n​\t为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。\nVariational Auto-encoder(VAE) ​\t把Normal Distribution采样得到的向量放进Decoder中\nAE和VAE结构 AE（自编码器）的核心是编码-解码-重建，结构如下：\n输入：原始图像 $X$（高维数据） Encoder（编码器）：将 $X$ 降维到低维隐空间（Latent Space），得到一个确定的隐向量 $z$（$z = \\text{Encoder}(X)$） Decoder（解码器）：将隐向量 $z$ 升维，还原回高维图像 $\\hat{X}$（$\\hat{X} = \\text{Decoder}(z)$） 训练目标：最小化重建误差（比如像素级MSE），即让 $\\hat{X} \\approx X$ ​\tAE能做好降维+重建，但没法生成新数据——因为训练后，每个 $X_i$ 和 $z_i$ 是一一对应的（隐空间是\u0026quot;离散点\u0026quot;分布）。如果随机采样一个不在训练集中的 $z$，Decoder会生成无意义的垃圾数据（隐空间缺乏\u0026quot;连续性\u0026quot;和\u0026quot;分布规律\u0026quot;）。点到点的映射（像是一个死记硬背的学生记住了全部的问题和答案（Xᵢ ↔ zᵢ），考试时只出原题就能答对（重建），但稍微变化一下题目，就完全不会了（无法生成））。\n​\t核心需求：给隐空间 $z$ 加分布约束，让 $z$ 服从已知概率分布（如标准正态分布 $\\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "图片 ​\t对于一张彩色图片而言，它有RGB三通道。R通道：记录图像中每个像素的红色分量强度（通常用0~255的数值表示，0表示无红色，255表示红色最亮）。G通道：记录绿色分量强度。B通道：记录蓝色分量强度。对于图片中的某一个像素而言，它有256x256x256种颜色，RGB三个通道组合而成。\n深度生成模型 ​\t文本生成，图片生成，视频生成。\n​\t对于一个输入，可以有多种，甚至无穷种回答。输出可能比输入更加复杂且高纬\n​\t一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。\n​\t对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==\n​\timage-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后图片生成都是一排一排生成出来的。\n、\n​\t一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，….）\n​\t为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。\nVariational Auto-encoder(VAE) ​\t把Normal Distribution采样得到的向量放进Decoder中\nAE和VAE结构 AE（自编码器）的核心是编码-解码-重建，结构如下：\n输入：原始图像 $X$（高维数据） Encoder（编码器）：将 $X$ 降维到低维隐空间（Latent Space），得到一个确定的隐向量 $z$（$z = \\text{Encoder}(X)$） Decoder（解码器）：将隐向量 $z$ 升维，还原回高维图像 $\\hat{X}$（$\\hat{X} = \\text{Decoder}(z)$） 训练目标：最小化重建误差（比如像素级MSE），即让 $\\hat{X} \\approx X$ ​\tAE能做好降维+重建，但没法生成新数据——因为训练后，每个 $X_i$ 和 $z_i$ 是一一对应的（隐空间是\"离散点\"分布）。如果随机采样一个不在训练集中的 $z$，Decoder会生成无意义的垃圾数据（隐空间缺乏\"连续性\"和\"分布规律\"）。点到点的映射（像是一个死记硬背的学生记住了全部的问题和答案（Xᵢ ↔ zᵢ），考试时只出原题就能答对（重建），但稍微变化一下题目，就完全不会了（无法生成））。\n​\t核心需求：给隐空间 $z$ 加分布约束，让 $z$ 服从已知概率分布（如标准正态分布 $\\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。\n​\tVAE（变分自编码器）保留AE的编码-解码结构，但对Encoder做关键修改，同时引入新的Loss项，解决\"生成能力\"问题。给隐空间加\"分布约束\"。分布到分布的映射（像是一个理解规律的学生，不仅记住答案，还理解了答案背后的分布规律，知道所有答案都符合某种\"语法\"或\"规则\"，即使遇到新问题，也能根据规则生成合理答案）。\nEncoder（变分编码器）：不再输出确定的 $z$，而是输出概率分布的参数——均值 $\\mu$ 和方差 $\\sigma^2$： $$\r\\mu = f_1(X), \\quad \\log\\sigma^2 = f_2(X)\r$$ 含义：对于输入 $X$，其隐向量 $z$ 不是一个点，而是服从高斯分布 $\\mathcal{N}(\\mu, \\sigma^2)$ 的随机变量。\n采样步骤：从 $\\mathcal{N}(\\mu, \\sigma^2)$ 中随机采样一个 $z$（生成能力的关键，后续用重参数化解决梯度问题）。\nDecoder（解码器）：和AE一致，输入采样得到的 $z$，输出重建图像 $\\hat{X}$，对应条件概率 $p(X|z)$（“给定 $z$，生成 $X$ 的概率”）。\nVAE的Loss VAE的Loss是重建Loss + KL散度，本质是平衡两个矛盾：\n采样的随机性会导致重建误差增大（每次采样的 $z$ 不同，$\\hat{X}$ 也不同）→ 网络倾向于让方差 $\\sigma^2 \\to 0$（退化成AE，失去生成能力）。 需要 $z$ 服从标准正态分布 $\\mathcal{N}(0,1)$（保证隐空间连续性，方便采样生成）→ 必须约束 $\\mathcal{N}(\\mu, \\sigma^2)$ 贴近 $\\mathcal{N}(0,1)$。 首先给出完整的VAE损失函数（对于单个样本$X$）： $$\r\\mathcal{Loss}_{\\text{VAE}}(\\theta, \\phi; X) = \\underbrace{\\mathbb{E}_{q_\\phi(z|X)}[\\log p_\\theta(X|z)]}_{\\text{重建Loss}} - \\beta \\cdot \\underbrace{D_{\\text{KL}}(q_\\phi(z|X) \\parallel p(z))}_{\\text{KL散度正则项约束}}\r$$ $X$ 观测数据（输入） 向量 $\\mathbb{R}^D$ 例如：一张$28×28$的MNIST图像展平为$784$维向量 $z$ 隐变量 向量 $\\mathbb{R}^d$ 潜在表示，$d \\ll D$（如$d=20$） $\\theta$ 解码器参数 神经网络权重 解码器$p_\\theta(x $\\phi$ 编码器参数 神经网络权重 编码器$q_\\phi(z $\\beta$ 正则化系数 标量 $\\mathbb{R}^+$ 控制KL散度的权重，$\\beta=1$时为标准VAE 第一项 $\\mathbb{E}_{q_\\phi(z|x)}[\\log p_\\theta(x|z)]= \\int \\log p_\\theta(x|z) \\cdot q_\\phi(z|x) dz$ （重建Loss）\n和AE一致，让 $\\hat{X}$($\\hat{X}=\\log p(X|z) \\approx X$)越大，重建效果越好。从编码器分布$q_\\phi(z|x)$中采样多个$z$，对每个$z$计算$\\log p_\\theta(x|z)$（重建质量），然后取平均值。 $q_\\phi(z|X)$：变分后验分布，给定$X$时，$z$的近似后验分布，编码器建模。多元高斯分布$$q_\\phi(z|X) = \\mathcal{N}(z; \\mu_\\phi(X), \\text{diag}(\\sigma^2_\\phi(X)))$$ 编码器输出两个向量：$\\mu_\\phi(x) \\in \\mathbb{R}^d$均值向量，$\\log\\sigma^2_\\phi(x) \\in \\mathbb{R}^d$对数方差向量 $\\log p_\\theta(X|z)$：**对数条件似然函数 **（在给定$z$的条件下，数据$X$出现的\"可能性\"的对数，越大表示重建效果越好） $p_\\theta(x|z)$：条件似然函数（给定隐变量$z$时，生成观测数据$X$的概率，由解码器建模），为二值数据或者连续数据 二值数据（如MNIST二值图）：伯努利分布$$p_\\theta(X|z) = \\prod_{i=1}^D [\\pi_i(z)]^{x_i}[1-\\pi_i(z)]^{1-x_i}$$，其中$\\pi_i(z) \\in [0,1]$是解码器第$i$个输出（sigmoid激活）。$$\\log p_\\theta(X|z) = \\sum_{i=1}^D [X_i \\log \\pi_i(z) + (1-X_i)\\log(1-\\pi_i(z))]$$，这就是交叉熵损失！ 连续数据（如灰度图）：高斯分布$$p_\\theta(X|z) = \\prod_{i=1}^D \\frac{1}{\\sqrt{2\\pi\\sigma^2}} \\exp\\left(-\\frac{(X_i - \\mu_i(z))^2}{2\\sigma^2}\\right)$$, 通常固定$\\sigma=1$，解码器输出均值$\\mu(z)$。$$\\log p_\\theta(X|z) = -\\frac{1}{2}\\sum_{i=1}^D (X_i - \\mu_i(z))^2 + \\text{常数}$$，这就是均方误差（MSE） 的负值！ 第二项 $D_{\\text{KL}}(q_\\phi(z|x) \\parallel p(z))$（KL散度）：\nKL散度定义：$ D_{\\text{KL}}(q \\parallel p) = \\int q(z) \\log\\frac{q(z)}{p(z)} dz $，衡量两个概率分布$q$和$p$之间的\"差异\"或\"距离\"。 衡量解码器输出分布 $q(z|X) = \\mathcal{N}(\\mu, \\sigma^2)$ 与目标先验分布 $p(z) = \\mathcal{N}(0,1)$ 差距，KL越小分布越近，隐空间越符合正态分布。 $q_\\phi(z|x) = \\mathcal{N}(z; \\mu, \\text{diag}(\\sigma^2))$：编码器输出的分布，其中$\\mu = \\mu_\\phi(x)$，$\\sigma^2 = \\sigma^2_\\phi(x)$ $p(z) = \\mathcal{N}(z; 0, I)$：先验分布，标准多元正态分布 负号：最大化重建（$\\log p(X|z)$ 越大越好）+ 最小化KL散度，合并后为\"重建项-KL项\"，整体目标是最大化Loss/最小化其负值。\nELBO 生成模型的终极目标是学习数据的真实分布 $p(X)$——只要学到 $p(X)$，就能从该分布中采样生成新数据。\n但直接估计 $p(X)$ 极难（如图像数据分布复杂，无简单公式描述），因此VAE引入隐变量 $z$，将 $p(X)$ 分解为： $$\rp(X) = \\int p(X|z) p(z) dz\r$$ 含义：数据 $X$ 的生成过程是\"先从先验分布 $p(z)$ 采样 $z$，再从条件分布 $p(X|z)$ 采样 $X$\" 问题：高维隐空间的积分是NP难的，无法直接计算 为解决积分难题，VAE采用变分推断：引入可参数化的近似后验分布 $q(z|X)$（即Encoder输出的 $\\mathcal{N}(\\mu, \\sigma^2)$），用它近似无法计算的真实后验 $p(z|X)$（“给定 $X$，隐变量 $z$ 的真实分布”）。\n衡量两个分布相似度的指标是KL散度：$KL(q(z|X) \\parallel p(z|X)) \\geq 0$（KL散度永远非负，等于0时两个分布完全一致）。\n目标是最大化对数似然 $\\log p(X)$（极大似然估计，让模型生成真实数据的概率最大）。通过数学变形，可将 $\\log p(X)$ 拆分为ELBO + KL散度： $$\r\\begin{aligned}\r\\log p(X) \u0026= \\mathbb{E}_{q(z|X)}[\\log p(X)] \\quad (\\text{乘以} \\int q(z|X)dz=1\\text{，不改变结果}) \\\\\r\u0026= \\mathbb{E}_{q(z|X)}\\left[\\log \\frac{p(X,z)}{p(z|X)}\\right] \\quad (\\text{贝叶斯公式：} p(X,z)=p(X|z)p(z)=p(z|X)p(X)) \\\\\r\u0026= \\mathbb{E}_{q(z|X)}\\left[\\log \\frac{p(X,z) q(z|X)}{p(z|X) q(z|X)}\\right] \\quad (\\text{分子分母同乘} q(z|X)) \\\\\r\u0026= \\underbrace{\\mathbb{E}_{q(z|X)}\\left[\\log \\frac{p(X,z)}{q(z|X)}\\right]}_{\\text{ELBO}} + \\underbrace{KL(q(z|X) \\parallel p(z|X))}_{\\geq 0}\r\\end{aligned}\r$$因 $KL(q \\parallel p) \\geq 0$，故： $$\r\\log p(X) \\geq \\text{ELBO}\r$$ $\\log p(X)$ 是模型证据（Model Evidence），衡量模型对数据的拟合程度 ELBO是证据下界（Evidence Lower Bound）——它是 $\\log p(X)$ 的下界，最大化ELBO等价于最大化 $\\log p(X)$（当KL=0时，ELBO=log p(X)） 对ELBO进一步变形，可得VAE的Loss： $$\r\\begin{aligned}\r\\text{ELBO} \u0026= \\mathbb{E}_{q(z|X)}\\left[\\log \\frac{p(X,z)}{q(z|X)}\\right] \\\\\r\u0026= \\mathbb{E}_{q(z|X)}\\left[\\log \\frac{p(X|z) p(z)}{q(z|X)}\\right] \\quad (\\text{分解联合分布} p(X,z)=p(X|z)p(z)) \\\\\r\u0026= \\mathbb{E}_{q(z|X)}[\\log p(X|z)] + \\mathbb{E}_{q(z|X)}\\left[\\log \\frac{p(z)}{q(z|X)}\\right] \\\\\r\u0026= \\mathbb{E}_{q(z|X)}[\\log p(X|z)] - KL(q(z|X) \\parallel p(z))\r\\end{aligned}\r$$这与之前的VAE Loss完全一致！\n结论：VAE的训练目标最大化ELBO，本质是通过近似后验 $q(z|X)$ 间接最大化模型证据 $\\log p(X)$，既保证重建效果，又约束隐空间分布，从而获得生成能力。\nFlow-based Generative Model ​\t很多照片输入，输出是Normal Distribution\nGenerative Adversarial Network(GAN) Diffusion Model ",
+  "wordCount" : "424",
+  "inLanguage": "en",
+  "datePublished": "2026-01-02T20:04:55+08:00",
+  "dateModified": "2026-01-02T20:04:55+08:00",
+  "author":{
+    "@type": "Person",
+    "name": "RisingInsight"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://localhost:1313/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "RisingInsight's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://localhost:1313/avatar.jpg"
+    }
+  }
+}
+</script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>深度生成模型 | RisingInsight</title>
+        <link rel="stylesheet" href="/css/extended.min.9575687382880731bc5e265493de50f9ee6d702ca7e0db3151f44ee03871bc73.css" integrity="sha256-lXVoc4KIBzG8XiZUk95Q&#43;e5tcCyn4NsxUfRO4DhxvHM=" />
+</head>
+<body id="top">
+    <header class="header" style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999; max-width: 100%; width: 100%; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <nav class="nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: var(--content-width); margin: 0 auto; padding: 0.5rem 1rem;">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="RisingInsight (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">RisingInsight</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu" style="display: flex; align-items: center; list-style: none; margin: 0; padding: 0; gap: 0;">
+                    <li style="margin: 0 8px;">
+                        <a href="http://localhost:1313/" title="🏠 首页"
+                           style="text-decoration: none; color: inherit; display: inline-block;">
+                            <span>🏠 首页</span>
+                        </a>
+                    </li>
+                    <li style="margin: 0 8px;">
+                        <a href="http://localhost:1313/archives/" title="📂 归档"
+                           style="text-decoration: none; color: inherit; display: inline-block;">
+                            <span>📂 归档</span>
+                        </a>
+                    </li>
+                    <li style="margin: 0 8px;">
+                        <a href="http://localhost:1313/about/" title="🙋‍♂️ 关于"
+                           style="text-decoration: none; color: inherit; display: inline-block;">
+                            <span>🙋‍♂️ 关于</span>
+                        </a>
+                    </li>
+            <li style="margin: 0 8px; color: #9ca3af; font-size: inherit;">|</li>
+                <li style="margin: 0 8px;">
+                    <a href="http://localhost:1313/search/" title="🔍 搜索 (Alt &#43; /)" accesskey=/
+                       style="text-decoration: none; color: inherit; display: inline-block;">
+                        <span>🔍 搜索</span>
+                    </a>
+                </li>
+            <li style="margin: 0 8px; color: #9ca3af; font-size: inherit;">|</li>
+                <li style="margin: 0 8px;">
+                    <a href="https://github.com/RisingInsight" title="🐙 GitHub"
+                       style="text-decoration: none; color: inherit; display: inline-block;">
+                        <span>🐙 GitHub</span>&nbsp;
+                        <svg fill="none" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" height="12" width="12">
+                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path>
+                            <path d="M15 3h6v6"></path>
+                            <path d="M10 14L21 3"></path>
+                        </svg>
+                    </a>
+                </li>
+        </ul>
+    </nav>
+</header>
+
+
+<style>
+    body {
+        padding-top: 70px !important;
+    }
+    @media (max-width: 768px) {
+        body {
+            padding-top: 60px !important;
+        }
+    }
+</style>
+
+    <main class="full-width-container" style="display: flex; gap: 2rem; padding: 20px 0;"><aside class="sidebar sidebar-left">
+<aside class="sidebar sidebar-left">
+    <div class="sidebar-content">
+        <h3 class="sidebar-title">文章归档</h3>
+        <div class="year-group">
+            <button class="year-toggle">
+                <span class="toggle-icon">▶</span>
+                <span class="year-text">2026年</span>
+            </button>
+            
+            <div class="year-content" style="display: none;">
+                <div class="month-group">
+                    <button class="month-toggle">
+                        <span class="toggle-icon">▶</span>
+                        <span class="month-text">01月</span>
+                    </button>
+                    
+                    <div class="month-content" style="display: none;">
+                        <ul class="archive-post-list">
+                            <li><a href="http://localhost:1313/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">深度生成模型</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/hugo%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">Hugo使用教程</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/dsfafsa/">dsfafsa</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/dsfda/">dsfda</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/copy/">copy</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/testdsfad/">testdsfad</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/%E5%85%AC%E5%BC%8F%E5%92%8C%E4%BB%A3%E7%A0%81%E6%B5%8B%E8%AF%95/">公式和代码测试</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/%E4%BD%A0%E7%9A%84%E6%96%87%E7%AB%A0%E6%A0%87%E9%A2%98/">你的文章标题</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/%E5%85%AC%E5%BC%8F%E5%92%8Cdssdfsdf/">公式和dssdfsdf</a></li>
+                            <li><a href="http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/">图片测试</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+        </aside><div class="content-area" style="flex: 1; max-width: 1200px;">
+<article class="post-single">
+    <header class="post-header">
+        
+        <h1 class="post-title entry-hint-parent">
+            深度生成模型
+        </h1>
+        <div class="post-meta"><span title='2026-01-02 20:04:55 +0800 CST'>发布时间：2026-01-02 20:04:55</span>&nbsp;|&nbsp;<span>发布者：RisingInsight</span>&nbsp;|&nbsp;<span>预计阅读时间：2 min</span>
+
+</div>
+    </header> 
+
+    <div class="post-content"><h1 id="图片">图片<a hidden class="anchor" aria-hidden="true" href="#图片">#</a></h1>
+<p>​	对于一张彩色图片而言，它有RGB三通道。<strong>R通道</strong>：记录图像中每个像素的<strong>红色分量强度</strong>（通常用0~255的数值表示，0表示无红色，255表示红色最亮）。<strong>G通道</strong>：记录<strong>绿色分量强度</strong>。<strong>B通道</strong>：记录<strong>蓝色分量强度</strong>。对于图片中的某一个像素而言，它有256x256x256种颜色，RGB三个通道组合而成。</p>
+<h1 id="深度生成模型">深度生成模型<a hidden class="anchor" aria-hidden="true" href="#深度生成模型">#</a></h1>
+<p>​	文本生成，图片生成，视频生成。</p>
+<p>​	对于一个输入，可以有多种，甚至无穷种回答。输出可能比输入更加复杂且高纬</p>
+<p>​	一段文字转换为一个模型，模型需要进行大量的脑补。因为图片对应的文字有很多，一张图胜过千言万语。</p>
+<p><img alt="image-20251222152235572" loading="lazy" src="/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/index.assets/image-20251222152235572.png"></p>
+<p>​	对于文字生成而言，主要采取逐个击破（Autoregressive，自回归），从输入文本计算出最可能的下一个字或者词（计算概率，选概率最大的），然后将其追加到输入文本的末尾，作为新的输入。然后重复，直到生成结束标记；图片生成的话，也可以采取这种方式进行。要画一只奔跑的狗，计算第一个像素最可能为什么颜色（概率最大），然后将第一个像素和文字作为新的输入，重复，知道生成结束标记。太浪费时间，==现在的图像生成不使用Autorgessvie自回归！！！==</p>
+<p>​	image-gpt：将2D图像转换为1D序列（得到256排的256个token），对于每一排的256个token，从输入token计算出最可能的下一个token，然后将其追加到输入token的末尾，作为新的输入。然后重复，直到生成结束标记。然后<strong>图片生成都是一排一排生成出来的</strong>。</p>
+<p><img src="./index.assets/image-20251222153436840.png" alt="image-20251222153436840" style="zoom:25%;" /><img src="./../../../../Study/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B.assets/image-20251222153534658.png" alt="image-20251222153534658" style="zoom:25%;" />、</p>
+<p>​	一步到位生成：直接预测256x256个每个像素点的颜色。得到的结果就是一个分布之内的，在这个分布之内的都是正确的输出。但是使用一步到位生成会导致每个像素点可能要画的图不一样（例如有的像素点是想画黑狗，有的想画白狗，有的向前跑，有的向后退，&hellip;.）</p>
+<img src="./index.assets/image-20251222164736119.png" alt="image-20251222164736119" style="zoom: 67%;" />
+<p>​	为了解决这个问题，就需要使用Normal Distribution。通过Normal Distribution 得到可能的图片P(x|y)，然后文字就帮忙指导映射。</p>
+<img src="./index.assets/image-20251222165314430.png" alt="image-20251222165314430" style="zoom: 67%;" />
+<h1 id="variational-auto-encodervae">Variational Auto-encoder(VAE)<a hidden class="anchor" aria-hidden="true" href="#variational-auto-encodervae">#</a></h1>
+<p>​	把Normal Distribution采样得到的向量放进Decoder中</p>
+<p><img alt="image-20251222170720742" loading="lazy" src="/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/index.assets/image-20251222170720742.png"></p>
+<h2 id="ae和vae结构">AE和VAE结构<a hidden class="anchor" aria-hidden="true" href="#ae和vae结构">#</a></h2>
+<p>AE（自编码器）的核心是<strong>编码-解码-重建</strong>，结构如下：</p>
+<ul>
+<li><strong>输入</strong>：原始图像 $X$（高维数据）</li>
+<li><strong>Encoder（编码器）</strong>：将 $X$ 降维到低维隐空间（Latent Space），得到一个确定的隐向量 $z$（$z = \text{Encoder}(X)$）</li>
+<li><strong>Decoder（解码器）</strong>：将隐向量 $z$ 升维，还原回高维图像 $\hat{X}$（$\hat{X} = \text{Decoder}(z)$）</li>
+<li><strong>训练目标</strong>：最小化<strong>重建误差</strong>（比如像素级MSE），即让 $\hat{X} \approx X$</li>
+</ul>
+<p>​	AE能做好<strong>降维+重建</strong>，但没法<strong>生成新数据</strong>——因为训练后，每个 $X_i$ 和 $z_i$ 是<strong>一一对应</strong>的（隐空间是&quot;离散点&quot;分布）。如果随机采样一个不在训练集中的 $z$，Decoder会生成无意义的垃圾数据（隐空间缺乏&quot;连续性&quot;和&quot;分布规律&quot;）。点到点的映射（像是一个<strong>死记硬背的学生</strong>记住了全部的问题和答案（Xᵢ ↔ zᵢ），考试时只出原题就能答对（重建），但稍微变化一下题目，就完全不会了（无法生成））。</p>
+<p>​	<strong>核心需求</strong>：给隐空间 $z$ 加<strong>分布约束</strong>，让 $z$ 服从已知概率分布（如标准正态分布 $\mathcal{N}(0,1)$），这样就能从该分布中随机采样 $z$，通过Decoder生成新数据。这是VAE的核心动机。</p>
+<p><img src="./index.assets/image-20251231194942578.png" alt="image-20251231194942578" style="zoom: 33%;" /><img src="./../../../../Study/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B/%25E6%25B7%25B1%25E5%25BA%25A6%25E7%2594%259F%25E6%2588%2590%25E6%25A8%25A1%25E5%259E%258B.assets/image-20251231194958673.png" alt="image-20251231194958673" style="zoom: 50%;" /></p>
+<p>​	VAE（变分自编码器）保留AE的<strong>编码-解码</strong>结构，但对Encoder做关键修改，同时引入新的Loss项，解决&quot;生成能力&quot;问题。给隐空间加&quot;分布约束&quot;。分布到分布的映射（像是一个<strong>理解规律的学生</strong>，不仅记住答案，还理解了<strong>答案背后的分布规律</strong>，知道所有答案都符合某种&quot;语法&quot;或&quot;规则&quot;，即使遇到新问题，也能根据规则生成合理答案）。</p>
+<ul>
+<li>
+<p><strong>Encoder（变分编码器）</strong>：不再输出确定的 $z$，而是输出<strong>概率分布的参数</strong>——均值 $\mu$ 和方差 $\sigma^2$：
+</p>
+$$
+  \mu = f_1(X), \quad \log\sigma^2 = f_2(X)
+  $$<p>
+含义：对于输入 $X$，其隐向量 $z$ 不是一个点，而是服从高斯分布 $\mathcal{N}(\mu, \sigma^2)$ 的随机变量。</p>
+</li>
+<li>
+<p><strong>采样步骤</strong>：从 $\mathcal{N}(\mu, \sigma^2)$ 中随机采样一个 $z$（生成能力的关键，后续用重参数化解决梯度问题）。</p>
+</li>
+<li>
+<p><strong>Decoder（解码器）</strong>：和AE一致，输入采样得到的 $z$，输出重建图像 $\hat{X}$，对应条件概率 $p(X|z)$（&ldquo;给定 $z$，生成 $X$ 的概率&rdquo;）。</p>
+</li>
+</ul>
+<h2 id="vae的loss">VAE的Loss<a hidden class="anchor" aria-hidden="true" href="#vae的loss">#</a></h2>
+<p>VAE的Loss是<strong>重建Loss + KL散度</strong>，本质是平衡两个矛盾：</p>
+<ul>
+<li>采样的随机性会导致重建误差增大（每次采样的 $z$ 不同，$\hat{X}$ 也不同）→ 网络倾向于让方差 $\sigma^2 \to 0$（退化成AE，失去生成能力）。</li>
+<li>需要 $z$ 服从标准正态分布 $\mathcal{N}(0,1)$（保证隐空间连续性，方便采样生成）→ 必须约束 $\mathcal{N}(\mu, \sigma^2)$ 贴近 $\mathcal{N}(0,1)$。</li>
+</ul>
+<p>首先给出完整的VAE损失函数（对于单个样本$X$）：
+</p>
+$$
+\mathcal{Loss}_{\text{VAE}}(\theta, \phi; X) = \underbrace{\mathbb{E}_{q_\phi(z|X)}[\log p_\theta(X|z)]}_{\text{重建Loss}} - \beta \cdot \underbrace{D_{\text{KL}}(q_\phi(z|X) \parallel p(z))}_{\text{KL散度正则项约束}}
+$$<ul>
+<li>
+<table>
+  <thead>
+      <tr>
+          <th>$X$</th>
+          <th>观测数据（输入）</th>
+          <th>向量 $\mathbb{R}^D$</th>
+          <th>例如：一张$28×28$的MNIST图像展平为$784$维向量</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>$z$</td>
+          <td><strong>隐变量</strong></td>
+          <td>向量 $\mathbb{R}^d$</td>
+          <td>潜在表示，$d \ll D$（如$d=20$）</td>
+      </tr>
+      <tr>
+          <td>$\theta$</td>
+          <td><strong>解码器参数</strong></td>
+          <td>神经网络权重</td>
+          <td>解码器$p_\theta(x</td>
+      </tr>
+      <tr>
+          <td>$\phi$</td>
+          <td><strong>编码器参数</strong></td>
+          <td>神经网络权重</td>
+          <td>编码器$q_\phi(z</td>
+      </tr>
+      <tr>
+          <td>$\beta$</td>
+          <td><strong>正则化系数</strong></td>
+          <td>标量 $\mathbb{R}^+$</td>
+          <td>控制KL散度的权重，$\beta=1$时为标准VAE</td>
+      </tr>
+  </tbody>
+</table>
+</li>
+<li>
+<p><strong>第一项           $\mathbb{E}_{q_\phi(z|x)}[\log p_\theta(x|z)]= \int \log p_\theta(x|z) \cdot q_\phi(z|x) dz$ （重建Loss）</strong></p>
+<ul>
+<li>和AE一致，让 $\hat{X}$($\hat{X}=\log p(X|z) \approx X$)越大，重建效果越好。从编码器分布$q_\phi(z|x)$中<strong>采样</strong>多个$z$，对每个$z$计算$\log p_\theta(x|z)$（重建质量），然后取<strong>平均值</strong>。</li>
+<li><strong>$q_\phi(z|X)$</strong>：变分后验分布，给定$X$时，$z$的近似后验分布，编码器建模。多元高斯分布$$q_\phi(z|X) = \mathcal{N}(z; \mu_\phi(X), \text{diag}(\sigma^2_\phi(X)))$$
+<ul>
+<li>编码器输出两个向量：$\mu_\phi(x) \in \mathbb{R}^d$均值向量，$\log\sigma^2_\phi(x) \in \mathbb{R}^d$对数方差向量</li>
+</ul>
+</li>
+<li><strong>$\log p_\theta(X|z)$</strong>：**对数条件似然函数 **（在给定$z$的条件下，数据$X$出现的&quot;可能性&quot;的对数，越大表示重建效果越好）</li>
+<li><strong>$p_\theta(x|z)$</strong>：<strong>条件似然函数</strong>（给定隐变量$z$时，生成观测数据$X$的概率，由<strong>解码器</strong>建模），为二值数据或者连续数据
+<ul>
+<li><strong>二值数据</strong>（如MNIST二值图）：伯努利分布$$p_\theta(X|z) = \prod_{i=1}^D [\pi_i(z)]^{x_i}[1-\pi_i(z)]^{1-x_i}$$，其中$\pi_i(z) \in [0,1]$是解码器第$i$个输出（sigmoid激活）。$$\log p_\theta(X|z) = \sum_{i=1}^D [X_i \log \pi_i(z) + (1-X_i)\log(1-\pi_i(z))]$$，这就是<strong>交叉熵损失</strong>！</li>
+<li><strong>连续数据</strong>（如灰度图）：高斯分布$$p_\theta(X|z) = \prod_{i=1}^D \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(X_i - \mu_i(z))^2}{2\sigma^2}\right)$$, 通常固定$\sigma=1$，解码器输出均值$\mu(z)$。$$\log p_\theta(X|z) = -\frac{1}{2}\sum_{i=1}^D (X_i - \mu_i(z))^2 + \text{常数}$$，这就是<strong>均方误差（MSE）</strong> 的负值！</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>第二项        $D_{\text{KL}}(q_\phi(z|x) \parallel p(z))$（KL散度）</strong>：</p>
+<ul>
+<li>KL散度定义：$ D_{\text{KL}}(q \parallel p) = \int q(z) \log\frac{q(z)}{p(z)} dz $，衡量两个概率分布$q$和$p$之间的&quot;差异&quot;或&quot;距离&quot;。</li>
+<li>衡量解码器输出分布 $q(z|X) = \mathcal{N}(\mu, \sigma^2)$ 与目标先验分布 $p(z) = \mathcal{N}(0,1)$ 差距，KL越小分布越近，隐空间越符合正态分布。
+<ul>
+<li><strong>$q_\phi(z|x) = \mathcal{N}(z; \mu, \text{diag}(\sigma^2))$</strong>：编码器输出的分布，其中$\mu = \mu_\phi(x)$，$\sigma^2 = \sigma^2_\phi(x)$</li>
+<li>$p(z) = \mathcal{N}(z; 0, I)$：先验分布，标准多元正态分布</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>负号</strong>：最大化重建（$\log p(X|z)$ 越大越好）+ 最小化KL散度，合并后为&quot;重建项-KL项&quot;，整体目标是最大化Loss/最小化其负值。</p>
+</li>
+</ul>
+<h2 id="elbo">ELBO<a hidden class="anchor" aria-hidden="true" href="#elbo">#</a></h2>
+<p>生成模型的终极目标是<strong>学习数据的真实分布 $p(X)$</strong>——只要学到 $p(X)$，就能从该分布中采样生成新数据。</p>
+<p>但直接估计 $p(X)$ 极难（如图像数据分布复杂，无简单公式描述），因此VAE引入<strong>隐变量 $z$</strong>，将 $p(X)$ 分解为：
+</p>
+$$
+p(X) = \int p(X|z) p(z) dz
+$$<ul>
+<li><strong>含义</strong>：数据 $X$ 的生成过程是&quot;先从先验分布 $p(z)$ 采样 $z$，再从条件分布 $p(X|z)$ 采样 $X$&quot;</li>
+<li><strong>问题</strong>：高维隐空间的积分是NP难的，无法直接计算</li>
+</ul>
+<p>为解决积分难题，VAE采用<strong>变分推断</strong>：引入可参数化的近似后验分布 $q(z|X)$（即Encoder输出的 $\mathcal{N}(\mu, \sigma^2)$），用它近似无法计算的真实后验 $p(z|X)$（&ldquo;给定 $X$，隐变量 $z$ 的真实分布&rdquo;）。</p>
+<p>衡量两个分布相似度的指标是<strong>KL散度</strong>：$KL(q(z|X) \parallel p(z|X)) \geq 0$（KL散度永远非负，等于0时两个分布完全一致）。</p>
+<p>目标是最大化<strong>对数似然 $\log p(X)$</strong>（极大似然估计，让模型生成真实数据的概率最大）。通过数学变形，可将 $\log p(X)$ 拆分为<strong>ELBO + KL散度</strong>：
+</p>
+$$
+\begin{aligned}
+\log p(X) &= \mathbb{E}_{q(z|X)}[\log p(X)] \quad (\text{乘以} \int q(z|X)dz=1\text{，不改变结果}) \\
+&= \mathbb{E}_{q(z|X)}\left[\log \frac{p(X,z)}{p(z|X)}\right] \quad (\text{贝叶斯公式：} p(X,z)=p(X|z)p(z)=p(z|X)p(X)) \\
+&= \mathbb{E}_{q(z|X)}\left[\log \frac{p(X,z) q(z|X)}{p(z|X) q(z|X)}\right] \quad (\text{分子分母同乘} q(z|X)) \\
+&= \underbrace{\mathbb{E}_{q(z|X)}\left[\log \frac{p(X,z)}{q(z|X)}\right]}_{\text{ELBO}} + \underbrace{KL(q(z|X) \parallel p(z|X))}_{\geq 0}
+\end{aligned}
+$$<p>因 $KL(q \parallel p) \geq 0$，故：
+</p>
+$$
+\log p(X) \geq \text{ELBO}
+$$<ul>
+<li>$\log p(X)$ 是<strong>模型证据</strong>（Model Evidence），衡量模型对数据的拟合程度</li>
+<li>ELBO是<strong>证据下界</strong>（Evidence Lower Bound）——它是 $\log p(X)$ 的下界，最大化ELBO等价于最大化 $\log p(X)$（当KL=0时，ELBO=log p(X)）</li>
+</ul>
+<p>对ELBO进一步变形，可得VAE的Loss：
+</p>
+$$
+\begin{aligned}
+\text{ELBO} &= \mathbb{E}_{q(z|X)}\left[\log \frac{p(X,z)}{q(z|X)}\right] \\
+&= \mathbb{E}_{q(z|X)}\left[\log \frac{p(X|z) p(z)}{q(z|X)}\right] \quad (\text{分解联合分布} p(X,z)=p(X|z)p(z)) \\
+&= \mathbb{E}_{q(z|X)}[\log p(X|z)] + \mathbb{E}_{q(z|X)}\left[\log \frac{p(z)}{q(z|X)}\right] \\
+&= \mathbb{E}_{q(z|X)}[\log p(X|z)] - KL(q(z|X) \parallel p(z))
+\end{aligned}
+$$<p>这与之前的VAE Loss完全一致！</p>
+<p><strong>结论</strong>：VAE的训练目标<strong>最大化ELBO</strong>，本质是通过近似后验 $q(z|X)$ 间接最大化模型证据 $\log p(X)$，既保证重建效果，又约束隐空间分布，从而获得生成能力。</p>
+<h1 id="flow-based-generative-model">Flow-based Generative Model<a hidden class="anchor" aria-hidden="true" href="#flow-based-generative-model">#</a></h1>
+<p>​	很多照片输入，输出是Normal Distribution</p>
+<p><img alt="image-20251222170843651" loading="lazy" src="/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/index.assets/image-20251222170843651.png"></p>
+<h1 id="generative-adversarial-networkgan">Generative Adversarial Network(GAN)<a hidden class="anchor" aria-hidden="true" href="#generative-adversarial-networkgan">#</a></h1>
+<p><img alt="image-20251222171609033" loading="lazy" src="/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/index.assets/image-20251222171609033.png"></p>
+<p><img alt="image-20251222171947177" loading="lazy" src="/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/index.assets/image-20251222171947177.png"></p>
+<h1 id="diffusion-model">Diffusion Model<a hidden class="anchor" aria-hidden="true" href="#diffusion-model">#</a></h1>
+<p><img alt="image-20251222171343954" loading="lazy" src="/posts/2026/01/%E6%B7%B1%E5%BA%A6%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/index.assets/image-20251222171343954.png"></p>
+
+
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+        </ul>
+<nav class="paginav">
+  <a class="next" href="http://localhost:1313/posts/2026/01/hugo%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Hugo使用教程</span>
+  </a>
+</nav>
+</footer>
+<div class="comments-container" style="margin-top: 50px; padding: 20px; border-top: 1px solid #eee;">
+    <h3 style="margin-bottom: 20px;">评论区</h3>
+    <script src="https://giscus.app/client.js"
+        data-repo="RisingInsight/RisingInsight.github.io"
+        data-repo-id="你的仓库ID"
+        data-category="Announcements"
+        data-category-id="你的分类ID"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+</article>
+        </div><aside class="sidebar sidebar-right">
+<aside class="sidebar sidebar-right">
+    <div class="sidebar-content">
+        <h3 class="sidebar-title">深度生成模型</h3><ul class="custom-toc-list"><div class="toc-collapse-container" style="display: block;">
+            <ul class="custom-toc-sublist"><li class="custom-toc-item level-1">
+        <a href="#%e5%9b%be%e7%89%87" class="custom-toc-link">图片</a>
+      </li><li class="custom-toc-item level-1">
+        <a href="#%e6%b7%b1%e5%ba%a6%e7%94%9f%e6%88%90%e6%a8%a1%e5%9e%8b" class="custom-toc-link">深度生成模型</a>
+      </li><li class="custom-toc-item level-1">
+        <a href="#variational-auto-encodervae" class="custom-toc-link">Variational Auto-encoder(VAE)</a>
+      </li><div class="toc-collapse-container" style="display: block;">
+            <ul class="custom-toc-sublist"><li class="custom-toc-item level-2">
+        <a href="#ae%e5%92%8cvae%e7%bb%93%e6%9e%84" class="custom-toc-link">AE和VAE结构</a>
+      </li><li class="custom-toc-item level-2">
+        <a href="#vae%e7%9a%84loss" class="custom-toc-link">VAE的Loss</a>
+      </li><li class="custom-toc-item level-2">
+        <a href="#elbo" class="custom-toc-link">ELBO</a>
+      </li></ul>
+        </div><li class="custom-toc-item level-1">
+        <a href="#flow-based-generative-model" class="custom-toc-link">Flow-based Generative Model</a>
+      </li><li class="custom-toc-item level-1">
+        <a href="#generative-adversarial-networkgan" class="custom-toc-link">Generative Adversarial Network(GAN)</a>
+      </li><li class="custom-toc-item level-1">
+        <a href="#diffusion-model" class="custom-toc-link">Diffusion Model</a>
+      </li></ul>
+    </div></ul>
+    </div>
+</aside>
+        </aside>
+    </main>
+<footer class="footer" style="text-align: center; padding: 20px 0; line-height: 1.8;">
+    
+    <div style="margin: 15px 0; font-size: 1.5rem;">
+        
+        <a href="https://github.com/RisingInsight?tab=repositories" 
+           target="_blank" rel="noopener noreferrer" 
+           title="GitHub" style="margin: 0 12px; color: #333;">
+            <i class="fa fa-github"></i> Github
+        </a>
+        
+        <a href="https://www.zhihu.com/people/zhang-zhang-jian-shi-26" 
+           target="_blank" rel="noopener noreferrer" 
+           title="知乎" style="margin: 0 12px; color: #0f88eb;">
+            <i class="fa fa-link"></i> 知乎
+        </a>
+        
+        <a href="https://blog.csdn.net/2203_75893174?spm=1000.2115.3001.5343" 
+           target="_blank" rel="noopener noreferrer" 
+           title="CSDN" style="margin: 0 12px; color: #f57c00;">
+            <i class="fa fa-code"></i> CSDN
+        </a>
+        
+        <a href="mailto:1668676243@qq.com" 
+           title="邮箱" style="margin: 0 12px; color: #ea4335;">
+            <i class="fa fa-envelope"></i> 邮箱
+        </a>
+    </div>
+
+    
+    <div style="color: #666; margin: 5px 0;">
+        本站总访问量 <span id="busuanzi_value_site_pv"></span> 次 | 本站访客数 <span id="busuanzi_value_site_uv"></span> 人
+    </div>
+
+    
+    <div style="color: #666; font-size: 0.9rem;">
+        Powered by <a href="http://localhost:1313/">RisingInsight</a> | Copyright&copy; 2026.1.1 ~ <span id="footer-end-date"></span>
+        | 基于 <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> & <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a> 搭建
+    </div>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a><script src="https://unpkg.com/typeit@8.7.1/dist/index.umd.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    
+    if (document.getElementById("typeit-header")) {
+      new TypeIt("#typeit-header", {
+        strings: ["Hello, I'm RisingInsight", "Welcome to my blog"], 
+        speed: 100,
+        loop: true,
+        breakLines: false,
+        nextStringDelay: 2000,
+        deleteSpeed: 50
+      }).go();
+    }
+  });
+</script>
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+<script>
+    const getFormattedCurrentDate = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        return `${year}.${month}.${day}`;
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const dateElement = document.getElementById('footer-end-date');
+        if (dateElement) {
+            dateElement.textContent = getFormattedCurrentDate();
+        }
+    });
+</script>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+<script src="https://unpkg.com/typeit@8.7.1/dist/index.umd.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    
+    if (document.getElementById("typeit-header")) {
+      new TypeIt("#typeit-header", {
+        strings: ["Hello, I'm RisingInsight", "Welcome to my blog"], 
+        speed: 100,
+        loop: true,
+        breakLines: false,
+        nextStringDelay: 2000,
+        deleteSpeed: 50
+      }).go();
+    }
+  });
+</script>
+
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    
+    <script>
+        const getFormattedCurrentDate = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            return `${year}.${month}.${day}`;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateElement = document.getElementById('footer-end-date');
+            if (dateElement) {
+                dateElement.textContent = getFormattedCurrentDate();
+            }
+        });
+    </script>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const yearToggles = document.querySelectorAll('.year-toggle');
+            yearToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const yearGroup = this.closest('.year-group');
+                    const yearContent = yearGroup.querySelector('.year-content');
+                    yearContent.style.display = yearContent.style.display === 'none' ? 'block' : 'none';
+                    yearGroup.classList.toggle('expanded');
+                });
+            });
+
+            
+            const monthToggles = document.querySelectorAll('.month-toggle');
+            monthToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const monthGroup = this.closest('.month-group');
+                    const monthContent = monthGroup.querySelector('.month-content');
+                    monthContent.style.display = monthContent.style.display === 'none' ? 'block' : 'none';
+                    monthGroup.classList.toggle('expanded');
+                });
+            });
+
+            
+            if (yearToggles.length > 0) {
+                yearToggles[0].click();
+                const firstMonthToggle = yearToggles[0].closest('.year-group').querySelector('.month-toggle');
+                if (firstMonthToggle) firstMonthToggle.click();
+            }
+        });
+    </script>
+
+    
+    <script>
+        let menu = document.getElementById('menu');
+        if (menu) {
+            const scrollPosition = localStorage.getItem("menu-scroll-position");
+            if (scrollPosition) {
+                menu.scrollLeft = parseInt(scrollPosition, 10);
+            }
+            
+            menu.onscroll = function () {
+                localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+            }
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                var id = this.getAttribute("href").substr(1);
+                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                        behavior: "smooth"
+                    });
+                } else {
+                    document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+                }
+                if (id === "top") {
+                    history.replaceState(null, null, " ");
+                } else {
+                    history.pushState(null, null, `#${id}`);
+                }
+            });
+        });
+    </script>
+    
+    <script>
+        var mybutton = document.getElementById("top-link");
+        window.onscroll = function () {
+            if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+                mybutton.style.visibility = "visible";
+                mybutton.style.opacity = "1";
+            } else {
+                mybutton.style.visibility = "hidden";
+                mybutton.style.opacity = "0";
+            }
+        };
+    </script>
+    
+    <script>
+        document.getElementById("theme-toggle").addEventListener("click", () => {
+            const html = document.querySelector("html");
+            if (html.dataset.theme === "dark") {
+                html.dataset.theme = 'light';
+                localStorage.setItem("pref-theme", 'light');
+            } else {
+                html.dataset.theme = 'dark';
+                localStorage.setItem("pref-theme", 'dark');
+            }
+        })
+    </script>
+    
+    <script>
+        document.querySelectorAll('pre > code').forEach((codeblock) => {
+            const container = codeblock.parentNode.parentNode;
+
+            const copybutton = document.createElement('button');
+            copybutton.classList.add('copy-code');
+            copybutton.innerHTML = 'copy';
+
+            function copyingDone() {
+                copybutton.innerHTML = 'copied!';
+                setTimeout(() => {
+                    copybutton.innerHTML = 'copy';
+                }, 2000);
+            }
+
+            copybutton.addEventListener('click', (cb) => {
+                if ('clipboard' in navigator) {
+                    navigator.clipboard.writeText(codeblock.textContent);
+                    copyingDone();
+                    return;
+                }
+
+                const range = document.createRange();
+                range.selectNodeContents(codeblock);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                try {
+                    document.execCommand('copy');
+                    copyingDone();
+                } catch (e) { };
+                selection.removeRange(range);
+            });
+
+            if (container.classList.contains("highlight")) {
+                container.appendChild(copybutton);
+            } else if (container.parentNode.firstChild == container) {
+            } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+                codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+            } else {
+                codeblock.parentNode.appendChild(copybutton);
+            }
+        });
+    </script>
+</body>
+</html>

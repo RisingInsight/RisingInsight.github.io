@@ -1,3 +1,9 @@
+---
+title: "Hugo使用教程"
+date: '2026-01-02T19:07:21+08:00'
+draft: false
+math: true  
+---
 # Hugo搭建个人博客
 
 ## Hexo和Hugo对比

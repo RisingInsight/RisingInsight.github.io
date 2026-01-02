@@ -1,31 +1,42 @@
 {{- if not (.Param "hideFooter") }}
-<footer class="footer">
-    <!-- 新增：第一行 - 本站访问量 + 访客数（单独一行，位于原有内容上方） -->
-    <div style="text-align: center; margin-bottom: 6px;">
+<footer class="footer" style="text-align: center; padding: 20px 0; line-height: 1.8;">
+    <!-- 1. 自定义社交链接（强制显示） -->
+    <div style="margin: 15px 0; font-size: 1.5rem;">
+        <!-- GitHub -->
+        <a href="https://github.com/RisingInsight?tab=repositories" 
+           target="_blank" rel="noopener noreferrer" 
+           title="GitHub" style="margin: 0 12px; color: #333;">
+            <i class="fa fa-github"></i> Github
+        </a>
+        <!-- 知乎 -->
+        <a href="https://www.zhihu.com/people/zhang-zhang-jian-shi-26" 
+           target="_blank" rel="noopener noreferrer" 
+           title="知乎" style="margin: 0 12px; color: #0f88eb;">
+            <i class="fa fa-link"></i> 知乎
+        </a>
+        <!-- CSDN -->
+        <a href="https://blog.csdn.net/2203_75893174?spm=1000.2115.3001.5343" 
+           target="_blank" rel="noopener noreferrer" 
+           title="CSDN" style="margin: 0 12px; color: #f57c00;">
+            <i class="fa fa-code"></i> CSDN
+        </a>
+        <!-- 邮箱 -->
+        <a href="mailto:1668676243@qq.com" 
+           title="邮箱" style="margin: 0 12px; color: #ea4335;">
+            <i class="fa fa-envelope"></i> 邮箱
+        </a>
+    </div>
+
+    <!-- 2. 访问量统计 -->
+    <div style="color: #666; margin: 5px 0;">
         本站总访问量 <span id="busuanzi_value_site_pv"></span> 次 | 本站访客数 <span id="busuanzi_value_site_uv"></span> 人
     </div>
 
-    {{- if not site.Params.footer.hideCopyright }}
-        {{- if site.Copyright }}
-        <span>{{ site.Copyright | markdownify }}</span>
-        {{- else }}
-        <!-- 已修改：将固定构建时间替换为JS动态填充的占位符 -->
-        <span> Powered by <a href="{{ "" | absLangURL }}"> RisingInsight</a> | Copyright&copy; 2026.1.1 ~ <span id="footer-end-date"></span> | </span>
-        {{- end }}
-        <!-- {{- print " · "}} -->
-    {{- end }}
-
-    {{- with site.Params.footer.text }}
-        {{ . | markdownify }}
-        {{- print " · "}}
-    {{- end }}
-
-    <!-- 原有Powered by信息保持不变 -->
-    <span>
-        基于
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a>  &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a> 搭建
-    </span>
+    <!-- 3. 版权+搭建信息 -->
+    <div style="color: #666; font-size: 0.9rem;">
+        Powered by <a href="{{ "" | absLangURL }}">RisingInsight</a> | Copyright&copy; 2026.1.1 ~ <span id="footer-end-date"></span>
+        | 基于 <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> & <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a> 搭建
+    </div>
 </footer>
 {{- end }}
 
@@ -39,21 +50,19 @@
 
 {{- partial "extend_footer.html" . }}
 
-<!-- 引入不蒜子统计脚本（新增：用于访问量/访客数统计） -->
+<!-- 不蒜子统计脚本 -->
 <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 
-<!-- 新增：动态填充页脚结束日期的JS（放在原有脚本之前，确保优先执行） -->
+<!-- 动态填充页脚日期 -->
 <script>
-    // 获取客户端当前日期，并格式化为 "年.月.日" 格式（与原有格式一致）
     const getFormattedCurrentDate = () => {
         const now = new Date();
         const year = now.getFullYear();
-        const month = now.getMonth() + 1; // JavaScript月份从0开始，需+1
+        const month = now.getMonth() + 1;
         const day = now.getDate();
         return `${year}.${month}.${day}`;
     };
 
-    // 页面加载完成后，替换占位符内容
     document.addEventListener('DOMContentLoaded', () => {
         const dateElement = document.getElementById('footer-end-date');
         if (dateElement) {
@@ -65,7 +74,6 @@
 <script>
     let menu = document.getElementById('menu');
     if (menu) {
-        // Set the scroll position
         const scrollPosition = localStorage.getItem("menu-scroll-position");
         if (scrollPosition) {
             menu.scrollLeft = parseInt(scrollPosition, 10);
@@ -94,7 +102,6 @@
             }
         });
     });
-
 </script>
 
 {{- if (not site.Params.disableScrollToTop) }}
@@ -109,7 +116,6 @@
             mybutton.style.opacity = "0";
         }
     };
-
 </script>
 {{- end }}
 
@@ -125,7 +131,6 @@
             localStorage.setItem("pref-theme", 'dark');
         }
     })
-
 </script>
 {{- end }}
 
@@ -167,12 +172,9 @@
         if (container.classList.contains("highlight")) {
             container.appendChild(copybutton);
         } else if (container.parentNode.firstChild == container) {
-            // td containing LineNos
         } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            // table containing LineNos and code
             codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
         } else {
-            // code blocks not having highlight as parent class
             codeblock.parentNode.appendChild(copybutton);
         }
     });

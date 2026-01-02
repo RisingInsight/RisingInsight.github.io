@@ -1,0 +1,24 @@
+{{- $scratch := newScratch }}
+
+{{- if not .Date.IsZero -}}
+{{- /* 增加“发布时间：”标签 */}}
+{{- $scratch.Add "meta" (slice (printf "<span title='%s'>发布时间：%s</span>" (.Date) (.Date | time.Format (default "2006-01-02 15:04:05" site.Params.DateFormat)))) }}
+{{- end }}
+
+{{- if not (.Param "hideAuthor") -}}
+{{- with (partial "author.html" .) }}
+{{- /* 增加“发布者：”标签 */}}
+{{- $scratch.Add "meta" (slice (printf "<span>发布者：%s</span>" .)) }}
+{{- end }}
+{{- end }}
+
+{{- if (.Param "ShowReadingTime") -}}
+{{- /* 增加“预计阅读时间：”标签 */}}
+{{- $scratch.Add "meta" (slice (printf "<span>预计阅读时间：%s</span>" (i18n "read_time" .ReadingTime | default (printf "%d min" .ReadingTime)))) }}
+{{- end }}
+
+
+{{- with ($scratch.Get "meta") }}
+{{- /* 把分隔符从“·”改成“|” */}}
+{{- delimit . "&nbsp;|&nbsp;" | safeHTML -}}
+{{- end -}}

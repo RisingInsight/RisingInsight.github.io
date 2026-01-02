@@ -1,183 +1,279 @@
-/* =================================================================
-   保留原有首页居中样式（无需修改）
-   ================================================================= */
-article.first-entry.home-info {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-}
-article.first-entry.home-info .entry-content {
-    width: 100% !important;
-    max-width: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-}
-.home-hero-image {
-    display: block !important;
-    margin: 0 auto 1.5rem auto !important;
-}
-article.first-entry.home-info .entry-footer {
-    display: flex !important;
-    justify-content: center !important;
-    width: 100% !important;
-}
-.social-icons {
-    display: flex !important;
-    justify-content: center !important;
+/* ======================================
+   全局全宽布局
+   ====================================== */
+.full-width-container {
+    display: flex;
+    width: 100%;
+    padding: 1.5rem 0;
+    align-items: flex-start;
+    box-sizing: border-box;
+    gap: 2rem; /* 增加栏间间距，避免拥挤 */
 }
 
-/* =================================================================
-   分页样式（适配当前渲染结构，强制统一+居中+精致化）
-   ================================================================= */
-/* 1. 分页容器：强制居中+合理间距 */
-.pagination-container, #custom-pagination {
-    width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 30px 0 !important;
-    margin: 0 auto !important;
+/* ======================================
+   左侧归档侧边栏
+   ====================================== */
+.sidebar.sidebar-left {
+    width: 250px;
+    position: sticky;
+    top: 2rem;
+    align-self: flex-start;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    margin-left: 1rem;
+}
+.sidebar.sidebar-left .sidebar-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    width: 100%;
+}
+.sidebar.sidebar-left .sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
 }
 
-/* 2. 分页内部容器：统一排列+间距 */
-.pagination-inner, .pagination-container nav {
-    display: inline-flex !important;
-    gap: 8px !important; /* 按钮之间间距 */
-    align-items: center !important;
-    justify-content: center !important;
+/* ======================================
+   年份+月份双折叠样式
+   ====================================== */
+.year-group {
+    margin: 0.8rem 0;
+}
+.year-toggle {
+    background: transparent;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    width: 100%;
+    text-align: left;
+    transition: color 0.2s;
+}
+.year-toggle:hover {
+    color: #10b981;
 }
 
-/* 3. 所有分页按钮（包括上下页/数字）：统一样式+强制居中 */
-.pagination-item, 
-.pagination-container a, 
-.pagination-container span {
-    /* 基础布局：强制居中 */
-    display: inline-flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    /* 尺寸+圆角：统一按钮大小 */
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 8px !important; /* 圆角更精致 */
-    /* 边框+背景：统一基础样式 */
-    border: 1px solid #e5e7eb !important;
-    background: #ffffff !important;
-    color: #374151 !important;
-    /* 文字样式：居中+统一 */
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    line-height: 1 !important;
-    text-decoration: none !important;
-    /* 过渡：hover丝滑 */
-    transition: all 0.2s ease !important;
-    /* 清除默认间距/换行 */
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
+.month-group {
+    margin: 0.6rem 0;
+    padding-left: 1rem;
+}
+.month-toggle {
+    background: transparent;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0;
+    width: 100%;
+    text-align: left;
+    transition: color 0.2s;
+}
+.month-toggle:hover {
+    color: #10b981;
 }
 
-/* 4. 上下页按钮：适配文字宽度（不再强制40px宽） */
-.pagination-item.arrow,
-.pagination-container a[href*="page"]:not(.number),
-.pagination-container span:not(.number) {
-    width: auto !important;
-    padding: 0 16px !important;
+.toggle-icon {
+    font-size: 0.8rem;
+    color: #888;
+    transition: transform 0.2s;
+}
+.year-group.expanded .toggle-icon,
+.month-group.expanded .toggle-icon {
+    transform: rotate(90deg);
+    color: #10b981;
 }
 
-/* 5. 当前页（绿色按钮）：高亮+白字 */
-.pagination-item.active,
-.pagination-container span[style*="background"] {
-    background: #10b981 !important; /* 柔和绿，可改 */
-    border-color: #10b981 !important;
-    color: #ffffff !important;
+.year-content {
+    margin-top: 0.5rem;
+}
+.month-content {
+    margin-top: 0.4rem;
+    padding-left: 1rem;
 }
 
-/* 6. hover效果：变绿+上浮 */
-.pagination-container a:hover:not(.disabled):not(.active) {
-    background: #10b981 !important;
-    border-color: #10b981 !important;
-    color: #ffffff !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15) !important;
+.archive-post-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.archive-post-list li {
+    margin: 0.4rem 0;
+    padding: 0.2rem 0.5rem;
+    border-left: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+.archive-post-list li:hover {
+    border-left: 2px solid #10b981;
+}
+.archive-post-list a {
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9rem;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.5;
+    max-width: 100%;
 }
 
-/* 7. 禁用状态（无链接的上下页）：灰化 */
-.pagination-item.disabled,
-.pagination-container span:not(.active):not([href]) {
-    background: #f9fafb !important;
-    color: #9ca3af !important;
-    border-color: #e5e7eb !important;
-    cursor: not-allowed !important;
+/* ======================================
+   中间内容区
+   ====================================== */
+.content-area {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+.list .content-area, .archive-page .content-area {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-/* 8. 深色模式适配 */
+/* ======================================
+   右侧目录强制显示样式
+   ====================================== */
+.sidebar.sidebar-right {
+    display: block !important; /* 强制显示容器 */
+    width: 300px;
+    position: sticky;
+    top: 2rem;
+    align-self: flex-start;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    margin-right: 1rem;
+    box-sizing: border-box;
+}
+.sidebar.sidebar-right .sidebar-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    width: 90%;
+    box-sizing: border-box;
+}
+/* 空目录提示 */
+.toc-empty {
+    font-size: 0.95rem;
+    color: #888;
+    padding: 0.5rem;
+}
+/* 层级区分（h1-h3） */
+.custom-toc-item.level-1::before {
+  content: "● ";
+  color: #10b981;
+  font-weight: 600;
+  display: inline-block;
+}
+.custom-toc-item.level-2::before {
+  content: "  ○ ";
+  color: #6c757d;
+  display: inline-block;
+}
+.custom-toc-item.level-3::before {
+  content: "    ■ ";
+  color: #868e96;
+  display: inline-block;
+}
+/* TOC基础样式 */
+.custom-toc-list, .custom-toc-sublist {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+}
+.custom-toc-item {
+  margin: 0.3rem 0 !important;
+}
+.custom-toc-link {
+  color: #495057 !important;
+  text-decoration: none !important;
+  font-size: 0.95rem;
+  white-space: normal !important;
+  line-height: 1.5;
+}
+.custom-toc-link.active {
+  color: #10b981 !important;
+  font-weight: 500;
+}
+
+/* ======================================
+   深色模式适配
+   ====================================== */
 @media (prefers-color-scheme: dark) {
-    .pagination-item,
-    .pagination-container a,
-    .pagination-container span {
-        background: #1f2937 !important;
-        border-color: #374151 !important;
-        color: #e5e7eb !important;
+    .sidebar.sidebar-left .sidebar-content, 
+    .sidebar.sidebar-right .sidebar-content {
+        background: #2d3748;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
-    .pagination-item.active,
-    .pagination-container span[style*="background"] {
-        background: #10b981 !important;
-        border-color: #10b981 !important;
+    .sidebar.sidebar-left .sidebar-title,
+    .sidebar.sidebar-right .sidebar-title {
+        color: #e2e8f0;
+        border-bottom-color: #4a5568;
     }
-    .pagination-item.disabled,
-    .pagination-container span:not(.active):not([href]) {
-        background: #111827 !important;
-        border-color: #374151 !important;
-        color: #6b7280 !important;
+    .year-toggle, .month-toggle {
+        color: #e2e8f0;
+    }
+    .year-toggle:hover, .month-toggle:hover {
+        color: #10b981;
+    }
+    .toggle-icon {
+        color: #a0aec0;
+    }
+    .archive-post-list a, .custom-toc-link {
+        color: #d1d5db !important;
+    }
+    .archive-post-list li:hover, .custom-toc-item:hover {
+        border-left-color: #10b981;
+    }
+    .custom-toc-link.active {
+        color: #10b981 !important;
+    }
+    .post-single {
+        color: #e2e8f0;
+    }
+    .post-title, .post-content h2, .post-content h3 {
+        color: #f7fafc;
+    }
+    .post-meta {
+        color: #a0aec0;
+        border-bottom-color: #4a5568;
+    }
+    .post-content pre {
+        background-color: #1a202c;
+    }
+    .post-content code {
+        background-color: rgba(16, 185, 129, 0.2);
     }
 }
 
-/* 9. 移动端适配：缩小按钮 */
-@media (max-width: 640px) {
-    .pagination-item,
-    .pagination-container a,
-    .pagination-container span {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 14px !important;
+/* ======================================
+   移动端适配
+   ====================================== */
+@media (max-width: 992px) {
+    .full-width-container {
+        flex-direction: column;
+        gap: 1rem;
     }
-    .pagination-item.arrow,
-    .pagination-container a[href*="page"]:not(.number),
-    .pagination-container span:not(.number) {
-        padding: 0 12px !important;
-        height: 36px !important;
+    .sidebar.sidebar-left, .sidebar.sidebar-right {
+        width: 100%;
+        position: static;
+        max-height: none;
+        margin-left: 0;
+        margin-right: 0;
     }
-    .pagination-inner, .pagination-container nav {
-        gap: 6px !important;
-    }
-}
-
-/* =================================================================
-   页脚样式：两行字体大小一致 + 缩小间距
-   ================================================================= */
-/* 1. 统一页脚所有元素字体大小（确保两行一致） */
-.footer {
-    font-size: 14px !important; /* 统一字体大小，可按需调整为13px/15px */
-    line-height: 1.4 !important; /* 统一行高，让文字更紧凑 */
-}
-/* 强制页脚内所有文本（div、span、a）字体大小与.footer一致，避免差异 */
-.footer div,
-.footer span,
-.footer a {
-    font-size: inherit !important; /* 继承.footer的字体大小，确保两行一致 */
-    margin: 0 !important; /* 清除默认间距 */
-    padding: 0 !important;
-}
-
-/* 2. 缩小统计行（第一行）与原有页脚行（第二行）的间距 */
-.footer > div:first-child {
-    margin-bottom: 3px !important; /* 关键：缩小两行间距，默认6px改为3px，可按需调整2px-4px */
-}
-
-/* 3. 保留原有页脚文字清晰性（可选，无需修改） */
-.footer span {
-    line-height: 1.5 !important;
 }
