@@ -1,0 +1,69 @@
+{{- with site.Params.homeInfoParams }}
+<article class="first-entry home-info" style="text-align: center;">
+    <!-- 引用static目录下的GIF图 -->
+    <div class="home-gif">
+        <img src="/home-bg.gif" alt="首页背景GIF" style="max-width: 300px; margin: 0 auto; display: block;">
+    </div>
+
+    <!-- 打字机文字容器 -->
+    <div class="entry-content" style="margin-top: 1rem; font-size: 1.2rem; min-height: 2rem;">
+        <span id="typewriter-text" style="display: inline-block;"></span>
+    </div>
+
+    <footer class="entry-footer">
+        {{ partial "social_icons.html" (dict "align" site.Params.homeInfoParams.AlignSocialIconsTo) }}
+    </footer>
+</article>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. 定义需要循环切换的10个句子（替换为你想要的内容）
+    const sentences = [
+        "Welcome to my blog",
+        "记录生活与技术的点滴",
+        "分享我的学习与成长",
+        "探索编程的乐趣",
+        "这里有我的日常思考",
+        "期待与您交流",
+        "一起进步，共同成长",
+        "保持热爱，奔赴山海",
+        "生活不止眼前的代码",
+        "感谢您的来访"
+    ];
+
+    const typewriterElement = document.getElementById('typewriter-text');
+    const typeInterval = 100;    // 打字速度（毫秒/字符）
+    const stayInterval = 2000;   // 每个句子打完后停留的时间（毫秒）
+    const deleteInterval = 50;   // 删除文字的速度（毫秒/字符）
+    let currentSentenceIndex = 0; // 当前显示的句子索引
+
+    // 打字函数：逐字打印当前句子
+    function typeWriter(text, index) {
+        if (index < text.length) {
+            typewriterElement.textContent += text.charAt(index);
+            index++;
+            setTimeout(() => typeWriter(text, index), typeInterval);
+        } else {
+            // 打完后停留，再切换下一句
+            setTimeout(deleteText, stayInterval);
+        }
+    }
+
+    // 删除函数：逐字清空当前句子（也可直接用typewriterElement.textContent = ""快速清空）
+    function deleteText() {
+        const currentText = typewriterElement.textContent;
+        if (currentText.length > 0) {
+            typewriterElement.textContent = currentText.slice(0, -1);
+            setTimeout(deleteText, deleteInterval);
+        } else {
+            // 切换到下一句（循环）
+            currentSentenceIndex = (currentSentenceIndex + 1) % sentences.length;
+            typeWriter(sentences[currentSentenceIndex], 0);
+        }
+    }
+
+    // 启动打字机（从第一个句子开始）
+    typeWriter(sentences[currentSentenceIndex], 0);
+});
+</script>
+{{- end -}}

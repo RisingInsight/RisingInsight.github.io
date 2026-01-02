@@ -122,7 +122,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>首页 | RisingInsight</title>
-        <link rel="stylesheet" href="/css/extended.min.9575687382880731bc5e265493de50f9ee6d702ca7e0db3151f44ee03871bc73.css" integrity="sha256-lXVoc4KIBzG8XiZUk95Q&#43;e5tcCyn4NsxUfRO4DhxvHM=" />
+        <link rel="stylesheet" href="/css/extended.min.30cc5d4181d98264d6146b96c9b02df1f0b476213af340a9975e4ecc69f439a6.css" integrity="sha256-MMxdQYHZgmTWFGuWybAt8fC0diE680Cpl15OzGn0OaY=" />
 </head>
 <body class="list" id="top">
     <header class="header" style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999; max-width: 100%; width: 100%; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
@@ -212,25 +212,75 @@
     <main class="full-width-container" style="display: flex; gap: 2rem; padding: 20px 0;"><aside class="sidebar sidebar-left">
 
         </aside><div class="content-area" style="flex: 1; max-width: 1200px;">   
-<article class="first-entry home-info">
-    <header class="entry-header">
-        <h1></h1>
-    </header>
-    <div class="entry-content">
-        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
-  <img src="/home-bg.gif" style="display: block; margin: 0 auto 20px auto; max-width: 300px;" alt="Hero">
-  <div style="font-family: monospace; font-size: 1.5rem; color: #333;">
-     <span id="typeit-header"></span>_
-  </div>
-</div>
-
+<article class="first-entry home-info" style="text-align: center;">
+    
+    <div class="home-gif">
+        <img src="/home-bg.gif" alt="首页背景GIF" style="max-width: 300px; margin: 0 auto; display: block;">
     </div>
+
+    
+    <div class="entry-content" style="margin-top: 1rem; font-size: 1.2rem; min-height: 2rem;">
+        <span id="typewriter-text" style="display: inline-block;"></span>
+    </div>
+
     <footer class="entry-footer">
         <div class="social-icons" >
 </div>
 
     </footer>
 </article>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const sentences = [
+        "Welcome to my blog",
+        "记录生活与技术的点滴",
+        "分享我的学习与成长",
+        "探索编程的乐趣",
+        "这里有我的日常思考",
+        "期待与您交流",
+        "一起进步，共同成长",
+        "保持热爱，奔赴山海",
+        "生活不止眼前的代码",
+        "感谢您的来访"
+    ];
+
+    const typewriterElement = document.getElementById('typewriter-text');
+    const typeInterval = 100;    
+    const stayInterval = 2000;   
+    const deleteInterval = 50;   
+    let currentSentenceIndex = 0; 
+
+    
+    function typeWriter(text, index) {
+        if (index < text.length) {
+            typewriterElement.textContent += text.charAt(index);
+            index++;
+            setTimeout(() => typeWriter(text, index), typeInterval);
+        } else {
+            
+            setTimeout(deleteText, stayInterval);
+        }
+    }
+
+    
+    function deleteText() {
+        const currentText = typewriterElement.textContent;
+        if (currentText.length > 0) {
+            typewriterElement.textContent = currentText.slice(0, -1);
+            setTimeout(deleteText, deleteInterval);
+        } else {
+            
+            currentSentenceIndex = (currentSentenceIndex + 1) % sentences.length;
+            typeWriter(sentences[currentSentenceIndex], 0);
+        }
+    }
+
+    
+    typeWriter(sentences[currentSentenceIndex], 0);
+});
+</script>
 
 <article class="post-entry"> 
   <header class="entry-header">
@@ -252,55 +302,29 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">dsfafsa
+    <h2 class="entry-hint-parent">公式和代码测试
     </h2>
   </header>
-  <footer class="entry-footer"><span title='2026-01-02 18:07:21 +0800 CST'>发布时间：2026-01-02 18:07:21</span>&nbsp;|&nbsp;<span>发布者：RisingInsight</span>&nbsp;|&nbsp;<span>预计阅读时间：0 min</span></footer>
-  <a class="entry-link" aria-label="post link to dsfafsa" href="http://localhost:1313/posts/2026/01/dsfafsa/"></a>
+  <footer class="entry-footer"><span title='2026-01-01 12:00:00 +0800 CST'>发布时间：2026-01-01 12:00:00</span>&nbsp;|&nbsp;<span>发布者：RisingInsight</span>&nbsp;|&nbsp;<span>预计阅读时间：1 min</span></footer>
+  <a class="entry-link" aria-label="post link to 公式和代码测试" href="http://localhost:1313/posts/2026/01/%E5%85%AC%E5%BC%8F%E5%92%8C%E4%BB%A3%E7%A0%81%E6%B5%8B%E8%AF%95/"></a>
 </article>
 
 <article class="post-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7_hu_a6860bf7c6fab1f.jpg 360w,http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7_hu_1f240c5381c145f.jpg 480w,http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7_hu_d0f555ac40033826.jpg 720w,http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7_hu_fc6491f57066dca9.jpg 1080w,http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7_hu_f83a217d99e9c501.jpg 1500w,http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7.jpg 1920w'
+                src="http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/picture7.jpg"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1920" height="1280"
+                alt="天空图片">
+</figure>
   <header class="entry-header">
-    <h2 class="entry-hint-parent">dsfda
+    <h2 class="entry-hint-parent">图片测试
     </h2>
   </header>
-  <footer class="entry-footer"><span title='2026-01-02 18:04:55 +0800 CST'>发布时间：2026-01-02 18:04:55</span>&nbsp;|&nbsp;<span>发布者：RisingInsight</span>&nbsp;|&nbsp;<span>预计阅读时间：1 min</span></footer>
-  <a class="entry-link" aria-label="post link to dsfda" href="http://localhost:1313/posts/2026/01/dsfda/"></a>
+  <footer class="entry-footer"><span title='2026-01-01 00:00:00 +0000 UTC'>发布时间：2026-01-01 00:00:00</span>&nbsp;|&nbsp;<span>发布者：RisingInsight</span>&nbsp;|&nbsp;<span>预计阅读时间：1 min</span></footer>
+  <a class="entry-link" aria-label="post link to 图片测试" href="http://localhost:1313/posts/2026/01/%E5%9B%BE%E7%89%87%E6%B5%8B%E8%AF%95/"></a>
 </article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">copy
-    </h2>
-  </header>
-  <footer class="entry-footer"><span title='2026-01-02 00:00:00 +0000 UTC'>发布时间：2026-01-02 00:00:00</span>&nbsp;|&nbsp;<span>发布者：RisingInsight</span>&nbsp;|&nbsp;<span>预计阅读时间：1 min</span></footer>
-  <a class="entry-link" aria-label="post link to copy" href="http://localhost:1313/posts/2026/01/copy/"></a>
-</article>
-
-<div style="width:100%;text-align:center;padding:30px 0;margin:0 auto;">
-  
-  <nav style="display:inline-flex;gap:8px;align-items:center;justify-content:center;">
-    
-    <span style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#9ca3af;font-size:15px;cursor:not-allowed;">« 上一页</span>
-
-      
-      
-
-    
-
-     
-        
-        <span style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-size:15px;font-weight:500;">1</span> 
-        
-        <a href="/page/2/" style="display:inline-flex;justify-content:center;align-items:center;width:40px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">2</a>
-
-    
-
-    
-    <a href="/page/2/" style="display:inline-flex;justify-content:center;align-items:center;width:auto;padding:0 16px;height:40px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:15px;text-decoration:none;transition:all 0.2s;">下一页 »</a>
-  </nav>
-</div>
-
         </div><aside class="sidebar sidebar-right">
         </aside>
     </main>
