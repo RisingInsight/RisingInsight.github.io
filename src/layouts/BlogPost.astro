@@ -1,0 +1,241 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import AuthorCard from '../components/AuthorCard.astro';
+import { getTagColor, getReadTime } from '../utils/blog';
+
+type Props = CollectionEntry<'blog'>['data'] & { id?: string; body?: string };
+
+const { title, description, pubDate, updatedDate, heroImage, tags, categories, body } = Astro.props;
+
+// 计算阅读时间
+const readTime = getReadTime(body || '');
+
+// 面包屑
+const breadcrumbItems = [
+  { label: '首页', href: '/' },
+  { label: '文章', href: '/blog/' },
+  ...(categories && categories.length > 0 ? [{ label: categories[0] }] : []),
+  { label: title },
+];
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={`${title} | RisingInsight's Blog`} description={description} type="article" />
+  </head>
+  <body>
+    <Header />
+
+    <!-- 阅读进度条 -->
+    <div id="reading-progress" class="reading-progress" style="width: 0%"></div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-20">
+      <div class="flex gap-8 lg:gap-12">
+        <!-- 左侧：作者卡片（大屏显示） -->
+        <aside class="hidden lg:block w-52 flex-shrink-0">
+          <AuthorCard />
+        </aside>
+
+        <!-- 中间：文章主体 -->
+        <div class="min-w-0 flex-1 max-w-3xl">
+      <article>
+        <!-- 面包屑 -->
+        <Breadcrumb items={breadcrumbItems} />
+
+        <!-- 文章头部 -->
+        <header class="mb-10 animate-fade-up">
+          <!-- 标签 -->
+          {tags && tags.length > 0 && (
+            <div class="flex flex-wrap gap-2 mb-5">
+              {tags.map((tag) => (
+                <span class={`tag ${getTagColor(tag)}`}>{tag}</span>
+              ))}
+            </div>
+          )}
+
+          <!-- 标题 -->
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight mb-5 tracking-tight">
+            {title}
+          </h1>
+
+          <!-- 描述 -->
+          <p class="text-lg text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+            {description}
+          </p>
+
+          <!-- 元信息 -->
+          <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400 dark:text-slate-500 pb-6 border-b border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <time datetime={pubDate.toISOString()}>
+                <FormattedDate date={pubDate} />
+              </time>
+            </div>
+            {updatedDate && (
+              <div class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <time datetime={updatedDate.toISOString()}>
+                  更新 <FormattedDate date={updatedDate} />
+                </time>
+              </div>
+            )}
+            {categories && categories.length > 0 && (
+              <div class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span>{categories.join(' / ')}</span>
+              </div>
+            )}
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{readTime}</span>
+            </div>
+          </div>
+
+          <!-- 封面图 -->
+          {heroImage && (
+            <div class="mt-8 rounded-2xl overflow-hidden shadow-lg">
+              <img src={heroImage} alt={title} class="w-full" loading="lazy" />
+            </div>
+          )}
+        </header>
+
+        <!-- 文章正文 -->
+        <!-- TOC：浮动目录用 fixed 定位不受位置影响，内嵌折叠目录在此显示 -->
+        <TableOfContents />
+        <div class="prose animate-fade-up animate-delay-1">
+          <slot />
+        </div>
+
+        <!-- 文章底部 -->
+        <div class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700">
+          <div class="flex items-center justify-between">
+            <button
+              id="back-to-top"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light bg-slate-100 dark:bg-slate-800 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-xl transition-all"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              返回顶部
+            </button>
+
+            <a
+              href="/blog/"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light bg-slate-100 dark:bg-slate-800 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-xl transition-all"
+            >
+              全部文章
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- 上下篇导航 -->
+        <nav id="post-nav" class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4"></nav>
+      </article>
+        </div>
+      </div>
+    </main>
+
+    <!-- 全局回到顶部浮动按钮 -->
+    <button
+      id="scroll-top-btn"
+      class="fixed bottom-6 right-6 z-40 w-11 h-11 flex items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 opacity-0 pointer-events-none transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      aria-label="回到顶部"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
+    </button>
+
+    <Footer />
+
+    <!-- 图片灯箱 -->
+    <div id="lightbox" class="lightbox-overlay">
+      <button id="lightbox-close" class="lightbox-close" aria-label="关闭">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      <img id="lightbox-img" src="" alt="" />
+    </div>
+  </body>
+</html>
+
+<script>
+  // 阅读进度条
+  const progressBar = document.getElementById('reading-progress');
+  // 浮动回到顶部按钮
+  const scrollTopBtn = document.getElementById('scroll-top-btn');
+
+  function onScroll() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    if (progressBar) {
+      progressBar.style.width = progress + '%';
+    }
+    // 浮动按钮在滚动超过 300px 后显示
+    if (scrollTopBtn) {
+      if (scrollTop > 300) {
+        scrollTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+        scrollTopBtn.classList.add('opacity-100');
+      } else {
+        scrollTopBtn.classList.add('opacity-0', 'pointer-events-none');
+        scrollTopBtn.classList.remove('opacity-100');
+      }
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // 回到顶部
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('back-to-top')?.addEventListener('click', scrollToTop);
+  scrollTopBtn?.addEventListener('click', scrollToTop);
+
+  // 图片灯箱
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
+  const lightboxClose = document.getElementById('lightbox-close');
+
+  document.querySelectorAll('.prose img').forEach(img => {
+    img.addEventListener('click', () => {
+      if (lightbox && lightboxImg) {
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  });
+
+  const closeLightbox = () => {
+    if (lightbox) {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  };
+
+  lightbox?.addEventListener('click', closeLightbox);
+  lightboxClose?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>

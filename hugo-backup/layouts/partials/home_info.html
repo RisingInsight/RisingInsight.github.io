@@ -1,0 +1,46 @@
+{{- with site.Params.homeInfoParams }}
+<article class="academic-hero">
+    <!-- 头像 -->
+    <img class="avatar" src="/avatar.jpg" alt="RisingInsight" />
+    <!-- 姓名 -->
+    <div class="name">{{ .Title }}</div>
+    <!-- 身份/简介 -->
+    <div class="title">{{ .Content }}</div>
+    <!-- 个人介绍 -->
+    <p class="bio">
+        {{ with site.Params.description }}{{ . }}{{ end }}
+    </p>
+    <!-- 研究方向标签 -->
+    <div class="interests">
+        <span class="interest-tag">遥感图像生成</span>
+        <span class="interest-tag">深度学习</span>
+        <span class="interest-tag">扩散模型</span>
+        <span class="interest-tag">多模态学习</span>
+        <span class="interest-tag">PyTorch Lightning</span>
+    </div>
+    <!-- 社交链接 -->
+    <div class="social-links">
+        <a href="https://github.com/RisingInsight" target="_blank" rel="noopener noreferrer" title="GitHub">
+            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+        </a>
+        <a href="https://www.zhihu.com/people/zhang-zhang-jian-shi-26" target="_blank" rel="noopener noreferrer" title="知乎">
+            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M5.721 0C2.251 0 0 2.25 0 5.719V18.28C0 21.751 2.252 24 5.721 24h12.56C21.751 24 24 21.75 24 18.281V5.72C24 2.249 21.75 0 18.281 0zm1.964 4.078h5.202c.105 0 .165.055.165.165v.783c0 .11-.06.165-.165.165H8.581c-.11 0-.165-.055-.165-.165v-.783c0-.11.055-.165.165-.165zm-.001 3.3h5.203c.11 0 .165.056.165.166v.782c0 .11-.056.166-.165.166H8.684c-.11 0-.165-.055-.165-.165v-.784c0-.11.055-.166.165-.166zm7.592 4.397h1.767v5.637h-1.767zm-7.707-.633h1.667c1.555 0 2.682.727 2.682 2.356v.042c0 1.63-1.127 2.394-2.716 2.394H7.569zm1.552 3.547h.115c.788 0 1.297-.338 1.297-1.027v-.041c0-.688-.51-1.028-1.297-1.028h-.115z"/>
+            </svg>
+        </a>
+        <a href="https://blog.csdn.net/2203_75893174" target="_blank" rel="noopener noreferrer" title="CSDN">
+            <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M3.5 8.5a1 1 0 011-1h2a1 1 0 010 2h-2a1 1 0 01-1-1zM8 3.5a1.5 1.5 0 013 0V4h2V3.5a1.5 1.5 0 013 0V4h1.5A2.5 2.5 0 0120 6.5v12a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-12A2.5 2.5 0 016.5 4H8V3.5zm10 13V9H6v7.5a1 1 0 001 1h10a1 1 0 001-1zM8 10.5v2h2v-2H8zm4 0v2h2v-2h-2z"/>
+            </svg>
+        </a>
+        <a href="mailto:1668676243@qq.com" title="邮箱">
+            <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M22 7l-10 7L2 7"/>
+            </svg>
+        </a>
+    </div>
+</article>
+{{- end -}}

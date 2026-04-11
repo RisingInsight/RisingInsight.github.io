@@ -1,0 +1,273 @@
+---
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const searchData = allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .map(post => ({
+    id: post.id,
+    title: post.data.title,
+    description: post.data.description,
+    tags: post.data.tags || [],
+    categories: post.data.categories || [],
+    date: post.data.pubDate,
+  }));
+---
+
+<!-- 搜索触发按钮 -->
+<button id="search-trigger" class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light hover:bg-primary/5 dark:hover:bg-primary/10 transition-all" aria-label="搜索" title="搜索文章 (Ctrl+K)">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+</button>
+
+<!-- 搜索弹窗 -->
+<div id="search-modal" class="search-modal">
+  <div class="search-backdrop"></div>
+  <div class="search-panel">
+    <!-- 搜索输入 -->
+    <div class="search-input-wrap">
+      <svg class="search-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input id="search-input" type="text" placeholder="搜索文章标题、标签..." autocomplete="off" class="search-input" />
+      <kbd class="search-kbd">ESC</kbd>
+    </div>
+
+    <!-- 搜索结果 -->
+    <div id="search-results" class="search-results">
+      <div class="search-empty-state">
+        <div class="text-4xl mb-3">🔍</div>
+        <p class="text-sm text-slate-400 dark:text-slate-500">输入关键词开始搜索</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ searchData }}>
+  const trigger = document.getElementById('search-trigger');
+  const modal = document.getElementById('search-modal');
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+  const backdrop = modal?.querySelector('.search-backdrop');
+
+  function openSearch() {
+    modal?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => input?.focus(), 100);
+  }
+  function closeSearch() {
+    modal?.classList.remove('active');
+    document.body.style.overflow = '';
+    if (input) input.value = '';
+    if (results) results.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">🔍</div><p class="text-sm text-slate-400 dark:text-slate-500">输入关键词开始搜索</p></div>';
+  }
+
+  trigger?.addEventListener('click', openSearch);
+  backdrop?.addEventListener('click', closeSearch);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSearch();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      openSearch();
+    }
+  });
+
+  input?.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) {
+      results.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">🔍</div><p class="text-sm text-slate-400 dark:text-slate-500">输入关键词开始搜索</p></div>';
+      return;
+    }
+    const matched = searchData.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.tags.some(t => t.toLowerCase().includes(q)) ||
+      p.categories.some(c => c.toLowerCase().includes(q))
+    );
+    if (matched.length === 0) {
+      results.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">😕</div><p class="text-sm text-slate-400 dark:text-slate-500">没有找到相关文章</p></div>';
+      return;
+    }
+    results.innerHTML = matched.map(p => `
+      <a href="/blog/${p.id}/" class="search-result-item">
+        <div class="search-result-title">${highlight(p.title, q)}</div>
+        <div class="search-result-desc">${p.description}</div>
+        <div class="search-result-meta">
+          <span>${p.date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
+          ${p.tags.slice(0, 2).map(t => `<span class="search-result-tag">${t}</span>`).join('')}
+        </div>
+      </a>
+    `).join('');
+  });
+
+  function highlight(text, q) {
+    if (!q) return text;
+    const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
+</script>
+
+<style>
+  /* 搜索弹窗 */
+  .search-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .search-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .search-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+  .search-panel {
+    position: relative;
+    width: 90%;
+    max-width: 560px;
+    max-height: 70vh;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95) translateY(-10px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid #e2e8f0;
+  }
+  .search-modal.active .search-panel {
+    transform: scale(1) translateY(0);
+  }
+  :global(.dark) .search-panel {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  .search-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  :global(.dark) .search-input-wrap {
+    border-color: #334155;
+  }
+  .search-input-icon {
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: transparent;
+    color: #1e293b;
+  }
+  :global(.dark) .search-input {
+    color: #f1f5f9;
+  }
+  .search-input::placeholder {
+    color: #94a3b8;
+  }
+  .search-kbd {
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: #94a3b8;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+  }
+  :global(.dark) .search-kbd {
+    background: #0f172a;
+    border-color: #334155;
+    color: #64748b;
+  }
+
+  .search-results {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px;
+  }
+  .search-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .search-result-item {
+    display: block;
+    padding: 12px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .search-result-item:hover {
+    background: #f8fafc;
+  }
+  :global(.dark) .search-result-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .search-result-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+  :global(.dark) .search-result-title {
+    color: #f1f5f9;
+  }
+  .search-result-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .search-result-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+  }
+  .search-result-tag {
+    padding: 1px 6px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    color: #64748b;
+  }
+  :global(.dark) .search-result-tag {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+  }
+  .search-highlight {
+    background: rgba(26, 86, 219, 0.15);
+    color: #1a56db;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+  :global(.dark) .search-highlight {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+  }
+</style>

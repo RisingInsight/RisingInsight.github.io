@@ -1,0 +1,16 @@
+<script src="https://unpkg.com/typeit@8.7.1/dist/index.umd.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 注意：这里的 ID 变成了 typeit-header
+    if (document.getElementById("typeit-header")) {
+      new TypeIt("#typeit-header", {
+        strings: ["Hello, I'm RisingInsight", "Welcome to my blog"], 
+        speed: 100,
+        loop: true,
+        breakLines: false,
+        nextStringDelay: 2000,
+        deleteSpeed: 50
+      }).go();
+    }
+  });
+</script>

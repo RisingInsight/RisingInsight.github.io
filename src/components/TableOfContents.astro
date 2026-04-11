@@ -1,0 +1,769 @@
+---
+// TableOfContents.astro - 文章目录组件
+// 默认全部折叠，点击/滚动只展开一层
+// 嵌套 ul/li 结构，不同层级用圆点大小/颜色 + 缩进区分
+// 大屏右侧浮动 sticky + 小屏文章内折叠
+// ⚠️ is:inline style/script 避免 Astro scoped CSS 穿透
+// ⚠️ 选择器必须用 "article .prose"（后代选择器），不是 "article.prose"
+---
+
+<!-- 浮动目录（大屏 ≥1280px） -->
+<div id="toc-float" style="display:none;">
+  <div class="toc-sidebar">
+    <div class="toc-sidebar-title" id="toc-float-title"></div>
+    <nav id="toc-nav" class="toc-nav"></nav>
+  </div>
+</div>
+
+<!-- 内嵌折叠目录（小屏 <1280px） -->
+<div id="toc-inline" style="display:none;">
+  <button id="toc-inline-toggle" type="button">
+    <span class="toc-inline-label">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      目录
+      <span id="toc-inline-count"></span>
+    </span>
+    <svg id="toc-inline-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  </button>
+  <div id="toc-inline-panel">
+    <nav id="toc-inline-nav" class="toc-nav"></nav>
+  </div>
+</div>
+
+<style is:inline>
+/* ========================================
+   TOC 浮动侧栏（大屏 ≥1280px）
+   ======================================== */
+#toc-float {
+  position: fixed;
+  top: 5rem;
+  right: 1.5rem;
+  width: 260px;
+  max-height: calc(100vh - 6rem);
+  z-index: 40;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border, #e2e8f0) transparent;
+}
+#toc-float::-webkit-scrollbar { width: 4px; }
+#toc-float::-webkit-scrollbar-thumb {
+  background: var(--color-border, #e2e8f0);
+  border-radius: 2px;
+}
+
+.toc-sidebar {
+  background: var(--color-surface-alt, #f8fafc);
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-light, #eef0f5);
+}
+.dark .toc-sidebar {
+  background: var(--color-surface-dark-alt, #1e293b);
+  border-color: var(--color-border-dark, #2d3a4d);
+}
+
+.toc-sidebar-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text, #1a1a2e);
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light, #eef0f5);
+  letter-spacing: 0.02em;
+}
+.toc-sidebar-title:has(.katex) {
+  white-space: normal;
+  overflow: visible;
+}
+.toc-sidebar-title .katex { font-size: 0.85em; }
+.dark .toc-sidebar-title {
+  color: var(--color-text-dark, #e2e8f0);
+  border-color: var(--color-border-dark, #2d3a4d);
+}
+
+/* ========================================
+   目录导航公共样式
+   ======================================== */
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.toc-nav ul, .toc-nav li {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.toc-nav ul { padding-left: 0 !important; }
+
+/* ========================================
+   嵌套子列表 — 折叠/展开
+   默认折叠（toc-branch-collapsed），展开时由 JS 控制
+   ======================================== */
+.toc-children {
+  padding-left: 16px !important;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.2s ease;
+}
+.toc-children.toc-expanded {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* ========================================
+   行容器
+   ======================================== */
+.toc-item-row {
+  display: flex;
+  align-items: center;
+  margin: 1px 0;
+}
+.toc-item-row > a {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary, #4a4a68);
+  text-decoration: none !important;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex: 1;
+  min-width: 0;
+}
+.toc-item-row > a:has(.katex),
+.toc-item-row > a:has(code) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+}
+.toc-item-row > a > span { min-width: 0; }
+.toc-nav .katex { font-size: 0.85em; }
+
+.dark .toc-item-row > a {
+  color: var(--color-text-dark-secondary, #94a3b8);
+}
+.toc-item-row > a:hover {
+  color: var(--color-primary, #1a56db);
+  background: var(--color-primary-bg, rgba(26, 86, 219, 0.06));
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  z-index: 10;
+  position: relative;
+}
+.dark .toc-item-row > a:hover {
+  color: var(--color-primary-light, #60a5fa);
+  background: rgba(96, 165, 250, 0.1);
+}
+
+/* ========================================
+   高亮状态
+   ======================================== */
+.toc-item-row > a.active {
+  color: var(--color-primary, #1a56db) !important;
+  font-weight: 600;
+  background: var(--color-primary-bg, rgba(26, 86, 219, 0.08));
+  border-left-color: var(--color-primary, #1a56db);
+}
+.dark .toc-item-row > a.active {
+  color: var(--color-primary-light, #60a5fa) !important;
+  background: rgba(96, 165, 250, 0.12);
+  border-left-color: var(--color-primary-light, #60a5fa);
+}
+
+/* ========================================
+   层级样式 — 圆点大小/颜色区分
+   ======================================== */
+
+/* 根级别圆点：所有 toc-item-row > a .toc-dot 基础样式 */
+.toc-item-row > a .toc-dot {
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+/* H1：大号蓝色圆点 */
+.toc-h1 > .toc-item-row > a { font-size: 0.88rem !important; font-weight: 600 !important; }
+.toc-h1 > .toc-item-row > a .toc-dot { width: 8px; height: 8px; background: var(--color-primary, #1a56db); }
+.dark .toc-h1 > .toc-item-row > a { color: var(--color-text-dark, #e2e8f0) !important; }
+
+/* H2：蓝色中圆点 */
+.toc-h2 > .toc-item-row > a .toc-dot { width: 6px; height: 6px; background: var(--color-primary, #1a56db); }
+
+/* H3：深灰小圆点 */
+.toc-h3 > .toc-item-row > a { font-size: 0.80rem !important; }
+.toc-h3 > .toc-item-row > a .toc-dot { width: 4px; height: 4px; background: var(--color-text-muted, #8888a0); }
+
+/* H4：更小更浅 */
+.toc-h4 > .toc-item-row > a { font-size: 0.78rem !important; color: var(--color-text-muted, #8888a0) !important; }
+.toc-h4 > .toc-item-row > a .toc-dot { width: 3px; height: 3px; background: var(--color-text-muted, #a0a0b8); }
+.dark .toc-h4 > .toc-item-row > a { color: var(--color-text-dark-muted, #64748b) !important; }
+
+/* H5 */
+.toc-h5 > .toc-item-row > a { font-size: 0.76rem !important; color: var(--color-text-muted, #a0a0b8) !important; }
+.toc-h5 > .toc-item-row > a .toc-dot { width: 2px; height: 2px; background: var(--color-text-muted, #b0b0c8); }
+.dark .toc-h5 > .toc-item-row > a { color: var(--color-text-dark-muted, #52607a) !important; }
+
+/* H6 */
+.toc-h6 > .toc-item-row > a { font-size: 0.74rem !important; color: var(--color-text-muted, #b0b0c8) !important; }
+.toc-h6 > .toc-item-row > a .toc-dot { width: 2px; height: 2px; background: var(--color-text-muted, #c0c0d0); }
+.dark .toc-h6 > .toc-item-row > a { color: var(--color-text-dark-muted, #4a5568) !important; }
+
+/* 高亮时统一圆点效果 */
+.toc-item-row > a.active .toc-dot {
+  background: var(--color-primary, #1a56db) !important;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.2);
+}
+.dark .toc-item-row > a.active .toc-dot {
+  background: var(--color-primary-light, #60a5fa) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+/* ========================================
+   折叠箭头按钮 — ▶/▼
+   ======================================== */
+.toc-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--color-text-muted, #a0a0b8);
+  transition: color 0.2s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 3px;
+  font-size: 0.55rem;
+  line-height: 1;
+}
+.toc-toggle-btn:hover {
+  color: var(--color-primary, #1a56db);
+  background: var(--color-primary-bg, rgba(26, 86, 219, 0.08));
+}
+.dark .toc-toggle-btn:hover {
+  color: var(--color-primary-light, #60a5fa);
+  background: rgba(96, 165, 250, 0.1);
+}
+
+/* 有子节点时才显示箭头 */
+.toc-has-children > .toc-item-row > .toc-toggle-btn {
+  display: flex;
+}
+/* 展开时箭头旋转 90°（▶ → ▼） */
+.toc-has-children.toc-expanded > .toc-item-row > .toc-toggle-btn {
+  transform: rotate(90deg);
+}
+
+/* ========================================
+   内嵌折叠目录（小屏 <1280px）
+   ======================================== */
+#toc-inline {
+  margin-bottom: 24px;
+  background: var(--color-surface-alt, #f8fafc);
+  border: 1px solid var(--color-border-light, #eef0f5);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dark #toc-inline {
+  background: var(--color-surface-dark-alt, #1e293b);
+  border-color: var(--color-border-dark, #2d3a4d);
+}
+#toc-inline-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+#toc-inline-toggle:hover { background: rgba(0,0,0,0.02); }
+.dark #toc-inline-toggle:hover { background: rgba(255,255,255,0.03); }
+
+.toc-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text, #1a1a2e);
+}
+.dark .toc-inline-label { color: var(--color-text-dark, #e2e8f0); }
+#toc-inline-count {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #8888a0);
+  font-weight: 400;
+  margin-left: 2px;
+}
+#toc-inline-arrow {
+  color: var(--color-text-muted, #8888a0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark #toc-inline-arrow { color: var(--color-text-dark-muted, #64748b); }
+
+#toc-inline-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#toc-inline-panel.expanded {
+  max-height: 600px;
+  overflow-y: auto;
+}
+#toc-inline-nav { padding: 0 8px 12px; }
+#toc-inline-nav .toc-item-row > a { font-size: 0.84rem; padding: 4px 8px; }
+
+/* ========================================
+   滚动锚点偏移补偿
+   ======================================== */
+.toc-scroll-offset {
+  display: block;
+  position: relative;
+  visibility: hidden;
+  height: 0;
+  margin-top: -5rem;
+  padding-top: 5rem;
+  pointer-events: none;
+}
+
+/* ========================================
+   响应式显示/隐藏
+   ======================================== */
+@media (max-width: 1279px) {
+  #toc-float { display: none !important; }
+}
+@media (min-width: 1280px) {
+  #toc-inline { display: none !important; }
+}
+</style>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', function() {
+  var tocFloat = document.getElementById('toc-float');
+  var tocFloatTitle = document.getElementById('toc-float-title');
+  var tocNav = document.getElementById('toc-nav');
+  var tocInline = document.getElementById('toc-inline');
+  var tocInlineNav = document.getElementById('toc-inline-nav');
+  var tocInlineToggle = document.getElementById('toc-inline-toggle');
+  var tocInlinePanel = document.getElementById('toc-inline-panel');
+  var tocInlineArrow = document.getElementById('toc-inline-arrow');
+  var tocInlineCount = document.getElementById('toc-inline-count');
+
+  var article = document.querySelector('article .prose');
+  if (!article) { console.warn('[TOC] 未找到 .prose 容器'); return; }
+
+  var headings = article.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  if (headings.length < 2) { return; }
+
+  var N = headings.length;
+
+  // 文章标题
+  var pageTitle = document.querySelector('article > header h1');
+  if (pageTitle && tocFloatTitle) tocFloatTitle.innerHTML = pageTitle.innerHTML.trim();
+
+  // 注入锚点
+  headings.forEach(function(h, idx) {
+    if (!h.id) h.id = 'toc-' + idx;
+    if (!h.querySelector('.toc-scroll-offset')) {
+      var anchor = document.createElement('span');
+      anchor.className = 'toc-scroll-offset';
+      h.insertBefore(anchor, h.firstChild);
+    }
+  });
+
+  // ========================================
+  // 构建父子树 + 预计算
+  // ========================================
+  var parentIdxArr = new Array(N);
+  var childrenMap = {};
+  var ancestorCache = new Array(N);
+
+  var parentStack = [];
+  for (var i = 0; i < N; i++) {
+    var level = parseInt(headings[i].tagName.charAt(1));
+    while (parentStack.length > 0 && parentStack[parentStack.length - 1].level >= level) {
+      parentStack.pop();
+    }
+    var parentIdx = parentStack.length > 0 ? parentStack[parentStack.length - 1].idx : -1;
+    parentIdxArr[i] = parentIdx;
+    parentStack.push({ idx: i, level: level });
+    if (!childrenMap[parentIdx]) childrenMap[parentIdx] = [];
+    childrenMap[parentIdx].push(i);
+  }
+
+  // 祖先链
+  for (var i = 0; i < N; i++) {
+    var chain = [];
+    var cur = i;
+    while (parentIdxArr[cur] !== -1) {
+      chain.unshift(parentIdxArr[cur]);
+      cur = parentIdxArr[cur];
+    }
+    ancestorCache[i] = chain;
+  }
+
+  // ========================================
+  // 构建嵌套 HTML — 默认全部折叠
+  // ========================================
+  var levelCls = { 1:'toc-h1', 2:'toc-h2', 3:'toc-h3', 4:'toc-h4', 5:'toc-h5', 6:'toc-h6' };
+
+  function buildNestedHtml() {
+    var openDepth = 0;
+    var result = [];
+
+    for (var i = 0; i < N; i++) {
+      var h = headings[i];
+      var id = h.id;
+      var html = h.innerHTML.trim();
+      var text = h.textContent.trim();
+      var cls = levelCls[parseInt(h.tagName.charAt(1))] || 'toc-h2';
+      var hasKids = childrenMap[i] && childrenMap[i].length > 0;
+      var displayContent = (html !== text) ? '<span>' + html + '</span>' : text;
+
+      // 关闭不再需要的子树
+      if (i > 0) {
+        var prevIdx = i - 1;
+        var isInPrevTree = false;
+        var t = i;
+        while (parentIdxArr[t] !== -1) {
+          if (parentIdxArr[t] === prevIdx) { isInPrevTree = true; break; }
+          t = parentIdxArr[t];
+        }
+        if (!isInPrevTree) {
+          var p = prevIdx;
+          while (p !== -1) {
+            var isAncestorOfI = false;
+            var a = i;
+            while (parentIdxArr[a] !== -1) {
+              if (parentIdxArr[a] === p) { isAncestorOfI = true; break; }
+              a = parentIdxArr[a];
+            }
+            if (isAncestorOfI) break;
+            if (childrenMap[p] && childrenMap[p].length > 0) {
+              result.push('</ul>');
+              openDepth--;
+            }
+            result.push('</li>');
+            p = parentIdxArr[p];
+          }
+        }
+      }
+
+      result.push('<li class="' + cls + (hasKids ? ' toc-has-children' : '') + '" data-idx="' + i + '">');
+      result.push('<div class="toc-item-row">');
+      result.push('<a href="#' + id + '"><span class="toc-dot"></span>' + displayContent + '</a>');
+      if (hasKids) {
+        result.push('<span class="toc-toggle-btn" data-idx="' + i + '">&#9654;</span>');
+      }
+      result.push('</div>');
+
+      if (hasKids) {
+        // 默认折叠：不加 toc-expanded class
+        result.push('<ul class="toc-children" data-parent-idx="' + i + '">');
+        openDepth++;
+      } else {
+        result.push('</li>');
+      }
+    }
+
+    while (openDepth > 0) {
+      result.push('</ul></li>');
+      openDepth--;
+    }
+
+    return '<ul class="toc-list">' + result.join('') + '</ul>';
+  }
+
+  var tocHtml = buildNestedHtml();
+  if (tocNav) tocNav.innerHTML = tocHtml;
+  if (tocInlineNav) tocInlineNav.innerHTML = tocHtml;
+  if (tocInlineCount) tocInlineCount.textContent = '(' + N + ')';
+  if (tocFloat) tocFloat.style.display = '';
+  if (tocInline) tocInline.style.display = '';
+
+  // ========================================
+  // 小屏整体折叠
+  // ========================================
+  var inlineExpanded = false;
+  if (tocInlineToggle && tocInlinePanel) {
+    tocInlineToggle.addEventListener('click', function() {
+      inlineExpanded = !inlineExpanded;
+      tocInlinePanel.classList.toggle('expanded', inlineExpanded);
+      if (tocInlineArrow) tocInlineArrow.style.transform = inlineExpanded ? 'rotate(180deg)' : '';
+    });
+  }
+  if (tocInlineNav) {
+    tocInlineNav.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (link) {
+        setTimeout(function() {
+          inlineExpanded = false;
+          if (tocInlinePanel) tocInlinePanel.classList.remove('expanded');
+          if (tocInlineArrow) tocInlineArrow.style.transform = '';
+        }, 80);
+      }
+    });
+  }
+
+  // ========================================
+  // 核心：展开/折叠某个节点的直接子目录
+  // ========================================
+
+  // 记录当前哪些节点是"展开"状态
+  var expandedNodes = {};
+
+  /**
+   * 展开/折叠节点 idx 的直接子列表
+   * toggle: true = 切换（如果展开则折叠，反之亦然）；false = 强制展开
+   */
+  function toggleNodeExpand(container, idx, toggle) {
+    if (!container) return;
+    var li = container.querySelector('li[data-idx="' + idx + '"]');
+    if (!li) return;
+    var childrenUl = li.querySelector(':scope > .toc-children');
+    if (!childrenUl) return;
+
+    var isExpanded = expandedNodes[idx];
+
+    if (toggle && isExpanded) {
+      // 折叠
+      delete expandedNodes[idx];
+      childrenUl.classList.remove('toc-expanded');
+      li.classList.remove('toc-expanded');
+    } else {
+      // 展开（或强制展开）
+      expandedNodes[idx] = true;
+      childrenUl.classList.add('toc-expanded');
+      li.classList.add('toc-expanded');
+    }
+  }
+
+  /**
+   * 根据活跃节点，展开从根到活跃节点的路径，加上活跃节点的直接子节点
+   * 同时折叠所有其他节点
+   */
+  function expandForActive(container, activeIdx) {
+    if (!container) return;
+
+    var ancestors = ancestorCache[activeIdx];
+    var ancestorSet = {};
+    for (var a = 0; a < ancestors.length; a++) ancestorSet[ancestors[a]] = true;
+
+    var directChildren = childrenMap[activeIdx] || [];
+
+    // 计算应该展开的节点集合：祖先 + 活跃节点自身（如果有子节点）
+    var shouldExpand = {};
+    for (var a = 0; a < ancestors.length; a++) shouldExpand[ancestors[a]] = true;
+    if (childrenMap[activeIdx] && childrenMap[activeIdx].length > 0) {
+      shouldExpand[activeIdx] = true;
+    }
+
+    // 同步 expandedNodes 字典
+    expandedNodes = {};
+    for (var key in shouldExpand) {
+      if (shouldExpand.hasOwnProperty(key)) expandedNodes[parseInt(key)] = true;
+    }
+
+    // 应用到 DOM
+    var allChildrenUls = container.querySelectorAll('.toc-children');
+    for (var i = 0; i < allChildrenUls.length; i++) {
+      var parentIdx = parseInt(allChildrenUls[i].getAttribute('data-parent-idx'));
+      var parentLi = allChildrenUls[i].closest('li');
+      if (shouldExpand[parentIdx]) {
+        allChildrenUls[i].classList.add('toc-expanded');
+        if (parentLi) parentLi.classList.add('toc-expanded');
+      } else {
+        allChildrenUls[i].classList.remove('toc-expanded');
+        if (parentLi) parentLi.classList.remove('toc-expanded');
+      }
+    }
+  }
+
+  // ========================================
+  // 绑定箭头点击事件 — 手动展开/折叠一层
+  // ========================================
+  function bindToggleEvents(container) {
+    if (!container) return;
+    var toggleBtns = container.querySelectorAll('.toc-toggle-btn');
+    for (var i = 0; i < toggleBtns.length; i++) {
+      (function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var idx = parseInt(btn.getAttribute('data-idx'));
+          toggleNodeExpand(container, idx, true);
+        });
+      })(toggleBtns[i]);
+    }
+  }
+  bindToggleEvents(tocNav);
+  bindToggleEvents(tocInlineNav);
+
+  // ========================================
+  // 平滑滚动 + 点击展开一层
+  // ========================================
+  var allTocLinks = document.querySelectorAll('#toc-nav a, #toc-inline-nav a');
+  allTocLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      var href = this.getAttribute('href');
+      if (href && href.charAt(0) === '#') {
+        var target = document.getElementById(href.slice(1));
+        if (target) {
+          e.preventDefault();
+          var offset = 80;
+          var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+          history.pushState(null, '', href);
+
+          // 找到点击的节点 idx，展开其直接子目录
+          var targetId = href.slice(1);
+          var clickedIdx = -1;
+          for (var j = 0; j < N; j++) {
+            if (headingEls[j].id === targetId) { clickedIdx = j; break; }
+          }
+          if (clickedIdx >= 0) {
+            // 展开路径 + 点击项的直接子节点
+            expandForActive(tocNav, clickedIdx);
+            expandForActive(tocInlineNav, clickedIdx);
+            // 更新高亮
+            updateActive(targetId);
+          }
+        }
+      }
+    });
+  });
+
+  // ========================================
+  // 滚动高亮 + 自动展开一层
+  // ========================================
+  var floatLinks = tocNav ? tocNav.querySelectorAll('a') : [];
+  var inlineLinks = tocInlineNav ? tocInlineNav.querySelectorAll('a') : [];
+  var headingEls = Array.prototype.slice.call(headings);
+  var lastActiveIdx = -1;
+
+  function updateActive(id) {
+    // 清除高亮
+    for (var i = 0; i < floatLinks.length; i++) floatLinks[i].classList.remove('active');
+    for (var i = 0; i < inlineLinks.length; i++) inlineLinks[i].classList.remove('active');
+
+    var activeIdx = -1;
+    for (var i = 0; i < N; i++) {
+      if (headingEls[i].id === id) { activeIdx = i; break; }
+    }
+    if (activeIdx < 0) return;
+    lastActiveIdx = activeIdx;
+
+    // 高亮链接
+    for (var i = 0; i < floatLinks.length; i++) {
+      if (floatLinks[i].getAttribute('href') === '#' + id) floatLinks[i].classList.add('active');
+    }
+    for (var i = 0; i < inlineLinks.length; i++) {
+      if (inlineLinks[i].getAttribute('href') === '#' + id) inlineLinks[i].classList.add('active');
+    }
+
+    // 浮动目录自动滚动到活跃项
+    if (tocFloat) {
+      var activeFloatLink = tocNav ? tocNav.querySelector('a.active') : null;
+      if (activeFloatLink) {
+        var row = activeFloatLink.closest('.toc-item-row');
+        var scrollTarget = row || activeFloatLink;
+        var linkTop = scrollTarget.offsetTop;
+        var sidebarTop = tocFloat.scrollTop;
+        var sidebarBottom = sidebarTop + tocFloat.clientHeight;
+        if (linkTop < sidebarTop || linkTop > sidebarBottom - 40) {
+          tocFloat.scrollTo({
+            top: linkTop - tocFloat.clientHeight / 2 + 20,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+
+    // 滚动时自动展开：从根到当前项 + 当前项的直接子节点
+    expandForActive(tocNav, activeIdx);
+    expandForActive(tocInlineNav, activeIdx);
+  }
+
+  // ========================================
+  // IntersectionObserver / scroll 降级
+  // ========================================
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(
+      function(entries) {
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].isIntersecting) {
+            updateActive(entries[i].target.id);
+          }
+        }
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+    );
+    headingEls.forEach(function(el) { observer.observe(el); });
+
+    // 初始：找到当前视口中的标题，高亮 + 展开一层
+    setTimeout(function() {
+      var closest = null;
+      var closestDist = Infinity;
+      headingEls.forEach(function(el) {
+        var rect = el.getBoundingClientRect();
+        if (rect.top <= 120 && rect.bottom > 0) {
+          var dist = Math.abs(rect.top - 80);
+          if (dist < closestDist) { closestDist = dist; closest = el.id; }
+        }
+      });
+      if (closest) updateActive(closest);
+    }, 100);
+  } else {
+    var ticking = false;
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(function() {
+          var scrollPos = window.scrollY + 110;
+          var activeIdx = 0;
+          for (var j = 0; j < headingEls.length; j++) {
+            if (headingEls[j].offsetTop <= scrollPos) activeIdx = j;
+          }
+          for (var j = 0; j < floatLinks.length; j++) {
+            floatLinks[j].classList.toggle('active', j === activeIdx);
+          }
+          for (var j = 0; j < inlineLinks.length; j++) {
+            inlineLinks[j].classList.toggle('active', j === activeIdx);
+          }
+          expandForActive(tocNav, activeIdx);
+          expandForActive(tocInlineNav, activeIdx);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+});
+</script>

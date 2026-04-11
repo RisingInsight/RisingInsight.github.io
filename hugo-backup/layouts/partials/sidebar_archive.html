@@ -1,0 +1,20 @@
+<aside class="sidebar-archive">
+  <h3 class="sidebar-title">文章归档</h3>
+  <!-- 筛选博客文章（排除非文章类型） -->
+  {{- $posts := where site.RegularPages "Type" "in" site.Params.mainSections }}
+  <!-- 按“年-月”分组（格式：2026年01月） -->
+  {{- $groupedPosts := $posts.GroupByDate "2026年01月" }}
+  <!-- 倒序显示（最新的年月在前） -->
+  {{- range $groupedPosts.Reverse }}
+    <div class="archive-month">
+      <h4>{{ .Key }}</h4>
+      <ul class="archive-post-list">
+        {{- range .Pages }}
+          <li>
+            <a href="{{ .Permalink }}">{{ .Title }}</a>
+          </li>
+        {{- end }}
+      </ul>
+    </div>
+  {{- end }}
+</aside>

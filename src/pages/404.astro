@@ -1,0 +1,73 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title="404 - 页面未找到" description="你迷路了..." />
+  </head>
+  <body>
+    <Header />
+
+    <main class="min-h-[70vh] flex items-center justify-center px-4">
+      <div class="text-center max-w-lg">
+        <!-- 大号动画 Emoji -->
+        <div class="text-8xl mb-6 animate-bounce">
+          🔭
+        </div>
+
+        <h1 class="text-6xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+          4<span class="text-primary dark:text-primary-light">0</span>4
+        </h1>
+
+        <p class="text-xl text-slate-500 dark:text-slate-400 mb-2 font-medium">
+          看起来你探索到了未知的星域
+        </p>
+
+        <p class="text-sm text-slate-400 dark:text-slate-500 mb-10 max-w-sm mx-auto leading-relaxed">
+          这颗星球上还没有内容，可能是一个黑洞把页面吞噬了，也可能这只是一个 404 错误。
+        </p>
+
+        <!-- 随机趣味文案 -->
+        <div id="fun-text" class="text-sm text-slate-400 dark:text-slate-500 mb-8 italic transition-opacity duration-300"></div>
+
+        <!-- 返回按钮 -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            返回首页
+          </a>
+          <a
+            href="/blog/"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+          >
+            浏览文章
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </body>
+</html>
+
+<script>
+  const funTexts = [
+    '如果你想找的内容在这里，请给我发个 Issue 🐛',
+    '恭喜你发现了一个隐藏的彩蛋！...开玩笑的 🎭',
+    '这个页面正在被 AI 重新训练中... 🧠',
+    '其实这里是存放表情包的地方，但被清理了 🧹',
+    '这大概就是传说中的「薛定谔的页面」 🐱',
+  ];
+  const el = document.getElementById('fun-text');
+  if (el) {
+    el.textContent = funTexts[Math.floor(Math.random() * funTexts.length)];
+  }
+</script>

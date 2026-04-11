@@ -1,0 +1,105 @@
+---
+import { NAV_ITEMS, PROFILE } from '../consts';
+import ThemeToggle from './ThemeToggle.astro';
+import SearchModal from './SearchModal.astro';
+
+// ⚠️ 去掉尾斜杠后，首页 href="/" 变成空字符串 ""
+// 判断高亮时，首页必须精确匹配（pathname 也为空），不能用 startsWith("")
+const pathname = Astro.url.pathname.replace(/\/$/, '');
+
+function isNavActive(currentPath: string, itemHref: string): boolean {
+  const itemPath = itemHref.replace(/\/$/, '');
+  // 首页：精确匹配（空字符串 === 空字符串）
+  if (itemPath === '') return currentPath === '';
+  // 其他页：路径完全匹配 或 当前路径以该项路径开头（如 /blog 匹配 /blog/hugo-tutorial）
+  return currentPath === itemPath || currentPath.startsWith(itemPath + '/');
+}
+---
+
+<header class="sticky top-0 z-50 glass border-b border-slate-200/60 dark:border-slate-700/40">
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2.5 group">
+      <div class="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-slate-200/80 dark:ring-slate-700/60 group-hover:ring-primary/50 transition-all shadow-sm">
+        <img src="/avatar.jpg" alt="avatar" class="w-full h-full object-cover" />
+      </div>
+      <span class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors hidden sm:block">
+        {PROFILE.name}
+      </span>
+    </a>
+
+    <!-- Desktop Nav -->
+    <div class="hidden sm:flex items-center gap-1">
+      {NAV_ITEMS.map((item) => {
+        const isActive = isNavActive(pathname, item.href);
+        return (
+          <a
+            href={item.href}
+            class:list={[
+              'px-4 py-2 text-sm font-medium rounded-xl transition-all',
+              isActive
+                ? 'text-primary dark:text-primary-light bg-primary/10 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary-light hover:bg-primary/5',
+            ]}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+      <SearchModal />
+      <ThemeToggle />
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <div class="flex items-center gap-2 sm:hidden">
+      <ThemeToggle />
+      <button
+        id="mobile-menu-btn"
+        class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        aria-label="Toggle menu"
+      >
+        <svg id="menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden sm:hidden border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
+    <div class="px-4 py-3 space-y-1">
+      {NAV_ITEMS.map((item) => {
+        const isActive = isNavActive(pathname, item.href);
+        return (
+          <a
+            href={item.href}
+            class:list={[
+              'block px-4 py-2.5 text-sm font-medium rounded-xl transition-all',
+              isActive
+                ? 'text-primary dark:text-primary-light bg-primary/10 font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-primary rounded-xl hover:bg-primary/5 transition-all',
+            ]}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</header>
+
+<script>
+  const btn = document.getElementById('mobile-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  const iconOpen = document.getElementById('menu-icon-open');
+  const iconClose = document.getElementById('menu-icon-close');
+
+  btn?.addEventListener('click', () => {
+    const isHidden = menu?.classList.toggle('hidden');
+    iconOpen?.classList.toggle('hidden', !isHidden);
+    iconClose?.classList.toggle('hidden', isHidden);
+  });
+</script>

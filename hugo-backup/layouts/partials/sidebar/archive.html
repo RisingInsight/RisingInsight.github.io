@@ -1,0 +1,39 @@
+{{- /* 左侧归档（年份+月份双折叠） */ -}}
+{{- if and .IsPage (eq .Type "posts") }}
+<aside class="sidebar sidebar-left">
+    <div class="sidebar-content">
+        <h3 class="sidebar-title">文章归档</h3>
+        
+        {{- $posts := where site.RegularPages "Type" "in" site.Params.mainSections }}
+        {{- $yearGroups := $posts.GroupByDate "2006年" }}
+        {{- range $yearGroups.Reverse }}
+        <div class="year-group">
+            <button class="year-toggle">
+                <span class="toggle-icon">▶</span>
+                <span class="year-text">{{ .Key }}</span>
+            </button>
+            
+            <div class="year-content" style="display: none;">
+                {{- $monthGroups := .Pages.GroupByDate "01月" }}
+                {{- range $monthGroups.Reverse }}
+                <div class="month-group">
+                    <button class="month-toggle">
+                        <span class="toggle-icon">▶</span>
+                        <span class="month-text">{{ .Key }}</span>
+                    </button>
+                    
+                    <div class="month-content" style="display: none;">
+                        <ul class="archive-post-list">
+                            {{- range .Pages }}
+                            <li><a href="{{ .Permalink }}">{{ .Title }}</a></li>
+                            {{- end }}
+                        </ul>
+                    </div>
+                </div>
+                {{- end }}
+            </div>
+        </div>
+        {{- end }}
+    </div>
+</aside>
+{{- end }}

@@ -1,0 +1,42 @@
+{{- /* TOC 模板：显示 H1~H6，支持截断+滚动高亮 */ -}}
+{{- $headers := findRE "<h([1-6])\\s+[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</h[1-6]>" .Content -1 -}}
+{{- $hasTOC := ge (len $headers) 1 -}}
+{{- if $hasTOC -}}
+  <ul class="custom-toc-list">
+    {{- $currentLevel := 0 -}}
+    {{- range $header := $headers -}}
+      {{- $matches := findRESubmatch "<h([1-6])\\s+[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</h[1-6]>" $header 1 -}}
+      {{- $level := index $matches 0 1 | int -}}
+
+      {{- $headerID := index $matches 0 2 | safeURL -}}
+      {{- $headerText := index $matches 0 3 | plainify | htmlUnescape | safeHTML -}}
+
+      {{- /* 处理层级折叠容器 */ -}}
+      {{- if gt $level $currentLevel -}}
+        {{- range seq (sub $level $currentLevel) -}}
+          <div class="toc-collapse-container">
+            <ul class="custom-toc-sublist">
+        {{- end -}}
+      {{- else if lt $level $currentLevel -}}
+        {{- range seq (sub $currentLevel $level) -}}
+          </ul>
+          </div>
+        {{- end -}}
+      {{- end -}}
+      {{- $currentLevel = $level -}}
+
+      {{- /* 生成可跳转的锚点，data-toc-level 用于滚动高亮 */ -}}
+      <li class="custom-toc-item level-{{ $level }}">
+        <a href="#{{ $headerID }}" class="custom-toc-link" data-toc-level="{{ $level }}">{{ $headerText }}</a>
+      </li>
+    {{- end -}}
+
+    {{- /* 关闭剩余容器 */ -}}
+    {{- range seq $currentLevel -}}
+      </ul>
+      </div>
+    {{- end -}}
+  </ul>
+{{- else -}}
+  <div class="toc-empty">暂无目录</div>
+{{- end -}}

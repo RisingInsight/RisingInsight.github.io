@@ -1,0 +1,361 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE, SITE_DESCRIPTION, PROFILE, SOCIALS } from '../consts';
+import { getCollection } from 'astro:content';
+import { getTagColor, getGradient, getReadTime } from '../utils/blog';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+// 统计实际数据
+const totalTags = [...new Set(allPosts.flatMap(p => p.data.tags || []))].length;
+const totalCategories = [...new Set(allPosts.flatMap(p => p.data.categories || []))].length;
+const totalWords = allPosts.reduce((sum, p) => sum + (p.body || '').length, 0);
+
+// 博客运行天数（从 2026 年 1 月 1 日创建）
+const BLOG_START_DATE = '2026-01-01';
+const startDate = new Date(BLOG_START_DATE);
+const runDays = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+const statsData = [
+  { label: '文章', value: allPosts.length, icon: 'doc' },
+  { label: '分类', value: totalCategories, icon: 'folder' },
+  { label: '标签', value: totalTags, icon: 'tag' },
+  { label: '字数', value: totalWords > 10000 ? (totalWords / 10000).toFixed(1) + 'w' : totalWords.toString(), icon: 'text' },
+  { label: '运行', value: runDays + ' 天', icon: 'clock' },
+];
+
+// 随机推荐文章（取第 2-3 篇避免和顶部重复）
+const recommendedPosts = sortedPosts.length > 3 ? sortedPosts.slice(1, 3) : sortedPosts.slice(0, 2);
+
+// 打字机文字
+const typewriterTexts = ['分析一些个人的学习笔记', '记录一些新鲜的技术', '就涨涨见识'];
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body>
+    <Header />
+
+    <main>
+      <!-- ===== Hero 区域 ===== -->
+      <section class="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white dark:from-[#0c1222] dark:to-[#0c1222]">
+        <!-- 装饰背景 -->
+        <div class="absolute inset-0 overflow-hidden">
+          <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-[100px] animate-blob"></div>
+          <div class="absolute top-20 -left-20 w-80 h-80 bg-purple-400/20 dark:bg-purple-500/10 rounded-full blur-[80px] animate-blob animation-delay-2000"></div>
+          <div class="absolute -bottom-20 left-1/2 w-72 h-72 bg-amber-400/15 dark:bg-amber-500/10 rounded-full blur-[80px] animate-blob animation-delay-4000"></div>
+          <!-- 网格纹理 -->
+          <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2UyZThmMCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIgb3BhY2l0eT0iMC40Ii8+PC9zdmc+')] opacity-50 dark:opacity-20"></div>
+        </div>
+
+        <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
+          <div class="flex flex-col items-center text-center">
+            <!-- 头像 -->
+            <div class="relative mb-8 animate-fade-up">
+              <div class="w-36 h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden shadow-2xl ring-4 ring-white dark:ring-slate-800 relative z-10">
+                <img src={PROFILE.avatar} alt={PROFILE.name} class="w-full h-full object-cover" />
+              </div>
+              <!-- 在线状态 + 装饰环 -->
+              <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-400 border-4 border-white dark:border-slate-800 rounded-full z-20 shadow-lg"></div>
+              <div class="absolute inset-0 w-36 h-36 lg:w-40 lg:h-40 rounded-full bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 opacity-20 blur-md -z-0 animate-pulse"></div>
+            </div>
+
+            <!-- 名字 -->
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-4 animate-fade-up animate-delay-1">
+              {PROFILE.name}
+            </h1>
+
+            <!-- 角色 + 标签 -->
+            <div class="flex flex-wrap items-center justify-center gap-2 mb-5 animate-fade-up animate-delay-2">
+              <span class="px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-semibold">
+                {PROFILE.role}
+              </span>
+              <span class="text-slate-300 dark:text-slate-600">|</span>
+              <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                {PROFILE.tagline}
+              </span>
+            </div>
+
+            <!-- 打字机效果 Bio -->
+            <div class="mb-8 animate-fade-up animate-delay-2">
+              <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
+                {PROFILE.bio}
+              </p>
+              <p class="text-sm text-slate-400 dark:text-slate-500 mt-2">
+                🏠 <span id="typewriter" class="typewriter-text text-primary dark:text-primary-light font-semibold"></span><span class="typewriter-cursor text-primary dark:text-primary-light">|</span>
+              </p>
+            </div>
+
+            <!-- 社交链接 -->
+            <div class="flex items-center gap-3 mb-10 animate-fade-up animate-delay-3">
+              {SOCIALS.map((s) => (
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="social-btn w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary dark:hover:border-primary-light hover:text-primary dark:hover:text-primary-light shadow-sm hover:shadow-md"
+                  aria-label={s.name}
+                  title={s.name}
+                >
+                  {s.icon === 'github' && (
+                    <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                  )}
+                  {s.icon === 'zhihu' && (
+                    <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24"><path d="M5.721 0C2.251 0 0 2.25 0 5.719V18.28C0 21.751 2.252 24 5.721 24h12.56C21.751 24 24 21.75 24 18.281V5.72C24 2.249 21.75 0 18.281 0zm1.964 4.078h5.202c.105 0 .167.054.167.167v5.646c0 .112-.063.166-.167.166H9.793v2.31h4.503c.105 0 .168.054.168.167v5.087H14.01l.012-2.025h1.992l.08 2.025h1.137c.106 0 .169-.054.169-.167V6.778l-1.398.532v1.293h-1.8V6.93l-1.398.564v1.241H10.72V7.25l-1.398.565v1.15H7.477V7.028L6.08 7.57v1.15H4.725V7.56L3.328 8.125v.834h1.397v5.046H3.328v1.678h1.397v2.05H4.86c.105 0 .168-.054.168-.167v-1.883h1.397v2.05h1.398V15.013H9.215V9.057H7.685V4.245zm9.367 0h.29v.776h.767v-.776h.29c.075 0 .136.061.136.136v1.363c0 .075-.061.136-.136.136h-.29v-.776h-.767v.776h-.29a.136.136 0 0 1-.136-.136V4.214c0-.075.061-.136.136-.136z"/></svg>
+                  )}
+                  {s.icon === 'csdn' && (
+                    <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24"><path d="M3.5 8.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2zm7 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2zm7 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2zM3.5 14.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2zm7 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2zm7 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2z"/></svg>
+                  )}
+                  {s.icon === 'mail' && (
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  )}
+                </a>
+              ))}
+            </div>
+
+            <!-- 统计卡片（增加运行天数） -->
+            <div class="grid grid-cols-5 gap-2 sm:gap-4 w-full max-w-xl animate-fade-up animate-delay-3">
+              {statsData.map((stat) => (
+                <div class="stat-card text-center p-2.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/40 shadow-sm">
+                  <div class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white whitespace-nowrap">
+                    {stat.value}
+                  </div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部波浪分割 -->
+        <div class="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full">
+            <path d="M0 80V30C240 0 480 60 720 40C960 20 1200 60 1440 30V80H0Z" fill="currentColor" class="text-white dark:text-[#0c1222]"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ===== 推荐阅读 ===== -->
+      {recommendedPosts.length > 0 && (
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-4">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex items-center gap-2">
+              <div class="w-1 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full"></div>
+              <h2 class="text-2xl font-bold text-slate-900 dark:text-white">推荐阅读</h2>
+              <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <div class="flex-1 h-px bg-gradient-to-r from-slate-200 dark:from-slate-700 via-slate-300 dark:via-slate-600 to-transparent"></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {recommendedPosts.map((post) => {
+              const grad = getGradient(post.data.title);
+              const readTime = getReadTime(post.body || '');
+              return (
+                <a href={`/blog/${post.id}/`} class="group flex items-center gap-4 p-4 rounded-xl bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 hover:border-amber-400/50 dark:hover:border-amber-500/30 hover:shadow-md transition-all">
+                  <div class:list={['shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br flex items-center justify-center text-2xl', grad]}>
+                    📖
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary dark:group-hover:text-primary-light transition-colors truncate text-sm">
+                      {post.data.title}
+                    </h3>
+                    <div class="flex items-center gap-2 mt-1 text-xs text-slate-400 dark:text-slate-500">
+                      <span>{post.data.pubDate.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
+                      <span>·</span>
+                      <span>{readTime}</span>
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <!-- ===== 标签云 ===== -->
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="flex items-center gap-2">
+            <div class="w-1 h-6 bg-gradient-to-b from-accent to-orange-400 rounded-full"></div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">标签云</h2>
+          </div>
+          <div class="flex-1 h-px bg-gradient-to-r from-slate-200 dark:from-slate-700 via-slate-300 dark:via-slate-600 to-transparent"></div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {Array.from(new Set(allPosts.flatMap(p => p.data.tags || []))).map(tag => {
+            const count = allPosts.filter(p => p.data.tags?.includes(tag)).length;
+            return (
+              <a
+                href={`/blog/`}
+                class={`tag ${getTagColor(tag)} hover:scale-105 transition-transform cursor-default`}
+                title={`${count} 篇文章`}
+              >
+                {tag}
+                <span class="ml-1 opacity-60">({count})</span>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+      <!-- ===== 文章列表 ===== -->
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <!-- 区域标题 -->
+        <div class="flex items-center gap-4 mb-10 mt-4">
+          <div class="flex items-center gap-2">
+            <div class="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full"></div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">最新文章</h2>
+          </div>
+          <div class="flex-1 h-px bg-gradient-to-r from-slate-200 dark:from-slate-700 via-slate-300 dark:via-slate-600 to-transparent"></div>
+          <a href="/archives/" class="text-sm font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary-light transition-colors flex items-center gap-1">
+            查看全部
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          </a>
+        </div>
+
+        <!-- 文章卡片网格 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8">
+          {sortedPosts.map((post, index) => {
+            const grad = getGradient(post.data.title);
+            const readTime = getReadTime(post.body || '');
+            return (
+              <a
+                href={`/blog/${post.id}/`}
+                class:list={[
+                  'post-card group block bg-white dark:bg-slate-800/40 rounded-2xl overflow-hidden animate-fade-up',
+                  `animate-delay-${Math.min(index + 1, 5)}`,
+                ]}
+              >
+                <!-- 渐变封面区域 -->
+                <div class:list={['relative h-44 overflow-hidden bg-gradient-to-br', grad]}>
+                  {/* 装饰元素 */}
+                  <div class="absolute inset-0 opacity-10">
+                    <div class="absolute top-4 right-4 w-20 h-20 border-2 border-white/40 rounded-full"></div>
+                    <div class="absolute bottom-4 left-4 w-16 h-16 border-2 border-white/30 rounded-lg rotate-12"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/20 rounded-full"></div>
+                  </div>
+                  {/* 文章分类标签（左上角） */}
+                  {post.data.categories.length > 0 && (
+                    <div class="absolute top-3 left-3 px-3 py-1 rounded-lg bg-black/20 backdrop-blur-sm text-white text-xs font-semibold">
+                      {post.data.categories[0]}
+                    </div>
+                  )}
+                  {/* 阅读时间（右上角） */}
+                  <div class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/20 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {readTime}
+                  </div>
+                  {/* 文章标题浮层 */}
+                  <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+                    <h3 class="text-lg font-bold text-white line-clamp-2 leading-snug">
+                      {post.data.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <!-- 卡片内容 -->
+                <div class="p-5">
+                  <!-- 标签 -->
+                  {post.data.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                      {post.data.tags.slice(0, 3).map((tag) => (
+                        <span class={`tag ${getTagColor(tag)}`}>{tag}</span>
+                      ))}
+                      {post.data.tags.length > 3 && (
+                        <span class="tag bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">+{post.data.tags.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+
+                  <!-- 描述 -->
+                  <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                    {post.data.description}
+                  </p>
+
+                  <!-- 底部信息 -->
+                  <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                    <time datetime={post.data.pubDate.toISOString()} class="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                      {post.data.pubDate.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                    </time>
+                    <span class="text-xs font-medium text-primary dark:text-primary-light flex items-center gap-1 group-hover:gap-2 transition-all">
+                      阅读全文
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+
+        {sortedPosts.length === 0 && (
+          <div class="text-center py-20">
+            <p class="text-6xl mb-4">📝</p>
+            <p class="text-slate-400 dark:text-slate-500 text-lg">还没有文章，敬请期待！</p>
+          </div>
+        )}
+      </section>
+    </main>
+
+    <Footer />
+  </body>
+</html>
+
+<script define:vars={{ typewriterTexts }}>
+  // 打字机效果
+  const el = document.getElementById('typewriter');
+  if (el) {
+    let textIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let currentText = '';
+
+    function type() {
+      const text = typewriterTexts[textIndex];
+      if (isDeleting) {
+        currentText = text.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        currentText = text.substring(0, charIndex + 1);
+        charIndex++;
+      }
+      el.textContent = currentText;
+
+      let delay = isDeleting ? 60 : 120;
+      if (!isDeleting && charIndex === text.length) {
+        delay = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        textIndex = (textIndex + 1) % typewriterTexts.length;
+        delay = 400;
+      }
+      setTimeout(type, delay);
+    }
+    type();
+  }
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .typewriter-cursor {
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+</style>

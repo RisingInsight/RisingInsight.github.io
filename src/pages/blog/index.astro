@@ -1,0 +1,236 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { getTagColor, getGradient, getReadTime } from '../../utils/blog';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+// 获取所有标签及计数
+const tagCounts: Record<string, number> = {};
+for (const post of allPosts) {
+  for (const tag of post.data.tags || []) {
+    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+  }
+}
+const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title="全部文章" description={`共 ${sortedPosts.length} 篇文章`} />
+  </head>
+  <body>
+    <Header />
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '全部文章' }]} />
+
+      <!-- 页面标题 -->
+      <div class="mb-10 animate-fade-up">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full"></div>
+          <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">全部文章</h1>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 ml-4">
+          共 <span class="font-semibold text-slate-700 dark:text-slate-300" id="post-count">{sortedPosts.length}</span> 篇
+        </p>
+      </div>
+
+      <!-- 标签筛选区 -->
+      <div class="mb-8 animate-fade-up animate-delay-1">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <span class="text-sm font-medium text-slate-500 dark:text-slate-400">按标签筛选</span>
+        </div>
+        <div class="flex flex-wrap gap-2" id="tag-filter">
+          <button
+            data-tag="all"
+            class="tag-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer"
+          >
+            全部
+          </button>
+          {allTags.map(([tag, count]) => (
+            <button
+              data-tag={tag}
+              class:list={['tag-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer']}
+            >
+              {tag}
+              <span class="ml-1 opacity-50">({count})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <!-- 文章列表 -->
+      <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8">
+        {sortedPosts.map((post, index) => {
+          const grad = getGradient(post.data.title);
+          const readTime = getReadTime(post.body || '');
+          const postTags = (post.data.tags || []).join(',');
+          return (
+            <a
+              href={`/blog/${post.id}/`}
+              data-tags={postTags}
+              class:list={[
+                'post-card post-item group block bg-white dark:bg-slate-800/40 rounded-2xl overflow-hidden animate-fade-up',
+                `animate-delay-${Math.min(index + 1, 5)}`,
+              ]}
+            >
+              <!-- 渐变封面 -->
+              <div class:list={['relative h-36 overflow-hidden bg-gradient-to-br', grad]}>
+                <div class="absolute inset-0 opacity-10">
+                  <div class="absolute top-4 right-4 w-16 h-16 border-2 border-white/40 rounded-full"></div>
+                  <div class="absolute bottom-4 left-4 w-12 h-12 border-2 border-white/30 rounded-lg rotate-12"></div>
+                </div>
+                {post.data.categories.length > 0 && (
+                  <div class="absolute top-3 left-3 px-3 py-1 rounded-lg bg-black/20 backdrop-blur-sm text-white text-xs font-semibold">
+                    {post.data.categories[0]}
+                  </div>
+                )}
+                <div class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/20 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {readTime}
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+                  <h2 class="text-lg font-bold text-white line-clamp-2 leading-snug">{post.data.title}</h2>
+                </div>
+              </div>
+
+              <!-- 内容 -->
+              <div class="p-5">
+                {post.data.tags.length > 0 && (
+                  <div class="flex flex-wrap gap-1.5 mb-3">
+                    {post.data.tags.slice(0, 3).map((tag) => (
+                      <span class={`tag ${getTagColor(tag)}`}>{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                  {post.data.description}
+                </p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                  <time datetime={post.data.pubDate.toISOString()} class="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                    {post.data.pubDate.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                  </time>
+                  <span class="text-xs font-medium text-primary dark:text-primary-light flex items-center gap-1 group-hover:gap-2 transition-all">
+                    阅读全文
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      <!-- 无结果提示 -->
+      <div id="no-results" class="hidden text-center py-20">
+        <p class="text-5xl mb-4">🔍</p>
+        <p class="text-slate-400 dark:text-slate-500 text-lg">该标签下暂无文章</p>
+        <button id="clear-filter" class="mt-4 px-4 py-2 text-sm font-medium text-primary dark:text-primary-light bg-primary/5 dark:bg-primary-light/10 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer">
+          清除筛选
+        </button>
+      </div>
+
+      {sortedPosts.length === 0 && (
+        <div class="text-center py-20">
+          <p class="text-6xl mb-4">📝</p>
+          <p class="text-slate-400 dark:text-slate-500 text-lg">还没有文章，敬请期待！</p>
+        </div>
+      )}
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<script>
+  // 标签筛选逻辑
+  const filterBtns = document.querySelectorAll<HTMLButtonElement>('.tag-filter-btn');
+  const postItems = document.querySelectorAll<HTMLElement>('.post-item');
+  const noResults = document.getElementById('no-results');
+  const clearFilter = document.getElementById('clear-filter');
+  const postCount = document.getElementById('post-count');
+  let activeTag = 'all';
+
+  function updateFilterButtons() {
+    filterBtns.forEach(btn => {
+      const tag = btn.dataset.tag || 'all';
+      if (tag === activeTag) {
+        btn.classList.add('active');
+        btn.style.background = 'var(--color-primary)';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--color-primary)';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = 'white';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        if (document.documentElement.classList.contains('dark')) {
+          btn.style.background = 'rgba(30,41,59,0.4)';
+        }
+      }
+    });
+  }
+
+  function filterPosts(tag: string) {
+    activeTag = tag;
+    let visibleCount = 0;
+    postItems.forEach(item => {
+      const tags = item.dataset.tags || '';
+      if (tag === 'all' || tags.includes(tag)) {
+        (item as HTMLElement).style.display = '';
+        visibleCount++;
+      } else {
+        (item as HTMLElement).style.display = 'none';
+      }
+    });
+    if (noResults) {
+      (noResults as HTMLElement).classList.toggle('hidden', visibleCount > 0 || tag === 'all');
+    }
+    if (postCount) {
+      postCount.textContent = tag === 'all' ? String(postItems.length) : String(visibleCount);
+    }
+    updateFilterButtons();
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterPosts(btn.dataset.tag || 'all');
+    });
+  });
+
+  clearFilter?.addEventListener('click', () => filterPosts('all'));
+
+  // 初始化按钮状态
+  updateFilterButtons();
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tag-filter-btn {
+    background: white;
+    color: #475569;
+    border-color: #e2e8f0;
+  }
+  :global(.dark) .tag-filter-btn {
+    background: rgba(30,41,59,0.4);
+    color: #94a3b8;
+    border-color: rgba(51,65,85,0.6);
+  }
+  .tag-filter-btn:hover:not(.active) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+</style>

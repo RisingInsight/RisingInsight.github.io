@@ -1,0 +1,351 @@
+{{- if lt hugo.Version "0.146.0" }}
+{{- errorf "=> hugo v0.146.0 or greater is required for hugo-PaperMod to build " }}
+{{- end -}}
+
+<!DOCTYPE html>
+{{- $theme := site.Params.defaultTheme | default "auto" }}
+{{- if eq $theme "dark" }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" data-theme="dark">
+{{- else if eq $theme "light" }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" data-theme="light">
+{{- else }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" data-theme="auto">
+{{- end }}
+
+<head>
+    {{- partial "head.html" . }}
+    <!-- 手动引入Font Awesome图标库（解决图标不显示） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>
+        {{- $titlePrefix := "" -}}
+        {{- if .IsHome -}}
+            {{- $titlePrefix = "首页" -}}
+        {{- else if eq .Layout "archives" -}}
+            {{- $titlePrefix = "归档" -}}
+        {{- else if and (isset . "File") (eq .File.BaseFileName "about") -}}
+            {{- $titlePrefix = "关于我" -}}
+        {{- else if eq .Layout "search" -}}
+            {{- $titlePrefix = "搜索" -}}
+        {{- else -}}
+            {{- $titlePrefix = .Title -}}
+        {{- end -}}
+        {{- printf "%s | RisingInsight" $titlePrefix | safeHTML -}}
+    </title>
+    {{- $customCSS := resources.Get "css/extended.css" }}
+    {{- if $customCSS }}
+        {{- $customCSS = $customCSS | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $customCSS.RelPermalink }}" integrity="{{ $customCSS.Data.Integrity }}" />
+    {{- end }}
+</head>
+
+{{- if (or (ne .Kind `page` ) (eq .Layout `archives`) (eq .Layout `search`)) }}
+<body class="list" id="top">
+{{- else }}
+<body id="top">
+{{- end }}
+    {{ partialCached "header.html" . .Page -}}
+
+    <!-- 阅读进度条 -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- 全宽布局：左-中-右（恢复原布局结构，确保左侧栏显示） -->
+    <main class="full-width-container" style="display: flex; gap: 2rem; padding: 20px 0;">
+        {{- /* 左侧归档（恢复调用+确保样式生效） */ -}}
+        <aside class="sidebar sidebar-left">
+            {{- partial "sidebar/archive.html" . }}
+        </aside>
+
+        {{- /* 中间内容区 */ -}}
+        <div class="content-area" style="flex: 1; max-width: 1200px;">
+            {{- block "main" . }}{{ end }}
+        </div>
+
+        {{- /* 右侧目录 */ -}}
+        <aside class="sidebar sidebar-right">
+            {{- partial "sidebar/toc.html" . }}
+        </aside>
+    </main>
+
+    {{- /* 页脚（放到main外面，恢复原结构） */ -}}
+    {{ partial "footer.html" . }}
+
+    {{- partial "extend_footer.html" . }}
+
+    <!-- 不蒜子统计脚本 -->
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <!-- 动态填充页脚日期 -->
+    <script>
+        const getFormattedCurrentDate = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            return `${year}.${month}.${day}`;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateElement = document.getElementById('footer-end-date');
+            if (dateElement) {
+                dateElement.textContent = getFormattedCurrentDate();
+            }
+        });
+    </script>
+
+    <!-- 左侧栏折叠交互JS（恢复+确保DOM加载后执行） -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. 年份折叠逻辑
+            const yearToggles = document.querySelectorAll('.year-toggle');
+            yearToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const yearGroup = this.closest('.year-group');
+                    const yearContent = yearGroup.querySelector('.year-content');
+                    yearContent.style.display = yearContent.style.display === 'none' ? 'block' : 'none';
+                    yearGroup.classList.toggle('expanded');
+                });
+            });
+
+            // 2. 月份折叠逻辑
+            const monthToggles = document.querySelectorAll('.month-toggle');
+            monthToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const monthGroup = this.closest('.month-group');
+                    const monthContent = monthGroup.querySelector('.month-content');
+                    monthContent.style.display = monthContent.style.display === 'none' ? 'block' : 'none';
+                    monthGroup.classList.toggle('expanded');
+                });
+            });
+
+            // 3. 默认展开最新年份+月份
+            if (yearToggles.length > 0) {
+                yearToggles[0].click();
+                const firstMonthToggle = yearToggles[0].closest('.year-group').querySelector('.month-toggle');
+                if (firstMonthToggle) firstMonthToggle.click();
+            }
+        });
+    </script>
+
+    <!-- 菜单滚动/锚点跳转JS -->
+    <script>
+        let menu = document.getElementById('menu');
+        if (menu) {
+            const scrollPosition = localStorage.getItem("menu-scroll-position");
+            if (scrollPosition) {
+                menu.scrollLeft = parseInt(scrollPosition, 10);
+            }
+            
+            menu.onscroll = function () {
+                localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+            }
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                var id = this.getAttribute("href").substr(1);
+                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                        behavior: "smooth"
+                    });
+                } else {
+                    document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+                }
+                if (id === "top") {
+                    history.replaceState(null, null, " ");
+                } else {
+                    history.pushState(null, null, `#${id}`);
+                }
+            });
+        });
+    </script>
+
+    {{- if (not site.Params.disableScrollToTop) }}
+    <!-- 回到顶部JS -->
+    <script>
+        var mybutton = document.getElementById("top-link");
+        window.onscroll = function () {
+            if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+                mybutton.style.visibility = "visible";
+                mybutton.style.opacity = "1";
+            } else {
+                mybutton.style.visibility = "hidden";
+                mybutton.style.opacity = "0";
+            }
+        };
+    </script>
+    {{- end }}
+
+    {{- if (not site.Params.disableThemeToggle) }}
+    <!-- 主题切换JS -->
+    <script>
+        document.getElementById("theme-toggle").addEventListener("click", () => {
+            const html = document.querySelector("html");
+            if (html.dataset.theme === "dark") {
+                html.dataset.theme = 'light';
+                localStorage.setItem("pref-theme", 'light');
+            } else {
+                html.dataset.theme = 'dark';
+                localStorage.setItem("pref-theme", 'dark');
+            }
+        })
+    </script>
+    {{- end }}
+
+    {{- if (and (eq .Kind "page") (ne .Layout "archives") (ne .Layout "search") (.Param "ShowCodeCopyButtons")) }}
+    <!-- 代码复制按钮JS -->
+    <script>
+        document.querySelectorAll('pre > code').forEach((codeblock) => {
+            const container = codeblock.parentNode.parentNode;
+
+            const copybutton = document.createElement('button');
+            copybutton.classList.add('copy-code');
+            copybutton.innerHTML = '{{- i18n "code_copy" | default "copy" }}';
+
+            function copyingDone() {
+                copybutton.innerHTML = '{{- i18n "code_copied" | default "copied!" }}';
+                setTimeout(() => {
+                    copybutton.innerHTML = '{{- i18n "code_copy" | default "copy" }}';
+                }, 2000);
+            }
+
+            copybutton.addEventListener('click', (cb) => {
+                if ('clipboard' in navigator) {
+                    navigator.clipboard.writeText(codeblock.textContent);
+                    copyingDone();
+                    return;
+                }
+
+                const range = document.createRange();
+                range.selectNodeContents(codeblock);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                try {
+                    document.execCommand('copy');
+                    copyingDone();
+                } catch (e) { };
+                selection.removeRange(range);
+            });
+
+            if (container.classList.contains("highlight")) {
+                container.appendChild(copybutton);
+            } else if (container.parentNode.firstChild == container) {
+            } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+                codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+            } else {
+                codeblock.parentNode.appendChild(copybutton);
+            }
+        });
+    </script>
+    {{- end }}
+
+    <!-- 阅读进度条 JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.getElementById('reading-progress');
+            if (!progressBar) return;
+
+            function updateProgress() {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                if (docHeight > 0) {
+                    const progress = (scrollTop / docHeight) * 100;
+                    progressBar.style.width = progress + '%';
+                }
+            }
+
+            window.addEventListener('scroll', updateProgress, { passive: true });
+            updateProgress();
+        });
+    </script>
+
+    <!-- 目录滚动高亮 JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tocLinks = document.querySelectorAll('.custom-toc-link');
+            if (tocLinks.length === 0) return;
+
+            // 收集所有 TOC 对应的标题元素
+            const headings = [];
+            tocLinks.forEach(link => {
+                const id = link.getAttribute('href').replace('#', '');
+                const el = document.getElementById(id);
+                if (el) {
+                    headings.push({ el, link });
+                }
+            });
+
+            if (headings.length === 0) return;
+
+            let activeId = null;
+
+            // 使用 IntersectionObserver 监听标题进入视口
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            activeId = entry.target.id;
+                            updateActiveLink();
+                        }
+                    });
+                },
+                {
+                    rootMargin: '-80px 0px -60% 0px',
+                    threshold: 0
+                }
+            );
+
+            headings.forEach(({ el }) => observer.observe(el));
+
+            function updateActiveLink() {
+                tocLinks.forEach(link => link.classList.remove('active'));
+                const activeLink = document.querySelector(`.custom-toc-link[href="#${activeId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                    // 滚动 TOC 使当前条目可见
+                    const sidebarRight = activeLink.closest('.sidebar-right');
+                    if (sidebarRight) {
+                        const sidebarContent = sidebarRight.querySelector('.sidebar-content');
+                        if (sidebarContent) {
+                            const linkTop = activeLink.offsetTop - sidebarContent.offsetTop;
+                            const scrollTop = sidebarContent.scrollTop;
+                            const visibleTop = scrollTop;
+                            const visibleBottom = scrollTop + sidebarContent.clientHeight;
+                            if (linkTop < visibleTop || linkTop > visibleBottom - 40) {
+                                sidebarContent.scrollTo({
+                                    top: linkTop - sidebarContent.clientHeight / 2 + 20,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 页面加载时立即检查当前滚动位置，触发初始高亮
+            function checkInitialActive() {
+                const scrollY = window.scrollY;
+                let closest = null;
+                let closestDist = Infinity;
+                headings.forEach(({ el, link }) => {
+                    const rect = el.getBoundingClientRect();
+                    // 找到已经在视口内、且最接近顶部的标题
+                    if (rect.top <= 120 && rect.bottom > 0) {
+                        const dist = Math.abs(rect.top - 80);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            closest = link;
+                        }
+                    }
+                });
+                if (closest) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    closest.classList.add('active');
+                }
+            }
+            checkInitialActive();
+        });
+    </script>
+</body>
+</html>
