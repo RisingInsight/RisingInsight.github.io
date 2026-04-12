@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
@@ -11,7 +12,7 @@ import { getTagColor, getReadTime } from '../utils/blog';
 
 type Props = CollectionEntry<'blog'>['data'] & { id?: string; body?: string };
 
-const { title, description, pubDate, updatedDate, heroImage, tags, categories, body } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, tags, categories, body, series } = Astro.props;
 
 // 计算阅读时间
 const readTime = getReadTime(body || '');
@@ -23,6 +24,21 @@ const breadcrumbItems = [
   ...(categories && categories.length > 0 ? [{ label: categories[0] }] : []),
   { label: title },
 ];
+
+// 相关文章（同标签，排除自身）
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const postId = Astro.props.id || '';
+const relatedPosts = allPosts
+  .filter(p => p.id !== postId && p.data.tags?.some((t: string) => tags?.includes(t)))
+  .slice(0, 3);
+
+// 系列文章
+let seriesPosts: { id: string; title: string; slug: string }[] = [];
+if (series) {
+  seriesPosts = allPosts
+    .filter(p => p.data.series === series && p.id !== postId)
+    .map(p => ({ id: p.id, title: p.data.title, slug: p.id }));
+}
 ---
 
 <html lang="zh-CN">
@@ -50,6 +66,16 @@ const breadcrumbItems = [
 
         <!-- 文章头部 -->
         <header class="mb-10 animate-fade-up">
+          <!-- 系列标签 -->
+          {series && (
+            <div class="mb-4">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 text-primary dark:text-primary-light text-xs font-semibold">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                系列：{series}
+              </span>
+            </div>
+          )}
+
           <!-- 标签 -->
           {tags && tags.length > 0 && (
             <div class="flex flex-wrap gap-2 mb-5">
@@ -103,6 +129,14 @@ const breadcrumbItems = [
               </svg>
               <span>{readTime}</span>
             </div>
+            <!-- 访问量 -->
+            <div class="flex items-center gap-1.5" id="view-count-container">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span id="view-count">...</span>
+            </div>
           </div>
 
           <!-- 封面图 -->
@@ -120,18 +154,72 @@ const breadcrumbItems = [
           <slot />
         </div>
 
-        <!-- 文章底部 -->
-        <div class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700">
+        <!-- 系列文章导航 -->
+        {series && seriesPosts.length > 0 && (
+          <div class="mt-12 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/40">
+            <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              系列目录
+            </h3>
+            <div class="space-y-2">
+              {seriesPosts.map(p => (
+                <a href={`/blog/${p.slug}/`} class="series-nav">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  <span class="truncate">{p.title}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- 相关文章推荐 -->
+        {relatedPosts.length > 0 && (
+          <div class="mt-12">
+            <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              相关推荐
+            </h3>
+            <div class="grid gap-3">
+              {relatedPosts.map(p => {
+                const postTags = p.data.tags || [];
+                return (
+                  <a href={`/blog/${p.id}/`} class="related-post-card group">
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 group-hover:text-primary dark:group-hover:text-primary-light transition-colors truncate">
+                        {p.data.title}
+                      </h4>
+                      <div class="flex items-center gap-2 mt-1 text-xs text-slate-400 dark:text-slate-500">
+                        <time>{p.data.pubDate.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</time>
+                        <span>·</span>
+                        <span>{getReadTime(p.body || '')}</span>
+                      </div>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary dark:group-hover:text-primary-light transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <!-- 点赞 + 文章底部操作 -->
+        <div class="mt-10 pt-8 border-t border-slate-200 dark:border-slate-700">
           <div class="flex items-center justify-between">
-            <button
-              id="back-to-top"
-              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light bg-slate-100 dark:bg-slate-800 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-xl transition-all"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              返回顶部
-            </button>
+            <div class="flex items-center gap-3">
+              <button id="like-btn" class="like-btn" aria-label="点赞">
+                <svg class="w-5 h-5 heart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                <span id="like-count">0</span>
+              </button>
+              <button
+                id="back-to-top"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light bg-slate-100 dark:bg-slate-800 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-xl transition-all"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                返回顶部
+              </button>
+            </div>
 
             <a
               href="/blog/"
@@ -147,6 +235,11 @@ const breadcrumbItems = [
 
         <!-- 上下篇导航 -->
         <nav id="post-nav" class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4"></nav>
+
+        <!-- Giscus 评论区 -->
+        <div class="giscus-wrapper">
+          <div class="giscus"></div>
+        </div>
       </article>
         </div>
       </div>
@@ -163,6 +256,9 @@ const breadcrumbItems = [
       </svg>
     </button>
 
+    <!-- 键盘快捷键提示 -->
+    <div id="shortcut-toast" class="shortcut-toast"></div>
+
     <Footer />
 
     <!-- 图片灯箱 -->
@@ -176,9 +272,10 @@ const breadcrumbItems = [
 </html>
 
 <script>
-  // 阅读进度条
+  // ==========================================
+  // 1. 阅读进度条 + 浮动回到顶部按钮
+  // ==========================================
   const progressBar = document.getElementById('reading-progress');
-  // 浮动回到顶部按钮
   const scrollTopBtn = document.getElementById('scroll-top-btn');
 
   function onScroll() {
@@ -188,7 +285,6 @@ const breadcrumbItems = [
     if (progressBar) {
       progressBar.style.width = progress + '%';
     }
-    // 浮动按钮在滚动超过 300px 后显示
     if (scrollTopBtn) {
       if (scrollTop > 300) {
         scrollTopBtn.classList.remove('opacity-0', 'pointer-events-none');
@@ -202,12 +298,84 @@ const breadcrumbItems = [
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // 回到顶部
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   document.getElementById('back-to-top')?.addEventListener('click', scrollToTop);
   scrollTopBtn?.addEventListener('click', scrollToTop);
 
-  // 图片灯箱
+  // ==========================================
+  // 2. 代码块复制按钮
+  // ==========================================
+  document.querySelectorAll('.prose pre').forEach(pre => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    pre.parentNode?.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>复制</span>`;
+    btn.addEventListener('click', () => {
+      const code = pre.querySelector('code')?.textContent || pre.textContent || '';
+      navigator.clipboard.writeText(code).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>已复制</span>`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>复制</span>`;
+        }, 2000);
+      });
+    });
+    wrapper.appendChild(btn);
+  });
+
+  // ==========================================
+  // 3. 文章点赞（localStorage）
+  // ==========================================
+  const likeBtn = document.getElementById('like-btn') as HTMLButtonElement;
+  const likeCount = document.getElementById('like-count');
+  const STORAGE_KEY_LIKES = 'blog_likes';
+  const STORAGE_KEY_LIKED = 'blog_liked';
+  const pageId = location.pathname;
+
+  function getLikes(): Record<string, number> {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY_LIKES) || '{}'); } catch { return {}; }
+  }
+  function getLiked(): string[] {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY_LIKED) || '[]'); } catch { return []; }
+  }
+
+  if (likeBtn && likeCount) {
+    const likes = getLikes();
+    const liked = getLiked();
+    likeCount.textContent = likes[pageId] || 0;
+    if (liked.includes(pageId)) {
+      likeBtn.classList.add('liked');
+      (likeBtn.querySelector('.heart-icon') as SVGElement)?.setAttribute('fill', 'currentColor');
+    }
+
+    likeBtn.addEventListener('click', () => {
+      const allLikes = getLikes();
+      const allLiked = getLiked();
+      if (allLiked.includes(pageId)) {
+        allLiked.splice(allLiked.indexOf(pageId), 1);
+        allLikes[pageId] = Math.max(0, (allLikes[pageId] || 1) - 1);
+        likeBtn.classList.remove('liked');
+        (likeBtn.querySelector('.heart-icon') as SVGElement)?.setAttribute('fill', 'none');
+      } else {
+        allLiked.push(pageId);
+        allLikes[pageId] = (allLikes[pageId] || 0) + 1;
+        likeBtn.classList.add('liked');
+        (likeBtn.querySelector('.heart-icon') as SVGElement)?.setAttribute('fill', 'currentColor');
+      }
+      localStorage.setItem(STORAGE_KEY_LIKES, JSON.stringify(allLikes));
+      localStorage.setItem(STORAGE_KEY_LIKED, JSON.stringify(allLiked));
+      likeCount.textContent = allLikes[pageId];
+    });
+  }
+
+  // ==========================================
+  // 4. 图片灯箱
+  // ==========================================
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
   const lightboxClose = document.getElementById('lightbox-close');
@@ -235,7 +403,189 @@ const breadcrumbItems = [
     e.stopPropagation();
     closeLightbox();
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeLightbox();
+
+  // ==========================================
+  // 5. 图片懒加载渐入动画
+  // ==========================================
+  const proseImgs = document.querySelectorAll('.prose img');
+  if ('IntersectionObserver' in window) {
+    const imgObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('loaded');
+          imgObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    proseImgs.forEach(img => {
+      img.classList.add('img-lazy');
+      // 如果图片已经在视口内，直接显示
+      if (img.getBoundingClientRect().top < window.innerHeight) {
+        img.classList.add('loaded');
+      } else {
+        imgObserver.observe(img);
+      }
+    });
+  }
+
+  // ==========================================
+  // 6. 返回上次阅读位置
+  // ==========================================
+  const SCROLL_POS_KEY = 'scroll_pos_';
+  // 恢复位置
+  const savedPos = sessionStorage.getItem(SCROLL_POS_KEY + pageId);
+  if (savedPos) {
+    const pos = parseInt(savedPos, 10);
+    if (!isNaN(pos) && pos > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: pos, behavior: 'instant' as ScrollBehavior });
+      });
+    }
+  }
+  // 离开页面时保存位置
+  window.addEventListener('beforeunload', () => {
+    sessionStorage.setItem(SCROLL_POS_KEY + pageId, String(window.scrollY));
   });
+  // 30秒自动保存
+  setInterval(() => {
+    sessionStorage.setItem(SCROLL_POS_KEY + pageId, String(window.scrollY));
+  }, 30000);
+
+  // ==========================================
+  // 7. 键盘快捷键
+  // ==========================================
+  const toast = document.getElementById('shortcut-toast');
+  function showToast(msg: string) {
+    if (!toast) return;
+    toast.innerHTML = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  }
+
+  // 文章列表（用于 j/k 导航）— 从上下篇导航推断
+  const allArticleLinks: { title: string; href: string }[] = [];
+  document.querySelectorAll('#post-nav a').forEach(a => {
+    const titleEl = a.querySelector('span:last-child');
+    if (titleEl && a.href) {
+      allArticleLinks.push({ title: titleEl.textContent || '', href: a.href });
+    }
+  });
+  // 尝试从相关推荐也收集
+  document.querySelectorAll('.related-post-card').forEach(a => {
+    const titleEl = a.querySelector('h4');
+    if (titleEl && a.href && !allArticleLinks.find(l => l.href === a.href)) {
+      allArticleLinks.push({ title: titleEl.textContent || '', href: a.href });
+    }
+  });
+
+  let isSearchFocused = false;
+  document.addEventListener('focusin', () => {
+    isSearchFocused = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (isSearchFocused) return;
+
+    if (e.key === 'Escape') {
+      closeLightbox();
+      return;
+    }
+    if (e.key === 't' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      scrollToTop();
+      showToast(`<kbd>T</kbd> 回到顶部`);
+    }
+    if (e.key === 'j' && !e.ctrlKey && !e.metaKey && !e.altKey && allArticleLinks.length > 0) {
+      // 下一篇文章（通常是 nextPost，索引 1 或 0）
+      const next = allArticleLinks[0];
+      if (next) {
+        showToast(`<kbd>J</kbd> ${next.title}`);
+        setTimeout(() => location.href = next.href, 600);
+      }
+    }
+    if (e.key === 'k' && !e.ctrlKey && !e.metaKey && !e.altKey && allArticleLinks.length > 1) {
+      const prev = allArticleLinks[1];
+      if (prev) {
+        showToast(`<kbd>K</kbd> ${prev.title}`);
+        setTimeout(() => location.href = prev.href, 600);
+      }
+    }
+  });
+
+  // ==========================================
+  // 8. 不蒜子访问量统计
+  // ==========================================
+  const viewCountEl = document.getElementById('view-count');
+  if (viewCountEl) {
+    // 动态加载不蒜子脚本
+    const script = document.createElement('script');
+    script.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+    script.async = true;
+    document.head.appendChild(script);
+    // 等待脚本加载完成后获取数据
+    script.onload = () => {
+      // 不蒜子使用 span 标签自动填充，需要特殊处理
+      // 使用 fetch 获取 pv 数据
+      fetch(`https://busuanzi.ibruce.info/busuanzi?jsonpCallback=busuanziCallBack_${Date.now()}`)
+        .then(r => r.text())
+        .then(() => {
+          // 不蒜子会自动统计，我们用简单方式显示
+          const el = document.getElementById('view-count');
+          if (el) {
+            // 不蒜子会在页面中创建数据，但跨域限制可能无法直接访问
+            // 使用简单的 localStorage 计数作为备选
+          }
+        });
+    };
+    // 备选：本地计数
+    const LOCAL_VIEW_KEY = 'local_views';
+    const views = JSON.parse(localStorage.getItem(LOCAL_VIEW_KEY) || '{}');
+    if (!views[pageId]) views[pageId] = 0;
+    // 仅在首次访问时 +1
+    const sessionViewed = sessionStorage.getItem('viewed_' + pageId);
+    if (!sessionViewed) {
+      views[pageId]++;
+      sessionStorage.setItem('viewed_' + pageId, '1');
+      localStorage.setItem(LOCAL_VIEW_KEY, JSON.stringify(views));
+    }
+    viewCountEl.textContent = views[pageId] + ' 阅读';
+  }
+</script>
+
+<!-- Giscus 评论系统 -->
+<script>
+  const giscusContainer = document.querySelector('.giscus');
+  if (giscusContainer) {
+    const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'RisingInsight/RisingInsight.github.io');
+    script.setAttribute('data-repo-id', 'R_kgDOQx_R_A');
+    script.setAttribute('data-category', 'Announcements');
+    script.setAttribute('data-category-id', 'DIC_kwDOQx_R_M4C0fi1');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'bottom');
+    script.setAttribute('data-theme', theme);
+    script.setAttribute('data-lang', 'zh-CN');
+    script.setAttribute('data-loading', 'lazy');
+    script.setAttribute('crossorigin', 'anonymous');
+    script.async = true;
+    giscusContainer.appendChild(script);
+
+    // 监听主题切换，更新 giscus 主题
+    const observer = new MutationObserver(() => {
+      const iframe = document.querySelector('iframe.giscus-frame') as HTMLIFrameElement;
+      if (iframe) {
+        const newTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        iframe.contentWindow?.postMessage(
+          { giscus: { setConfig: { theme: newTheme } } },
+          'https://giscus.app'
+        );
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  }
 </script>

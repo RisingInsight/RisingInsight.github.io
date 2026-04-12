@@ -469,3 +469,192 @@ body {
 .lightbox-close:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* ===== 代码块复制按钮 ===== */
+.code-block-wrapper {
+  position: relative;
+}
+.code-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+.code-block-wrapper:hover .code-copy-btn {
+  opacity: 1;
+}
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+.code-copy-btn.copied {
+  opacity: 1;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+}
+
+/* ===== 图片渐入动画 ===== */
+.prose img {
+  cursor: zoom-in;
+  transition: transform 0.3s ease, opacity 0.6s ease;
+}
+.prose img.img-lazy {
+  opacity: 0;
+  transform: scale(0.98);
+}
+.prose img.img-lazy.loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ===== 文章点赞按钮 ===== */
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.like-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+.dark .like-btn:hover {
+  border-color: #f87171;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+.like-btn.liked {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+.dark .like-btn.liked {
+  border-color: #f87171;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+.like-btn .heart-icon {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.like-btn.liked .heart-icon,
+.like-btn:hover .heart-icon {
+  transform: scale(1.2);
+}
+
+/* ===== 相关文章推荐卡片 ===== */
+.related-post-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+.related-post-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 16px rgba(26, 86, 219, 0.08);
+  transform: translateY(-2px);
+}
+.dark .related-post-card {
+  background: var(--color-surface-dark-alt);
+  border-color: var(--color-border-dark);
+}
+.dark .related-post-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+}
+
+/* ===== Giscus 评论区域 ===== */
+.giscus-wrapper {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+}
+.dark .giscus-wrapper {
+  border-color: var(--color-border-dark);
+}
+.giscus {
+  max-width: 100%;
+}
+
+/* ===== 键盘快捷键提示 Toast ===== */
+.shortcut-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: var(--color-surface-dark);
+  color: white;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 300;
+}
+.shortcut-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.shortcut-toast kbd {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin: 0 2px;
+}
+
+/* ===== 系列文章导航 ===== */
+.series-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.dark .series-nav {
+  background: rgba(26, 86, 219, 0.1);
+  color: var(--color-primary-light);
+}
+.series-nav:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 86, 219, 0.12);
+}
