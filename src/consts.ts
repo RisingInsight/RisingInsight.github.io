@@ -1,6 +1,6 @@
 // 站点全局配置
 export const SITE_TITLE = "RisingInsight's Blog";
-export const SITE_DESCRIPTION = '分析一些个人的学习笔记 | 记录一些新鲜的技术';
+export const SITE_DESCRIPTION = '分享一些个人的学习笔记 | 记录一些新鲜的技术';
 export const SITE_AUTHOR = 'RisingInsight';
 export const SITE_LANG = 'zh-cn';
 export const SITE_URL = 'https://risinginsight.github.io';
