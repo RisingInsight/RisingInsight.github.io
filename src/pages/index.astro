@@ -5,6 +5,7 @@ import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION, PROFILE, SOCIALS } from '../consts';
 import { getCollection } from 'astro:content';
 import { getTagColor, getGradient, getReadTime } from '../utils/blog';
+import ParticleNetwork from '../components/ParticleNetwork.astro';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = allPosts.sort(
@@ -45,12 +46,13 @@ const typewriterTexts = ['分享一些个人的学习笔记', '记录一些新�
 
     <main>
       <!-- ===== Hero 区域 ===== -->
-      <section class="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white dark:from-[#0c1222] dark:to-[#0c1222]">
+      <section id="hero" class="relative bg-gradient-to-b from-slate-50 to-white dark:from-[#0c1222] dark:to-[#0c1222]">
         <!-- 装饰背景 -->
         <div class="absolute inset-0 overflow-hidden">
-          <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-[100px] animate-blob"></div>
-          <div class="absolute top-20 -left-20 w-80 h-80 bg-purple-400/20 dark:bg-purple-500/10 rounded-full blur-[80px] animate-blob animation-delay-2000"></div>
-          <div class="absolute -bottom-20 left-1/2 w-72 h-72 bg-amber-400/15 dark:bg-amber-500/10 rounded-full blur-[80px] animate-blob animation-delay-4000"></div>
+          <!-- 粒子网络（替换原 blob 动画） -->
+          <ParticleNetwork />
+          <!-- 鼠标跟随光效 -->
+          <div id="mouse-glow"></div>
           <!-- 网格纹理 -->
           <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2UyZThmMCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIgb3BhY2l0eT0iMC40Ii8+PC9zdmc+')] opacity-50 dark:opacity-20"></div>
         </div>
@@ -59,7 +61,7 @@ const typewriterTexts = ['分享一些个人的学习笔记', '记录一些新�
           <div class="flex flex-col items-center text-center">
             <!-- 头像 -->
             <div class="relative mb-8 animate-fade-up">
-              <div class="w-36 h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden shadow-2xl ring-4 ring-white dark:ring-slate-800 relative z-10">
+              <div data-tilt class="w-36 h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden shadow-2xl ring-4 ring-white dark:ring-slate-800 relative z-10">
                 <img src={PROFILE.avatar} alt={PROFILE.name} class="w-full h-full object-cover" />
               </div>
               <!-- 在线状态 + 装饰环 -->
@@ -123,9 +125,9 @@ const typewriterTexts = ['分享一些个人的学习笔记', '记录一些新�
             <!-- 统计卡片（增加运行天数） -->
             <div class="grid grid-cols-5 gap-2 sm:gap-4 w-full max-w-xl animate-fade-up animate-delay-3">
               {statsData.map((stat) => (
-                <div class="stat-card text-center p-2.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/40 shadow-sm">
+                <div data-tilt class="stat-card text-center p-2.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/40 shadow-sm">
                   <div class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white whitespace-nowrap">
-                    {stat.value}
+                    <span class="stat-value" data-target={stat.value}>0</span>
                   </div>
                   <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
                     {stat.label}
@@ -342,6 +344,137 @@ const typewriterTexts = ['分享一些个人的学习笔记', '记录一些新�
       setTimeout(type, delay);
     }
     type();
+  }
+</script>
+
+<script>
+  // ===== 1. 鼠标跟随光效 =====
+  const heroSection = document.getElementById('hero');
+  const mouseGlow = document.getElementById('mouse-glow');
+
+  if (heroSection && mouseGlow && window.matchMedia('(hover: hover)').matches) {
+    let glowX = 0, glowY = 0;
+    let targetX = -1000, targetY = -1000;
+    let isOverHero = false;
+
+    function updateGlowPosition(e: MouseEvent) {
+      const rect = heroSection!.getBoundingClientRect();
+      targetX = e.clientX - rect.left;
+      targetY = e.clientY - rect.top;
+    }
+
+    document.addEventListener('pointermove', (e) => {
+      const rect = heroSection!.getBoundingClientRect();
+      const over = e.clientX >= rect.left && e.clientX <= rect.right &&
+                   e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (over) {
+        if (!isOverHero) {
+          isOverHero = true;
+          mouseGlow!.classList.add('active');
+        }
+        targetX = e.clientX - rect.left;
+        targetY = e.clientY - rect.top;
+      } else if (isOverHero) {
+        isOverHero = false;
+        mouseGlow!.classList.remove('active');
+      }
+    });
+
+    function animateGlow() {
+      glowX += (targetX - glowX) * 0.08;
+      glowY += (targetY - glowY) * 0.08;
+      mouseGlow!.style.left = glowX + 'px';
+      mouseGlow!.style.top = glowY + 'px';
+      requestAnimationFrame(animateGlow);
+    }
+    animateGlow();
+  }
+
+  // ===== 2. 3D 倾斜效果 =====
+  if (window.matchMedia('(hover: hover)').matches) {
+    const tiltElements = document.querySelectorAll('[data-tilt], .social-btn');
+    const maxAngle = 8;
+
+    tiltElements.forEach((el) => {
+      const htmlEl = el as HTMLElement;
+
+      htmlEl.addEventListener('mouseenter', () => {
+        htmlEl.classList.remove('tilt-leave');
+      });
+
+      htmlEl.addEventListener('mousemove', (e: Event) => {
+        const me = e as MouseEvent;
+        const rect = htmlEl.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const rotateY = ((me.clientX - centerX) / (rect.width / 2)) * maxAngle;
+        const rotateX = -((me.clientY - centerY) / (rect.height / 2)) * maxAngle;
+
+        htmlEl.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        htmlEl.style.boxShadow = `${-rotateY * 2}px ${rotateX * 2}px 30px rgba(26, 86, 219, 0.1)`;
+      });
+
+      htmlEl.addEventListener('mouseleave', () => {
+        htmlEl.classList.add('tilt-leave');
+        htmlEl.style.transform = 'perspective(800px) rotateX(0) rotateY(0) scale(1)';
+        htmlEl.style.boxShadow = '';
+      });
+    });
+  }
+
+  // ===== 3. 数字滚动动画 =====
+  function animateNumber(el: HTMLElement) {
+    const target = el.dataset.target || '0';
+    const duration = 1500;
+
+    const match = target.match(/^([\d.]+)(.*)$/);
+    if (!match) { el.textContent = target; return; }
+
+    const endValue = parseFloat(match[1]);
+    const suffix = match[2];
+    const isDecimal = target.includes('.');
+    const startTime = performance.now();
+
+    function easeOutExpo(t: number): number {
+      return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    }
+
+    function step(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeOutExpo(progress);
+      const current = endValue * easedProgress;
+
+      if (isDecimal) {
+        el.textContent = current.toFixed(1) + suffix;
+      } else {
+        el.textContent = Math.floor(current) + suffix;
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.textContent = target;
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  const statValues = document.querySelectorAll('.stat-value');
+  if (statValues.length > 0) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animateNumber(entry.target as HTMLElement);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+    statValues.forEach((el) => observer.observe(el));
   }
 </script>
 
