@@ -1,16 +1,14 @@
 // 站点全局配置
 export const SITE_TITLE = "RisingInsight's Blog";
 export const SITE_DESCRIPTION = '分享一些个人的学习笔记 | 记录一些新鲜的技术';
-export const SITE_AUTHOR = 'RisingInsight';
-export const SITE_LANG = 'zh-cn';
 export const SITE_URL = 'https://risinginsight.github.io';
 
 // 社交链接
 export const SOCIALS = [
-  { name: 'GitHub', href: 'https://github.com/RisingInsight', icon: 'github', color: '#1e293b' },
-  { name: '知乎', href: 'https://www.zhihu.com/people/zhang-zhang-jian-shi-26', icon: 'zhihu', color: '#0066ff' },
-  { name: 'CSDN', href: 'https://blog.csdn.net/2203_75893174', icon: 'csdn', color: '#cf222e' },
-  { name: 'Email', href: 'mailto:1668676243@qq.com', icon: 'mail', color: '#6366f1' },
+  { name: 'GitHub', href: 'https://github.com/RisingInsight' },
+  { name: '知乎', href: 'https://www.zhihu.com/people/zhang-zhang-jian-shi-26' },
+  { name: 'CSDN', href: 'https://blog.csdn.net/2203_75893174' },
+  { name: 'Email', href: 'mailto:1668676243@qq.com' },
 ];
 
 // 导航菜单
@@ -32,11 +30,3 @@ export const PROFILE = {
   location: 'China',
   school: "Master's Student",
 };
-
-// 统计数据
-export const STATS = [
-  { label: '文章', value: '4', icon: 'doc' },
-  { label: '分类', value: '3', icon: 'folder' },
-  { label: '标签', value: '12', icon: 'tag' },
-  { label: '字数', value: '2.5w', icon: 'text' },
-];

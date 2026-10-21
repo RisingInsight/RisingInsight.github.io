@@ -2,6 +2,7 @@
 title: "深度生成模型"
 pubDate: 2026-01-02
 math: true
+featured: true
 description: "从VAE到DDPM：全面推导深度生成模型的核心原理，包括变分自编码器ELBO推导、GAN对抗训练、Flow模型以及扩散模型DDPM的前向过程与逆向去噪过程。"
 tags:
   - 深度学习

@@ -1,108 +1,51 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
+import { formatDate } from '../utils/blog';
 
-// 时光机数据（可自行添加）
 const moments = [
   {
     date: '2026-04-11',
-    content: '使用 Astro 对个人博客进行了全面重构，体验大幅提升 🚀',
-    emoji: '✨',
+    content: '使用 Astro 对个人博客进行了全面重构，体验大幅提升。',
     category: '网站',
-    color: 'from-blue-500 to-indigo-500',
   },
   {
     date: '2026-01-01',
-    content: '使用 Hugo 搭建了个人博客，正式开始记录学习与研究的旅程',
-    emoji: '🎉',
+    content: '使用 Hugo 搭建了个人博客，正式开始记录学习与研究的旅程。',
     category: '网站',
-    color: 'from-blue-500 to-indigo-500',
   },
-];
-
-const breadcrumbItems = [
-  { label: '首页', href: '/' },
-  { label: '时光机' },
 ];
 ---
 
-<html lang="zh-CN">
-  <head>
-    <BaseHead title="时光机" description="记录生活与研究的碎片瞬间" />
-  </head>
-  <body>
-    <Header />
+<BaseLayout title="时光机" description="记录生活与研究的碎片瞬间">
+  <main class="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+    <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '时光机' }]} />
 
-    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <Breadcrumb items={breadcrumbItems} />
+    <header class="border-b border-rule pb-6">
+      <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">Log</div>
+      <h1 class="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+        时光机
+      </h1>
+      <p class="mt-3 text-sm text-muted">记录生活与研究的碎片瞬间 · {moments.length} 条</p>
+    </header>
 
-      <!-- 页面标题 -->
-      <div class="mb-10 animate-fade-up">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full"></div>
-          <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">时光机</h1>
-        </div>
-        <p class="text-slate-500 dark:text-slate-400 ml-4">记录生活与研究的碎片瞬间 ⏳</p>
-      </div>
-
-      <!-- 时间线 -->
-      <div class="relative pl-8 space-y-6">
-        <!-- 竖线 -->
-        <div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-primary via-purple-400 to-accent"></div>
-
-        {moments.map((moment, i) => {
-          const date = new Date(moment.date);
-          const dateStr = date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
-          const weekday = date.toLocaleDateString('zh-CN', { weekday: 'short' });
-          return (
-            <div class="relative scroll-reveal" style={`animation-delay: ${i * 0.08}s`}>
-              <!-- 节点 -->
-              <div class:list={[
-                'absolute -left-8 top-4 w-[22px] h-[22px] rounded-full bg-white dark:bg-slate-900 border-[3px] flex items-center justify-center text-[10px] group-hover:scale-125 transition-transform z-10',
-                moment.category === '研究' ? 'border-orange-500 dark:border-orange-400' : '',
-                moment.category === '网站' ? 'border-blue-500 dark:border-blue-400' : '',
-                moment.category === '学习' ? 'border-emerald-500 dark:border-emerald-400' : '',
-                moment.category === '生活' ? 'border-pink-500 dark:border-pink-400' : '',
-              ]}>
-                {moment.emoji}
-              </div>
-              <div class="group p-5 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 hover:border-primary/30 dark:hover:border-primary-light/30 hover:shadow-md transition-all">
-                <div class="flex items-center gap-2 mb-2 flex-wrap">
-                  <span class:list={[
-                    'px-2.5 py-0.5 rounded-full text-xs font-bold text-white bg-gradient-to-r',
-                    moment.color,
-                  ]}>
-                    {moment.category}
-                  </span>
-                  <span class="text-xs text-slate-400 dark:text-slate-500">{dateStr} {weekday}</span>
-                </div>
-                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">
-                  {moment.content}
-                </p>
-              </div>
+    <div class="relative mt-10 border-l border-rule pl-6">
+      {moments.map((moment) => {
+        const date = new Date(moment.date);
+        return (
+          <div class="relative pb-10 last:pb-0">
+            <span class="absolute -left-[28px] top-1.5 h-2 w-2 rounded-full border border-paper bg-accent"></span>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light">
+              <time datetime={moment.date}>{formatDate(date)}</time>
+              <span class="text-rule">/</span>
+              <span>{date.toLocaleDateString('zh-CN', { weekday: 'short' })}</span>
+              <span class="text-rule">/</span>
+              <span>{moment.category}</span>
             </div>
-          );
-        })}
-      </div>
-    </main>
-
-    <Footer />
-  </body>
-</html>
-
-<script>
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
-  );
-  document.querySelectorAll('.scroll-reveal').forEach((el) => observer.observe(el));
-</script>
+            <p class="mt-2 max-w-2xl text-sm leading-7 text-ink-soft">{moment.content}</p>
+          </div>
+        );
+      })}
+    </div>
+  </main>
+</BaseLayout>

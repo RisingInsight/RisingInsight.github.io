@@ -1,63 +1,45 @@
-# Astro Starter Kit: Blog
+# RisingInsight's Blog
+
+个人科研笔记与技术博客，基于 Astro 构建。
+
+## 技术栈
+
+- Astro 6 + MDX
+- Tailwind CSS 4
+- KaTeX（remark-math / rehype-katex）
+- Pagefind 全文搜索
+- Giscus 评论
+- GitHub Pages + GitHub Actions
+
+## 本地开发
 
 ```sh
-npm create astro@latest -- --template blog
+npm install
+npm run dev       # http://localhost:4321
+npm run build     # 构建到 dist/，并生成 Pagefind 索引
+npm run preview   # 预览构建结果
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 内容
 
-Features:
+文章位于 `src/content/blog/`，支持 Markdown 与 MDX。常用 frontmatter：
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+```yaml
+title: "文章标题"
+description: "摘要"
+pubDate: 2026-01-02
+updatedDate: 2026-01-03   # 可选
+tags: [扩散模型, DDPM]
+categories: [深度学习理论]
+series: "生成模型笔记"      # 可选
+featured: true             # 可选，显示在首页推荐
+draft: true                # 可选，草稿不会构建
+heroImage: "/posts/my-post/cover.jpg"  # 可选
+ogImage: "/posts/my-post/og.png"       # 可选，分享图；默认 og-default.png
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+文章图片放在 `public/posts/<slug>/` 下，正文中用绝对路径引用。
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## 部署
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+推送到 `main` 后由 `.github/workflows/deploy-astro.yml` 自动构建并部署到 GitHub Pages。

@@ -16,61 +16,89 @@ const searchData = allPosts
   }));
 ---
 
-<!-- 搜索触发按钮 -->
-<button id="search-trigger" class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light hover:bg-primary/5 dark:hover:bg-primary/10 transition-all" aria-label="搜索" title="搜索文章 (Ctrl+K)">
-  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-</button>
-
 <!-- 搜索弹窗 -->
-<div id="search-modal" class="search-modal">
+<div id="search-modal" class="search-modal" role="dialog" aria-modal="true" aria-label="搜索文章" inert>
   <div class="search-backdrop"></div>
   <div class="search-panel">
-    <!-- 搜索输入 -->
     <div class="search-input-wrap">
-      <svg class="search-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <svg class="search-input-icon" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
-      <input id="search-input" type="text" placeholder="全文搜索文章..." autocomplete="off" class="search-input" />
+      <input id="search-input" type="text" placeholder="搜索笔记..." autocomplete="off" class="search-input" aria-label="搜索文章" />
       <kbd class="search-kbd">ESC</kbd>
+      <button id="search-close" class="search-close" type="button" aria-label="关闭搜索">×</button>
     </div>
 
-    <!-- 搜索结果 -->
-    <div id="search-results" class="search-results">
+    <div id="search-results" class="search-results" aria-live="polite">
       <div class="search-empty-state">
-        <div class="text-4xl mb-3">🔍</div>
-        <p class="text-sm text-slate-400 dark:text-slate-500">输入关键词开始搜索</p>
-        <p class="text-xs text-slate-300 dark:text-slate-600 mt-2">支持全文搜索</p>
+        <p class="search-empty-title">输入关键词开始搜索</p>
+        <p class="search-empty-hint">支持全文搜索 · Pagefind</p>
       </div>
     </div>
   </div>
 </div>
 
 <script define:vars={{ searchData }}>
-  const trigger = document.getElementById('search-trigger');
   const modal = document.getElementById('search-modal');
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results');
   const backdrop = modal?.querySelector('.search-backdrop');
+  const closeBtn = document.getElementById('search-close');
+  const triggers = document.querySelectorAll('[data-search-trigger]');
 
   let pagefindLoaded = false;
-  let pagefind: any = null;
+  let pagefind = null;
+  let lastTrigger = null;
+  let searchSeq = 0;
 
-  function openSearch() {
+  function emptyState(message) {
+    return `<div class="search-empty-state"><p class="search-empty-title">${message}</p><p class="search-empty-hint">支持全文搜索 · Pagefind</p></div>`;
+  }
+
+  function openSearch(event) {
+    if (event?.currentTarget) lastTrigger = event.currentTarget;
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+      document.getElementById('mobile-menu-btn')?.click();
+    }
+    modal?.removeAttribute('inert');
     modal?.classList.add('active');
     document.body.style.overflow = 'hidden';
     setTimeout(() => input?.focus(), 100);
   }
+
   function closeSearch() {
+    searchSeq += 1;
     modal?.classList.remove('active');
+    modal?.setAttribute('inert', '');
     document.body.style.overflow = '';
     if (input) input.value = '';
-    if (results) results.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">🔍</div><p class="text-sm text-slate-400 dark:text-slate-500">输入关键词开始搜索</p><p class="text-xs text-slate-300 dark:text-slate-600 mt-2">支持全文搜索</p></div>';
+    if (results) results.innerHTML = emptyState('输入关键词开始搜索');
+    if (lastTrigger) {
+      lastTrigger.focus();
+      lastTrigger = null;
+    }
   }
 
-  trigger?.addEventListener('click', openSearch);
+  triggers.forEach((trigger) => trigger.addEventListener('click', openSearch));
+  closeBtn?.addEventListener('click', closeSearch);
   backdrop?.addEventListener('click', closeSearch);
+
+  modal?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(modal.querySelectorAll('input, button, a[href]'));
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSearch();
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -79,7 +107,6 @@ const searchData = allPosts
     }
   });
 
-  // 尝试加载 Pagefind
   async function loadPagefind() {
     if (pagefindLoaded) return pagefind;
     try {
@@ -92,32 +119,58 @@ const searchData = allPosts
     }
   }
 
-  let searchTimeout: number;
+  function stripHtml(value) {
+    return String(value || '').replace(/<[^>]+>/g, ' ');
+  }
+
+  // Pagefind 默认是前缀/模糊匹配，这里再要求查询词真实出现在结果文本中
+  function queryMatches(query, post, excerpt) {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (terms.length === 0) return false;
+    const haystack = [
+      post?.title,
+      post?.description,
+      ...(post?.tags || []),
+      ...(post?.categories || []),
+      stripHtml(excerpt),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return terms.some((term) => haystack.includes(term));
+  }
+
+  let searchTimeout;
   input?.addEventListener('input', () => {
     const q = input.value.trim();
+    const seq = ++searchSeq;
     clearTimeout(searchTimeout);
 
     if (!q) {
-      results!.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">🔍</div><p class="text-sm text-slate-400 dark:text-slate-500">输入关键词开始搜索</p><p class="text-xs text-slate-300 dark:text-slate-600 mt-2">支持全文搜索</p></div>';
+      results.innerHTML = emptyState('输入关键词开始搜索');
       return;
     }
 
     searchTimeout = window.setTimeout(async () => {
       const pf = await loadPagefind();
+      if (seq !== searchSeq) return;
 
       if (pf) {
-        // 使用 Pagefind 全文搜索
         try {
           const search = await pf.search(q);
-          const items = await Promise.all(search.results.slice(0, 8).map((r: any) => r.data()));
+          if (seq !== searchSeq) return;
+          const items = await Promise.all(search.results.slice(0, 8).map((r) => r.data()));
+          if (seq !== searchSeq) return;
 
-          if (items.length === 0) {
-            results!.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">😕</div><p class="text-sm text-slate-400 dark:text-slate-500">没有找到相关文章</p></div>';
+          const matchedItems = items.filter((item) => {
+            const slug = item.url.replace('/blog/', '').replace(/\/$/, '');
+            const post = searchData.find(p => p.id === slug);
+            return queryMatches(q, post, item.excerpt);
+          });
+
+          if (matchedItems.length === 0) {
+            results.innerHTML = emptyState('没有找到相关文章');
             return;
           }
 
-          results!.innerHTML = items.map((item: any) => {
-            // 从 Pagefind URL 提取 slug
+          results.innerHTML = matchedItems.map((item) => {
             const slug = item.url.replace('/blog/', '').replace(/\/$/, '');
             const post = searchData.find(p => p.id === slug);
             const title = post ? post.title : item.meta?.title || slug;
@@ -129,23 +182,23 @@ const searchData = allPosts
                 <div class="search-result-title">${highlight(title, q)}</div>
                 ${desc ? `<div class="search-result-desc">${desc}</div>` : ''}
                 <div class="search-result-meta">
-                  ${date ? `<span>${date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>` : ''}
+                  ${date ? `<span>${new Date(date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>` : ''}
                   ${tags.slice(0, 2).map(t => `<span class="search-result-tag">${t}</span>`).join('')}
                 </div>
               </a>
             `;
           }).join('');
         } catch {
-          fallbackSearch(q);
+          if (seq === searchSeq) fallbackSearch(q, seq);
         }
       } else {
-        // 降级搜索
-        fallbackSearch(q);
+        fallbackSearch(q, seq);
       }
     }, 200);
   });
 
-  function fallbackSearch(q: string) {
+  function fallbackSearch(q, seq = searchSeq) {
+    if (seq !== searchSeq) return;
     const lower = q.toLowerCase();
     const matched = searchData.filter(p =>
       p.title.toLowerCase().includes(lower) ||
@@ -154,30 +207,33 @@ const searchData = allPosts
       p.categories.some(c => c.toLowerCase().includes(lower))
     );
     if (matched.length === 0) {
-      results!.innerHTML = '<div class="search-empty-state"><div class="text-4xl mb-3">😕</div><p class="text-sm text-slate-400 dark:text-slate-500">没有找到相关文章</p></div>';
+      results.innerHTML = emptyState('没有找到相关文章');
       return;
     }
-    results!.innerHTML = matched.map(p => `
+    results.innerHTML = matched.map(p => `
       <a href="/blog/${p.id}/" class="search-result-item">
         <div class="search-result-title">${highlight(p.title, q)}</div>
         <div class="search-result-desc">${p.description}</div>
         <div class="search-result-meta">
-          <span>${p.date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
+          <span>${new Date(p.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
           ${p.tags.slice(0, 2).map(t => `<span class="search-result-tag">${t}</span>`).join('')}
         </div>
       </a>
     `).join('');
   }
 
-  function highlight(text: string, q: string) {
-    if (!q) return text;
+  function escapeHtml(value) {
+    return value.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  }
+
+  function highlight(text, q) {
+    if (!q) return escapeHtml(text);
     const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+    return escapeHtml(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 </script>
 
 <style>
-  /* 搜索弹窗 */
   .search-modal {
     position: fixed;
     inset: 0;
@@ -188,7 +244,7 @@ const searchData = allPosts
     padding-top: 10vh;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity .2s ease;
   }
   .search-modal.active {
     opacity: 1;
@@ -197,145 +253,151 @@ const searchData = allPosts
   .search-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(18, 20, 23, .48);
     backdrop-filter: blur(4px);
   }
   .search-panel {
     position: relative;
+    display: flex;
+    flex-direction: column;
     width: 90%;
     max-width: 560px;
     max-height: 70vh;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transform: scale(0.95) translateY(-10px);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    transform: scale(.98) translateY(-6px);
+    transition: transform .2s cubic-bezier(.16, 1, .3, 1);
   }
   .search-modal.active .search-panel {
     transform: scale(1) translateY(0);
   }
-  :global(.dark) .search-panel {
-    background: #1e293b;
-    border-color: #334155;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-  }
-
   .search-input-wrap {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  :global(.dark) .search-input-wrap {
-    border-color: #334155;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--rule);
   }
   .search-input-icon {
-    width: 20px;
-    height: 20px;
-    color: #94a3b8;
     flex-shrink: 0;
+    width: 19px;
+    height: 19px;
+    color: var(--muted-light);
   }
   .search-input {
     flex: 1;
-    border: none;
-    outline: none;
-    font-size: 1rem;
+    border: 0;
+    outline: 0;
     background: transparent;
-    color: #1e293b;
-  }
-  :global(.dark) .search-input {
-    color: #f1f5f9;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: .95rem;
   }
   .search-input::placeholder {
-    color: #94a3b8;
+    color: var(--muted-light);
   }
   .search-kbd {
-    padding: 2px 8px;
-    font-size: 0.7rem;
+    padding: 2px 7px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--surface-alt);
+    color: var(--muted);
     font-family: var(--font-mono);
-    color: #94a3b8;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    font-size: .65rem;
   }
-  :global(.dark) .search-kbd {
-    background: #0f172a;
-    border-color: #334155;
-    color: #64748b;
+  .search-close {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface-alt);
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, color .15s;
   }
-
+  .search-close:hover {
+    background: var(--paper-alt);
+    color: var(--ink);
+  }
   .search-results {
-    overflow-y: auto;
     flex: 1;
-    padding: 8px;
+    overflow-y: auto;
+    padding: 6px;
   }
   .search-empty-state {
+    padding: 38px 20px;
     text-align: center;
-    padding: 40px 20px;
+  }
+  .search-empty-title {
+    font-family: var(--font-serif);
+    font-size: .98rem;
+    color: var(--ink);
+  }
+  .search-empty-hint {
+    margin-top: 5px;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: .62rem;
+    letter-spacing: .06em;
   }
   .search-result-item {
     display: block;
-    padding: 12px 16px;
-    border-radius: 10px;
+    padding: 11px 13px;
+    border-radius: 4px;
     text-decoration: none;
-    transition: background 0.15s;
-    cursor: pointer;
+    transition: background .15s;
   }
   .search-result-item:hover {
-    background: #f8fafc;
-  }
-  :global(.dark) .search-result-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-alt);
   }
   .search-result-title {
+    margin-bottom: 3px;
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-size: .92rem;
     font-weight: 600;
-    font-size: 0.9rem;
-    color: #1e293b;
-    margin-bottom: 4px;
-  }
-  :global(.dark) .search-result-title {
-    color: #f1f5f9;
   }
   .search-result-desc {
-    font-size: 0.8rem;
-    color: #64748b;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     overflow: hidden;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: .76rem;
+    line-height: 1.6;
   }
   .search-result-meta {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.7rem;
-    color: #94a3b8;
+    gap: 7px;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: .6rem;
   }
   .search-result-tag {
-    padding: 1px 6px;
-    background: #f1f5f9;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    color: #64748b;
-  }
-  :global(.dark) .search-result-tag {
-    background: rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
+    padding: 1px 5px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: .58rem;
   }
   .search-highlight {
-    background: rgba(26, 86, 219, 0.15);
-    color: #1a56db;
+    padding: 0 1px;
     border-radius: 2px;
-    padding: 0 2px;
+    background: var(--accent-soft);
+    color: var(--accent);
   }
-  :global(.dark) .search-highlight {
-    background: rgba(59, 130, 246, 0.2);
-    color: #93c5fd;
+  @media (max-width: 640px) {
+    .search-kbd { display: none; }
   }
 </style>

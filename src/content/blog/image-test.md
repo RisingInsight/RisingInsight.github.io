@@ -1,6 +1,7 @@
 ---
 title: "图片测试"
 pubDate: 2026-01-01
+draft: true
 heroImage: "/posts/image-test/picture7.jpg"
 description: "博客图片渲染功能测试页面。"
 tags:

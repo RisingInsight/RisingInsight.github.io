@@ -1,6 +1,7 @@
 ---
 title: "公式和代码测试"
 pubDate: 2026-01-01
+draft: true
 math: true
 description: "博客的数学公式和代码块渲染功能测试页面。"
 tags:

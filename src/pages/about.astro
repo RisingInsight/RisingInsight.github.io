@@ -1,282 +1,178 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { PROFILE, SOCIALS } from '../consts';
 import { getCollection } from 'astro:content';
-import { getTagColor } from '../utils/blog';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import { PROFILE, SOCIALS } from '../consts';
+import { formatDate } from '../utils/blog';
 
 const interests = [
-  { emoji: '🛰️', label: '扩散模型', detail: 'Diffusion Model / Latent Diffusion Model', color: 'from-blue-500 to-cyan-500' },
-  { emoji: '🎨', label: '图像模态转换', detail: 'Image-to-Image Translations', color: 'from-purple-500 to-pink-500' },
-  { emoji: '🔗', label: '多模态学习', detail: 'Multi-modal / CLIP / Cross-modal Generation', color: 'from-orange-400 to-red-500' },
-  { emoji: '🧩', label: '生成模型', detail: 'VAE / GAN / Diffusion', color: 'from-emerald-400 to-teal-500' },
+  { label: '扩散模型', detail: 'Diffusion Model / Latent Diffusion Model' },
+  { label: '图像模态转换', detail: 'Image-to-Image Translations' },
+  { label: '多模态学习', detail: 'Multi-modal / CLIP / Cross-modal Generation' },
+  { label: '生成模型', detail: 'VAE / GAN / Diffusion' },
 ];
 
 const timeline = [
-  { year: '2026.01.01', title: '搭建个人博客', desc: '使用Hugo搭建了个人博客', icon: '🚀' },
-  { year: '2026.04.11', title: '重构个人博客', desc: '使用Astro重构了个人博客', icon: '⚡' },
+  { year: '2026.01.01', title: '搭建个人博客', desc: '使用 Hugo 搭建了个人博客。' },
+  { year: '2026.04.11', title: '重构个人博客', desc: '使用 Astro 重构了个人博客。' },
 ];
 
-const skills = [
-  { name: 'Python', level: 95, color: 'bg-orange-500' },
-  { name: 'C/C++', level: 90, color: 'bg-blue-500' },
-  { name: 'PyTorch', level: 92, color: 'bg-green-500' },
-  { name: 'Diffusion Models', level: 80, color: 'bg-purple-500' },
-  { name: 'Image-to-Image Translations', level: 75, color: 'bg-cyan-500' },
+const toolbox = [
+  { category: '深度学习', items: ['PyTorch', 'Transformer', 'GCN', 'YOLO'] },
+  { category: '数据处理', items: ['WebDataset', 'Pandas', 'NumPy', 'Matplotlib'] },
+  { category: '博客工具', items: ['Astro', 'Tailwind CSS', 'GitHub Pages'] },
 ];
 
-const techStack = [
-  { category: '深度学习', items: ['PyTorch', 'Transformer', 'GCN', 'YOLO'], color: 'from-blue-500 to-indigo-500' },
-  { category: '数据处理', items: ['WebDataset', 'Pandas', 'NumPy', 'Matplotlib'], color: 'from-emerald-400 to-teal-500' },
-  { category: '博客工具', items: ['Astro', 'Tailwind CSS', 'GitHub Pages'], color: 'from-orange-400 to-amber-500' },
-];
-
-// 获取最新 3 篇文章
 const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 ---
 
-<html lang="zh-CN">
-  <head>
-    <BaseHead title="About" description="About RisingInsight - Deep Learning Researcher" />
-  </head>
-  <body>
-    <Header />
+<BaseLayout title="关于" description={`About ${PROFILE.name} - Deep Learning Researcher`}>
+  <main class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+    <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '关于' }]} />
 
-    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <!-- 个人介绍 Hero -->
-      <div class="text-center mb-16 animate-fade-up">
-        <div class="relative inline-block mb-6">
-          <div class="w-32 h-32 mx-auto rounded-full overflow-hidden ring-4 ring-primary/20 shadow-xl relative z-10">
-            <img src={PROFILE.avatar} alt={PROFILE.name} class="w-full h-full object-cover" />
-          </div>
-          <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-400 border-[3px] border-white dark:border-slate-900 rounded-full z-20 shadow-lg"></div>
-          <div class="absolute inset-0 w-32 h-32 mx-auto rounded-full bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 opacity-20 blur-md -z-0 animate-pulse"></div>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">{PROFILE.name}</h1>
-        <div class="flex flex-wrap items-center justify-center gap-2 mb-4">
-          <span class="px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-semibold">
-            {PROFILE.role}
-          </span>
-          <span class="text-slate-300 dark:text-slate-600">|</span>
-          <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            {PROFILE.tagline}
-          </span>
-        </div>
-        <p class="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed text-base mb-6">
-          你好，我是 <strong class="text-slate-900 dark:text-white">{PROFILE.name}</strong>，
-          一名关注扩散模型的学生。
-          我的研究兴趣集中在图像模态转换（Image-to-Image Translations）。
+    <header class="flex flex-col gap-6 border-b border-rule pb-10 sm:flex-row sm:items-start">
+      <img
+        src={PROFILE.avatar}
+        alt={PROFILE.name}
+        class="h-24 w-24 rounded-full border border-rule object-cover"
+      />
+      <div class="min-w-0">
+        <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">About</div>
+        <h1 class="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+          {PROFILE.name}
+        </h1>
+        <p class="mt-2 text-sm text-muted">{PROFILE.role} · {PROFILE.tagline}</p>
+        <p class="mt-4 max-w-2xl text-sm leading-7 text-ink-soft">
+          你好，我是 {PROFILE.name}，一名关注扩散模型与图像模态转换的学生。
+          这里记录推导、实验与论文阅读，也会放一些技术实践。
         </p>
-        <!-- 快速统计 -->
-        <div class="flex items-center justify-center gap-6 text-sm text-slate-400 dark:text-slate-500">
-          <span class="flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            {PROFILE.location}
-          </span>
-          <span class="flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-            {PROFILE.school}
-          </span>
+        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted">
+          <span>{PROFILE.location}</span>
+          <span>{PROFILE.school}</span>
         </div>
       </div>
+    </header>
 
-      <!-- 研究兴趣（带渐变卡片） -->
-      <section class="mb-16 scroll-reveal">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full"></div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Research Interests</h2>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {interests.map((item) => (
-            <div class="group relative flex items-start gap-4 p-5 rounded-2xl bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 hover:border-primary/30 dark:hover:border-primary-light/30 hover:shadow-lg transition-all overflow-hidden">
-              <!-- 渐变装饰 -->
-              <div class:list={['absolute top-0 right-0 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 bg-gradient-to-br', item.color]}></div>
-              <span class="text-2xl mt-0.5 shrink-0">{item.emoji}</span>
-              <div class="relative">
-                <h3 class="font-semibold text-slate-900 dark:text-white mb-0.5">{item.label}</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400">{item.detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <!-- 技能水平（进度条） -->
-      <section class="mb-16 scroll-reveal">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-1 h-6 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-full"></div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Skill Levels</h2>
-        </div>
-        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 space-y-5">
-          {skills.map((skill) => (
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{skill.name}</span>
-                <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">{skill.level}%</span>
-              </div>
-              <div class="h-2.5 bg-slate-100 dark:bg-slate-700/60 rounded-full overflow-hidden">
-                <div
-                  class:list={[skill.color, 'h-full rounded-full transition-all duration-1000 ease-out']}
-                  style={`width: ${skill.level}%`}
-                ></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <!-- 学习时间线 -->
-      <section class="mb-16 scroll-reveal">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-1 h-6 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full"></div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Timeline</h2>
-        </div>
-        <div class="relative pl-8 space-y-8">
-          <!-- 时间线竖线 -->
-          <div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-primary via-purple-400 to-accent"></div>
-          {timeline.map((item) => (
-            <div class="relative group">
-              <!-- 节点 -->
-              <div class="absolute -left-8 top-1 w-[22px] h-[22px] rounded-full bg-white dark:bg-slate-900 border-[3px] border-primary dark:border-primary-light flex items-center justify-center text-[10px] group-hover:scale-125 transition-transform z-10">
-                {item.icon}
-              </div>
-              <div class="p-5 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 group-hover:border-primary/30 dark:hover:border-primary-light/30 group-hover:shadow-md transition-all">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xs font-bold text-primary dark:text-primary-light bg-primary/10 dark:bg-primary-light/10 px-2.5 py-0.5 rounded-full">{item.year}</span>
-                </div>
-                <h3 class="font-semibold text-slate-900 dark:text-white mb-1">{item.title}</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <!-- 技术栈 -->
-      <section class="mb-16 scroll-reveal">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-1 h-6 bg-gradient-to-b from-accent to-orange-400 rounded-full"></div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Tech Stack</h2>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {techStack.map((group) => (
-            <div class="p-5 rounded-2xl bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 hover:shadow-md transition-all">
-              <div class:list={['inline-block px-3 py-0.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r mb-4', group.color]}>
-                {group.category}
-              </div>
-              <div class="flex flex-wrap gap-2">
-                {group.items.map((item) => (
-                  <span class="px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-700/50 rounded-lg text-slate-700 dark:text-slate-300 font-medium border border-slate-100 dark:border-slate-600/50 hover:border-primary/30 dark:hover:border-primary-light/30 transition-colors cursor-default">
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <!-- 最近文章入口 -->
-      {recentPosts.length > 0 && (
-        <section class="mb-16 scroll-reveal">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-1 h-6 bg-gradient-to-b from-pink-500 to-rose-500 rounded-full"></div>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Recent Posts</h2>
+    <div class="mt-12 grid gap-12 md:grid-cols-[1fr_240px]">
+      <div>
+        <section>
+          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+            Research interests
           </div>
-          <div class="space-y-3">
+          <div class="mt-4 divide-y divide-rule">
+            {interests.map((item, index) => (
+              <div class="grid grid-cols-[28px_1fr] gap-4 py-4">
+                <span class="font-serif text-lg leading-none text-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div>
+                  <h2 class="font-serif text-base font-semibold text-ink">{item.label}</h2>
+                  <p class="mt-1 text-[12px] leading-6 text-muted">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section class="mt-12">
+          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+            Toolbox
+          </div>
+          <div class="mt-4 divide-y divide-rule">
+            {toolbox.map((group) => (
+              <div class="grid gap-2 py-4 sm:grid-cols-[90px_1fr]">
+                <div class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light">
+                  {group.category}
+                </div>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink">
+                  {group.items.map((item) => <span>{item}</span>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section class="mt-12">
+          <div class="flex items-baseline justify-between">
+            <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+              Recent notes
+            </div>
+            <a href="/blog/" class="text-[11px] text-muted transition-colors hover:text-accent">
+              全部 <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div class="mt-4 divide-y divide-rule">
             {recentPosts.map((post) => (
               <a
                 href={`/blog/${post.id}/`}
-                class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 hover:border-primary/30 dark:hover:border-primary-light/30 hover:shadow-md transition-all"
+                class="group flex items-baseline justify-between gap-4 py-3"
               >
-                <div class="shrink-0 text-center w-12">
-                  <div class="text-xl font-bold text-slate-800 dark:text-slate-200 leading-none">
-                    {post.data.pubDate.toLocaleDateString('zh-CN', { day: 'numeric' })}
-                  </div>
-                  <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                    {post.data.pubDate.toLocaleDateString('zh-CN', { month: 'short' })}
-                  </div>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary dark:group-hover:text-primary-light transition-colors truncate text-sm sm:text-base">
-                    {post.data.title}
-                  </h3>
-                  <p class="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{post.data.description}</p>
-                </div>
-                {post.data.tags.length > 0 && (
-                  <div class="hidden sm:flex gap-1 shrink-0">
-                    {post.data.tags.slice(0, 2).map((tag) => (
-                      <span class={`tag ${getTagColor(tag)}`}>{tag}</span>
-                    ))}
-                  </div>
-                )}
-                <svg class="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary dark:group-hover:text-primary-light transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <span class="font-serif text-sm font-semibold text-ink transition-colors group-hover:text-accent">
+                  {post.data.title}
+                </span>
+                <span class="font-mono text-[9px] text-muted-light">
+                  {formatDate(post.data.pubDate)}
+                </span>
               </a>
             ))}
           </div>
-          <div class="mt-4 text-center">
-            <a href="/blog/" class="text-sm font-medium text-primary dark:text-primary-light hover:underline transition-colors">
-              查看全部文章 →
-            </a>
+        </section>
+      </div>
+
+      <aside class="space-y-10">
+        <section>
+          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Profile</div>
+          <dl class="mt-4 space-y-3 text-[12px]">
+            <div>
+              <dt class="text-muted-light">Role</dt>
+              <dd class="mt-0.5 text-ink">{PROFILE.role}</dd>
+            </div>
+            <div>
+              <dt class="text-muted-light">School</dt>
+              <dd class="mt-0.5 text-ink">{PROFILE.school}</dd>
+            </div>
+            <div>
+              <dt class="text-muted-light">Location</dt>
+              <dd class="mt-0.5 text-ink">{PROFILE.location}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section>
+          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Site log</div>
+          <div class="mt-4 space-y-4">
+            {timeline.map((item) => (
+              <div>
+                <div class="font-mono text-[9px] text-muted-light">{item.year}</div>
+                <div class="mt-1 text-[12px] font-medium text-ink">{item.title}</div>
+                <p class="mt-0.5 text-[11px] leading-6 text-muted">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </section>
-      )}
 
-      <!-- 社交链接 -->
-      <section class="mb-16 scroll-reveal">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-1 h-6 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-full"></div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Contact</h2>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          {SOCIALS.map((s) => (
-            <a
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="social-btn inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary dark:hover:border-primary-light hover:text-primary dark:hover:text-primary-light transition-all shadow-sm hover:shadow-md font-medium text-sm"
-            >
-              {s.name}
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          ))}
-        </div>
-      </section>
+        <section>
+          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Contact</div>
+          <div class="mt-4 flex flex-col gap-2 text-[12px]">
+            {SOCIALS.map((social) => (
+              <a
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-muted transition-colors hover:text-accent"
+              >
+                {social.name} <span aria-hidden="true">↗</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      </aside>
+    </div>
 
-      <!-- 座右铭 -->
-      <div class="scroll-reveal">
-        <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-primary-bg to-white dark:from-blue-500/5 dark:to-transparent border border-primary/10 dark:border-primary-light/10">
-          <div class="text-3xl mb-3">✨</div>
-          <blockquote class="text-lg text-slate-600 dark:text-slate-300 italic leading-relaxed">
-            "{PROFILE.bio}"
-          </blockquote>
-        </div>
-      </div>
-    </main>
-
-    <Footer />
-  </body>
-</html>
-
-<script>
-  // 滚动渐入动画
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-  );
-  document.querySelectorAll('.scroll-reveal').forEach((el) => observer.observe(el));
-</script>
+    <div class="mt-16 border-t border-rule pt-8 text-center">
+      <p class="font-serif text-lg text-muted">“{PROFILE.bio}”</p>
+    </div>
+  </main>
+</BaseLayout>
