@@ -1,0 +1,34 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  width?: string;
+}
+
+const { src, alt, caption, width } = Astro.props;
+---
+
+<figure class="mdx-figure" style={width ? `max-width:${width}` : undefined}>
+  <img src={src} alt={alt} loading="lazy" decoding="async" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .mdx-figure {
+    margin: 2em auto;
+  }
+  .mdx-figure :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+  .mdx-figure figcaption {
+    margin-top: .6rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--muted-light);
+  }
+</style>

@@ -1,0 +1,46 @@
+---
+interface Props {
+  type?: 'note' | 'idea' | 'warning';
+  title?: string;
+}
+
+const { type = 'note', title } = Astro.props;
+const defaultTitles = { note: '笔记', idea: '关键想法', warning: '注意' };
+---
+
+<aside class:list={['mdx-callout', `mdx-callout-${type}`]}>
+  <div class="mdx-callout-label">{title || defaultTitles[type]}</div>
+  <div class="mdx-callout-body"><slot /></div>
+</aside>
+
+<style>
+  .mdx-callout {
+    margin: 1.8em 0;
+    padding: 1rem 1.1rem;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .mdx-callout-label {
+    margin-bottom: .5rem;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .mdx-callout-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .mdx-callout-body :global(p) {
+    font-size: .95rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+  .mdx-callout-warning {
+    border-left-color: #a36b4e;
+    background: color-mix(in srgb, #a36b4e 8%, var(--paper));
+  }
+  .mdx-callout-warning .mdx-callout-label {
+    color: #a36b4e;
+  }
+</style>

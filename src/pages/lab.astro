@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import DiffusionDemo from '../components/mdx/DiffusionDemo.astro';
+---
+
+<BaseLayout title="实验" description="交互式可视化与小型实验">
+  <main class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+    <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '实验' }]} />
+
+    <header class="border-b border-rule pb-6">
+      <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">Lab</div>
+      <h1 class="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+        实验
+      </h1>
+      <p class="mt-3 max-w-2xl text-sm leading-7 text-muted">
+        把论文里的过程变成可以拖动、可以观察的东西。这里放一些小型交互实验和可视化。
+      </p>
+    </header>
+
+    <section class="mt-10">
+      <DiffusionDemo />
+      <p class="mt-4 text-[12px] leading-6 text-muted">
+        完整推导和解释见
+        <a
+          href="/blog/diffusion-toy-demo/"
+          class="text-ink underline decoration-rule underline-offset-4 transition-colors hover:text-accent"
+        >《扩散模型去噪：一个可交互的二维玩具模型》</a>。
+      </p>
+    </section>
+  </main>
+</BaseLayout>

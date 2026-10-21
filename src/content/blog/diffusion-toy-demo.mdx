@@ -1,0 +1,97 @@
+---
+title: "扩散模型去噪：一个可交互的二维玩具模型"
+description: "用三个高斯簇和已知 score 的二维玩具分布，直观看到前向加噪与逆向去噪，并对照 DDPM 的采样公式。"
+pubDate: 2026-10-21
+math: true
+tags:
+  - 扩散模型
+  - DDPM
+  - 交互可视化
+  - 生成模型
+categories:
+  - 深度学习理论
+---
+
+import { Callout, Equation, DiffusionDemo } from '../../components/mdx';
+
+扩散模型的论文里通常会先写出前向加噪，再写出逆向去噪。但“加噪”和“去噪”在二维空间里到底长什么样，只看公式其实很难建立直觉。这篇文章用一个只有三个高斯簇的玩具分布，把前向过程和逆向采样都画出来。
+
+## 前向过程
+
+给定数据 $x_0$，DDPM 的前向过程是一个固定的马尔可夫链：
+
+<Equation
+  number="1"
+  label="Forward process"
+  latex={String.raw`q(x_t \mid x_{t-1}) = \mathcal{N}\left(x_t;\sqrt{1-\beta_t}x_{t-1},\beta_t I\right)`}
+/>
+
+利用高斯分布的可加性，可以直接采样任意时刻：
+
+<Equation
+  number="2"
+  label="Closed form"
+  latex={String.raw`x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon,\qquad \epsilon\sim\mathcal{N}(0,I)`}
+/>
+
+下面的演示固定了一组二维数据点，拖动滑块可以看它们从三个簇逐渐变成噪声云。
+
+<DiffusionDemo />
+
+<Callout type="idea" title="观察">
+  前向过程不需要模型，也不断丢失信息；真正需要学习的是逆向过程每一步的“去噪方向”。
+</Callout>
+
+## 逆向过程
+
+如果知道每个噪声水平下数据分布的 score，即 $\nabla_{x_t}\log q(x_t)$，就可以用 DDPM 的逆向采样公式：
+
+<Equation
+  number="3"
+  label="Reverse step"
+  latex={String.raw`x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\left(x_t + \beta_t\,\nabla_{x_t}\log q(x_t)\right) + \sqrt{\beta_t}\,z`}
+/>
+
+在玩具模型里，数据分布是三个高斯簇的混合，因此 score 可以解析计算，不需要训练神经网络。点击“运行逆向去噪”，粒子会从标准正态噪声开始，逐步聚回三个簇。
+
+<Callout type="warning" title="这不是训练好的图像模型">
+  这里用解析 score 是为了把注意力放在采样过程本身。真实图像扩散模型会用神经网络估计 score 或噪声，并且通常需要更多步数、更复杂的噪声调度和条件控制。
+</Callout>
+
+## 玩具模型的设置
+
+演示中的混合分布为
+
+<Equation
+  number="4"
+  label="Data distribution"
+  latex={String.raw`p(x_0)=\frac{1}{3}\sum_{k=1}^{3}\mathcal{N}(x_0;\mu_k,\sigma^2 I)`}
+/>
+
+其中三个均值分别位于二维平面的三个位置，$\sigma=0.22$。对每个噪声水平，给定 $x_t$ 时混合权重的后验为
+
+<Equation
+  number="5"
+  label="Responsibilities"
+  latex={String.raw`\gamma_k(x_t)=\frac{w_k\,\mathcal{N}(x_t;\sqrt{\bar{\alpha}_t}\mu_k,\,v_tI)}{\sum_j w_j\,\mathcal{N}(x_t;\sqrt{\bar{\alpha}_t}\mu_j,\,v_tI)}`}
+/>
+
+其中 $v_t=1-\bar{\alpha}_t+\bar{\alpha}_t\sigma^2$。于是 score 可以写成各组分 score 的加权和：
+
+<Equation
+  number="6"
+  label="Analytic score"
+  latex={String.raw`\nabla_{x_t}\log q(x_t)=\sum_{k=1}^{3}\gamma_k(x_t)\frac{\sqrt{\bar{\alpha}_t}\mu_k-x_t}{v_t}`}
+/>
+
+这正是演示里逆向采样使用的方向。它把“学习一个去噪网络”替换成了“知道一个很小的二维分布”，让采样过程可以被完整看见。
+
+## 可以从演示里观察到的现象
+
+- 前向过程把三个簇逐渐抹平；在高噪声端，粒子几乎只保留整体的尺度信息。
+- 逆向过程并不是一次性把点拉回簇心，而是先形成大尺度结构，再逐步收缩到局部模式。
+- 采样步数和噪声调度会显著影响最终分布；真实模型需要在这些细节上做取舍。
+
+<Callout type="note" title="下一步">
+  如果你想把玩具模型换成真实模型，可以把解析 score 替换成训练好的 $\epsilon_\theta(x_t,t)$，再用同样的逆向公式采样。文章里的交互组件可以直接复用。
+</Callout>
