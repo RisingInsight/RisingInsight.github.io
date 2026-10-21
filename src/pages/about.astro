@@ -2,25 +2,26 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
-import { PROFILE, SOCIALS } from '../consts';
+import { GITHUB_BRANCH, GITHUB_REPO, PROFILE, SOCIALS } from '../consts';
 import { formatDate } from '../utils/blog';
 
 const interests = [
-  { label: '扩散模型', detail: 'Diffusion Model / Latent Diffusion Model' },
-  { label: '图像模态转换', detail: 'Image-to-Image Translations' },
-  { label: '多模态学习', detail: 'Multi-modal / CLIP / Cross-modal Generation' },
-  { label: '生成模型', detail: 'VAE / GAN / Diffusion' },
+  { label: '生成模型', detail: 'Diffusion / VAE / GAN / Flow' },
+  { label: '图像模态转换', detail: 'Image-to-Image / Multi-modal Translation' },
+  { label: '深度学习工程', detail: 'PyTorch / Training / Inference / Tooling' },
+  { label: '技术写作', detail: 'Build in public / Notes / Experiments' },
 ];
 
 const timeline = [
   { year: '2026.01.01', title: '搭建个人博客', desc: '使用 Hugo 搭建了个人博客。' },
   { year: '2026.04.11', title: '重构个人博客', desc: '使用 Astro 重构了个人博客。' },
+  { year: '2026.10.21', title: '技术风改版', desc: '转向实验室终端风，加入热力图、状态面板与交互实验。' },
 ];
 
 const toolbox = [
-  { category: '深度学习', items: ['PyTorch', 'Transformer', 'GCN', 'YOLO'] },
-  { category: '数据处理', items: ['WebDataset', 'Pandas', 'NumPy', 'Matplotlib'] },
-  { category: '博客工具', items: ['Astro', 'Tailwind CSS', 'GitHub Pages'] },
+  { category: 'Modeling', items: ['PyTorch', 'Transformer', 'GCN', 'YOLO'] },
+  { category: 'Data', items: ['Python', 'NumPy', 'Pandas', 'WebDataset'] },
+  { category: 'Build', items: ['Astro', 'TypeScript', 'Tailwind CSS', 'GitHub Actions'] },
 ];
 
 const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
@@ -32,25 +33,40 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
   <main class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '关于' }]} />
 
-    <header class="flex flex-col gap-6 border-b border-rule pb-10 sm:flex-row sm:items-start">
-      <img
-        src={PROFILE.avatar}
-        alt={PROFILE.name}
-        class="h-24 w-24 rounded-full border border-rule object-cover"
-      />
-      <div class="min-w-0">
-        <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">About</div>
-        <h1 class="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-          {PROFILE.name}
-        </h1>
-        <p class="mt-2 text-sm text-muted">{PROFILE.role} · {PROFILE.tagline}</p>
-        <p class="mt-4 max-w-2xl text-sm leading-7 text-ink-soft">
-          你好，我是 {PROFILE.name}，一名关注扩散模型与图像模态转换的学生。
-          这里记录推导、实验与论文阅读，也会放一些技术实践。
-        </p>
-        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted">
-          <span>{PROFILE.location}</span>
-          <span>{PROFILE.school}</span>
+    <header class="border border-rule bg-surface/55 p-5 sm:p-7">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
+        <div class="flex items-center gap-2 font-mono text-[9px] tracking-[0.08em] text-muted-light">
+          <span class="text-accent">~/</span>
+          about.md
+        </div>
+        <a
+          href={`https://github.com/${GITHUB_REPO}/edit/${GITHUB_BRANCH}/src/pages/about.astro`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
+        >
+          edit ↗
+        </a>
+      </div>
+      <div class="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start">
+        <img
+          src={PROFILE.avatar}
+          alt={PROFILE.name}
+          class="h-20 w-20 rounded-full border border-accent/30 object-cover"
+        />
+        <div class="min-w-0">
+          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">about</div>
+          <h1 class="mt-2 font-serif text-3xl font-semibold tracking-[-0.035em] text-ink sm:text-4xl">
+            {PROFILE.name}
+          </h1>
+          <p class="mt-2 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{PROFILE.role} · {PROFILE.location}</p>
+          <p class="mt-4 max-w-2xl text-sm leading-7 text-ink-soft">
+            你好，我是 {PROFILE.name}。我关注生成模型与深度学习，喜欢把论文里的东西跑起来，
+            再把实现过程、踩坑记录和一些技术想法写在这里。
+          </p>
+          <p class="mt-2 max-w-2xl text-[12px] leading-6 text-muted">
+            {PROFILE.bio} · {PROFILE.tagline}
+          </p>
         </div>
       </div>
     </header>
@@ -59,7 +75,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
       <div>
         <section>
           <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
-            Research interests
+            Focus areas
           </div>
           <div class="mt-4 divide-y divide-rule">
             {interests.map((item, index) => (
@@ -78,7 +94,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
         <section class="mt-12">
           <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
-            Toolbox
+            Stack
           </div>
           <div class="mt-4 divide-y divide-rule">
             {toolbox.map((group) => (
@@ -97,7 +113,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         <section class="mt-12">
           <div class="flex items-baseline justify-between">
             <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
-              Recent notes
+              Recent logs
             </div>
             <a href="/blog/" class="text-[11px] text-muted transition-colors hover:text-accent">
               全部 <span aria-hidden="true">→</span>

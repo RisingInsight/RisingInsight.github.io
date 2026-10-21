@@ -1,14 +1,15 @@
 # RisingInsight's Blog
 
-个人科研笔记与技术博客，基于 Astro 构建。
+个人技术博客，实验室终端风：记录生成模型、深度学习与工程实践。
 
 ## 技术栈
 
 - Astro 6 + MDX
 - Tailwind CSS 4
+- Space Grotesk / Inter / JetBrains Mono
 - KaTeX（remark-math / rehype-katex）
 - Pagefind 全文搜索
-- Giscus 评论
+- Giscus 评论与留言板（GitHub Discussions）
 - GitHub Pages + GitHub Actions
 
 ## 本地开发
@@ -32,7 +33,7 @@ updatedDate: 2026-01-03   # 可选
 tags: [扩散模型, DDPM]
 categories: [深度学习理论]
 series: "生成模型笔记"      # 可选
-featured: true             # 可选，显示在首页推荐
+featured: true             # 可选，首页置顶标记
 draft: true                # 可选，草稿不会构建
 heroImage: "/posts/my-post/cover.jpg"  # 可选
 ogImage: "/posts/my-post/og.png"       # 可选，分享图；默认 og-default.png
@@ -40,9 +41,27 @@ ogImage: "/posts/my-post/og.png"       # 可选，分享图；默认 og-default.
 
 文章图片放在 `public/posts/<slug>/` 下，正文中用绝对路径引用。
 
-## 交互 Demo
+## 在线编辑与审核
 
-`npm run generate:image-demo` 会从 `public/avatar.jpg` 生成 `public/demo/*.webp` 的扩散帧，供 `/lab` 和图像扩散文章使用。
+- 文章页右上角提供 `edit ↗` / `history`，指向 GitHub 网页编辑器和提交历史。
+- 非仓库协作者点击编辑会走 GitHub 的 fork + PR 流程；所有者审核并合并后自动部署。
+- 文章列表提供 `new post ↗`，可在 GitHub 网页端新建 Markdown/MDX 并上传图片。
+- 撤回已发布修改使用 GitHub 的 history/revert；未保存的编辑由浏览器/编辑器撤销。
+
+留言板 `/guestbook/` 使用 Giscus（GitHub Discussions）。登录 GitHub 后可留言，所有者可在 GitHub 删除；先审后发与站内管理后台将使用 Cloudflare Worker + D1 实现。
+
+## 热力图与统计
+
+- 创作热力图在构建时读取 `git log`，按作者时区统计真实提交；Actions checkout 已设置 `fetch-depth: 0`。
+- 首页 traffic 条使用 Busuanzi 的站点 PV/UV（localhost 不加载，避免统计开发预览）；后续可用 Cloudflare Worker + D1 替换为自建计数。
+- 首页展示文章数、字数、提交数与运行天数，均为构建时真实数据。
+
+## 资源生成
+
+```sh
+npm run generate:image-demo   # 从头像生成扩散帧
+npm run generate:og           # 重新生成默认 OG 分享图
+```
 
 ## 部署
 

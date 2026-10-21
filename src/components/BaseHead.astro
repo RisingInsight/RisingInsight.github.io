@@ -4,8 +4,9 @@ import 'katex/dist/katex.min.css';
 import '@fontsource/inter/latin-400.css';
 import '@fontsource/inter/latin-500.css';
 import '@fontsource/inter/latin-600.css';
-import '@fontsource/source-serif-4/latin-400.css';
-import '@fontsource/source-serif-4/latin-600.css';
+import '@fontsource/space-grotesk/latin-500.css';
+import '@fontsource/space-grotesk/latin-600.css';
+import '@fontsource/space-grotesk/latin-700.css';
 import '@fontsource/jetbrains-mono/latin-400.css';
 import '@fontsource/jetbrains-mono/latin-500.css';
 import type { ImageMetadata } from 'astro';
@@ -27,6 +28,8 @@ const imageUrl = new URL(typeof ogImage === 'string' ? ogImage : ogImage.src, SI
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#06090c" />
+<meta name="color-scheme" content="dark light" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="/avatar.jpg" type="image/jpeg" />
 <link rel="sitemap" href="/sitemap-index.xml" />
@@ -35,7 +38,7 @@ const imageUrl = new URL(typeof ogImage === 'string' ? ogImage : ogImage.src, SI
 
 <!-- 防闪烁内联脚本（尽早执行，在任何 CSS 之前） -->
 <script is:inline>
-  (function(){try{var d=document.documentElement;d.classList.add('js');var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches)){d.classList.add('dark')}else{d.classList.remove('dark')}}catch(e){}})();
+  (function(){try{var d=document.documentElement;d.classList.add('js');var t=localStorage.getItem('theme');if(t==='light'){d.classList.remove('dark')}else{d.classList.add('dark')}}catch(e){}})();
 </script>
 
 <!-- Canonical URL -->

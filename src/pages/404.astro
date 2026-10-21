@@ -2,24 +2,34 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="404 - 页面未找到" description="页面不存在">
-  <main class="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-4 py-24 text-center">
-    <div class="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-light">
-      404 / Not found
-    </div>
-    <h1 class="mt-4 font-serif text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-      这个页面不存在
-    </h1>
-    <p class="mt-4 text-sm leading-7 text-muted">
-      可能是链接过期，或者它从来没有存在过。
-    </p>
-    <div class="mt-8 flex gap-5 text-[12px]">
-      <a href="/" class="text-ink underline decoration-rule underline-offset-4 transition-colors hover:text-accent">
-        返回首页
-      </a>
-      <a href="/blog/" class="text-muted underline decoration-rule underline-offset-4 transition-colors hover:text-accent">
-        浏览笔记
-      </a>
+<BaseLayout title="404 // RisingInsight" description="页面不存在">
+  <main class="mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center px-4 py-24">
+    <div class="terminal-window w-full max-w-xl">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="ml-2 font-mono text-[9px] tracking-[0.08em] text-muted-light">error.log</span>
+        <span class="ml-auto font-mono text-[8px] uppercase tracking-[0.12em] text-muted-light">exit 1</span>
+      </div>
+      <div class="p-6 font-mono text-[11px] leading-6">
+        <div><span class="text-accent">$</span> <span class="text-ink-soft">cat /requested/path</span></div>
+        <div class="mt-3 text-[var(--danger)]">404: no such file or directory</div>
+        <h1 class="mt-6 font-serif text-3xl font-semibold tracking-[-0.03em] text-ink sm:text-4xl">
+          这个页面不存在
+        </h1>
+        <p class="mt-3 text-[12px] leading-6 text-muted">
+          可能是链接过期，或者它从来没有存在过。
+        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href="/" class="btn btn-primary">cd ~</a>
+          <a href="/blog/" class="btn">ls /blog</a>
+        </div>
+        <div class="mt-6 flex items-center gap-2 text-muted-light">
+          <span class="text-accent">$</span>
+          <span class="cursor-blink"></span>
+        </div>
+      </div>
     </div>
   </main>
 </BaseLayout>

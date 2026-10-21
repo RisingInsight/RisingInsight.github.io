@@ -24,7 +24,7 @@ const searchData = allPosts
       <svg class="search-input-icon" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
-      <input id="search-input" type="text" placeholder="搜索笔记..." autocomplete="off" class="search-input" aria-label="搜索文章" />
+      <input id="search-input" type="text" placeholder="grep notes / tags..." autocomplete="off" class="search-input" aria-label="搜索文章" />
       <kbd class="search-kbd">ESC</kbd>
       <button id="search-close" class="search-close" type="button" aria-label="关闭搜索">×</button>
     </div>
@@ -32,7 +32,7 @@ const searchData = allPosts
     <div id="search-results" class="search-results" aria-live="polite">
       <div class="search-empty-state">
         <p class="search-empty-title">输入关键词开始搜索</p>
-        <p class="search-empty-hint">支持全文搜索 · Pagefind</p>
+        <p class="search-empty-hint">full-text index · Pagefind</p>
       </div>
     </div>
   </div>
@@ -52,7 +52,7 @@ const searchData = allPosts
   let searchSeq = 0;
 
   function emptyState(message) {
-    return `<div class="search-empty-state"><p class="search-empty-title">${message}</p><p class="search-empty-hint">支持全文搜索 · Pagefind</p></div>`;
+    return `<div class="search-empty-state"><p class="search-empty-title">${message}</p><p class="search-empty-hint">full-text index · Pagefind</p></div>`;
   }
 
   function openSearch(event) {
@@ -253,8 +253,8 @@ const searchData = allPosts
   .search-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(18, 20, 23, .48);
-    backdrop-filter: blur(4px);
+    background: rgba(3, 6, 8, .62);
+    backdrop-filter: blur(6px);
   }
   .search-panel {
     position: relative;
@@ -265,9 +265,9 @@ const searchData = allPosts
     max-height: 70vh;
     overflow: hidden;
     border: 1px solid var(--rule);
-    border-radius: 8px;
+    border-radius: 4px;
     background: var(--surface);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow), 0 0 0 1px rgba(var(--accent-rgb), .04);
     transform: scale(.98) translateY(-6px);
     transition: transform .2s cubic-bezier(.16, 1, .3, 1);
   }
@@ -293,8 +293,8 @@ const searchData = allPosts
     outline: 0;
     background: transparent;
     color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: .95rem;
+    font-family: var(--font-mono);
+    font-size: .88rem;
   }
   .search-input::placeholder {
     color: var(--muted-light);
@@ -357,7 +357,7 @@ const searchData = allPosts
     transition: background .15s;
   }
   .search-result-item:hover {
-    background: var(--surface-alt);
+    background: var(--accent-soft);
   }
   .search-result-title {
     margin-bottom: 3px;
@@ -387,7 +387,7 @@ const searchData = allPosts
   .search-result-tag {
     padding: 1px 5px;
     border: 1px solid var(--rule);
-    border-radius: 999px;
+    border-radius: 3px;
     color: var(--muted);
     font-size: .58rem;
   }

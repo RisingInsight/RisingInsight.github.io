@@ -22,6 +22,6 @@ const { post, prevPost, nextPost } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data} id={post.id} body={post.body} prevPost={prevPost} nextPost={nextPost}>
+<BlogPost {...post.data} id={post.id} body={post.body} filePath={post.filePath} prevPost={prevPost} nextPost={nextPost}>
   <Content />
 </BlogPost>

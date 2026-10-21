@@ -24,6 +24,7 @@
     document.querySelectorAll('[data-theme-toggle]').forEach((toggle) => {
       toggle.setAttribute('aria-pressed', String(isDark));
     });
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#06090c' : '#f3f7f7');
   };
 
   if (!document.documentElement.hasAttribute('data-theme-toggle-bound')) {

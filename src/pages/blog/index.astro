@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
+import { GITHUB_BRANCH, GITHUB_REPO } from '../../consts';
 import { formatDate, formatWordCount, getReadTime, getWordCount } from '../../utils/blog';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
@@ -27,13 +28,27 @@ const allCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
   <main class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '笔记' }]} />
 
-    <header class="border-b border-rule pb-6">
-      <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">Notes</div>
-      <h1 class="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+    <header class="border border-rule bg-surface/55 p-5 sm:p-7">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
+        <div class="flex items-center gap-2 font-mono text-[9px] tracking-[0.08em] text-muted-light">
+          <span class="text-accent">~/</span>
+          posts.index
+        </div>
+        <a
+          href={`https://github.com/${GITHUB_REPO}/new/${GITHUB_BRANCH}/src/content/blog`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
+        >
+          new post ↗
+        </a>
+      </div>
+      <div class="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-accent">notes</div>
+      <h1 class="mt-3 font-serif text-3xl font-semibold tracking-[-0.035em] text-ink sm:text-4xl">
         笔记
       </h1>
       <p class="mt-3 text-sm text-muted">
-        显示 <span id="post-count" class="text-ink">{sortedPosts.length}</span> / {sortedPosts.length} 篇 · 按分类或标签筛选
+        显示 <span id="post-count" class="font-mono text-ink">{sortedPosts.length}</span> / {sortedPosts.length} 篇 · 按分类或标签筛选
       </p>
     </header>
 
@@ -71,12 +86,12 @@ const allCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
             href={`/blog/${post.id}/`}
             data-tags={postTags}
             data-categories={postCategories}
-            class="post-item group grid gap-4 py-7 sm:grid-cols-[90px_1fr_auto] sm:items-baseline"
+            class="post-item group grid gap-4 py-7 transition-colors hover:bg-accent-soft/40 sm:grid-cols-[110px_1fr_auto] sm:items-baseline"
           >
             <div class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
               {formatDate(post.data.pubDate)}
               <br />
-              <span class="text-muted-light">
+              <span class="whitespace-nowrap text-muted-light">
                 {getReadTime(post.body || '')} · {formatWordCount(getWordCount(post.body || ''))} 字
               </span>
             </div>
@@ -115,6 +130,11 @@ const allCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
     {sortedPosts.length === 0 && (
       <p class="py-16 text-center text-sm text-muted">还没有笔记。</p>
     )}
+
+    <div class="mt-10 flex flex-wrap items-center justify-between gap-2 border-t border-rule pt-4 font-mono text-[8px] uppercase tracking-[0.1em] text-muted-light">
+      <span>edit / submit via github pr</span>
+      <span>owner review before deploy</span>
+    </div>
   </main>
 </BaseLayout>
 

@@ -1,6 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { SITE_TITLE, SITE_DESCRIPTION, PROFILE, SOCIALS } from '../consts';
+import Heatmap from '../components/Heatmap.astro';
+import {
+  SITE_TITLE,
+  SITE_DESCRIPTION,
+  PROFILE,
+  SOCIALS,
+  GITHUB_USERNAME,
+} from '../consts';
 import { getCollection } from 'astro:content';
 import {
   formatDate,
@@ -9,30 +16,23 @@ import {
   getSeriesGroups,
   getWordCount,
 } from '../utils/blog';
+import { getCommitActivity } from '../utils/git';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
-const sortedPosts = allPosts.sort(
+const latestPosts = allPosts.sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
 
 const tagCounts: Record<string, number> = {};
-const categoryCounts: Record<string, number> = {};
 let totalWords = 0;
 for (const post of allPosts) {
   totalWords += getWordCount(post.body || '');
   for (const tag of post.data.tags || []) tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-  for (const category of post.data.categories || []) {
-    categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-  }
 }
 const tags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-const categories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
 const seriesGroups = getSeriesGroups(allPosts);
-
-const featuredPost = sortedPosts.find((post) => post.data.featured) ?? null;
-const indexPosts = featuredPost
-  ? sortedPosts.filter((post) => post.id !== featuredPost.id)
-  : sortedPosts;
+const activity = getCommitActivity();
+const lastCommitLabel = activity.lastCommit ? activity.lastCommit.replace(/-/g, '.') : '—';
 
 const BLOG_START_DATE = '2026-01-01';
 const runDays = Math.max(
@@ -43,276 +43,500 @@ const runDays = Math.max(
 
 <BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
   <main>
-    <section class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
-      <div class="relative overflow-hidden border border-rule bg-ink">
-        <img
-          src="/demo/home-banner.webp"
-          alt=""
-          width="1592"
-          height="520"
-          fetchpriority="high"
-          class="h-44 w-full object-cover object-[center_42%] sm:h-56 lg:h-64"
-        />
-        <div class="absolute inset-0 bg-gradient-to-r from-[#0d1114]/85 via-[#0d1114]/45 to-[#0d1114]/10"></div>
-        <div class="absolute inset-0 flex flex-col justify-between p-5 sm:p-7 lg:p-8">
-          <div class="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.2em] text-white/65">
-            <span>RisingInsight / Research notes</span>
-            <span class="hidden sm:inline">Vol. 01 · 2026</span>
-          </div>
+    <section class="relative overflow-hidden border-b border-rule">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 lg:px-8 lg:pb-14 lg:pt-24">
+        <div class="grid items-center gap-12 lg:grid-cols-[1.04fr_.96fr]">
           <div>
-            <h1 class="font-serif text-3xl font-semibold leading-tight tracking-[-0.02em] text-white sm:text-4xl lg:text-[2.75rem]">
-              生成模型笔记
+            <div class="flex flex-wrap items-center gap-3 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-light">
+              <span class="status-dot"></span>
+              <span>build log</span>
+              <span class="text-rule">/</span>
+              <span>2026</span>
+              <span class="hidden items-center gap-2 sm:flex">
+                <span class="text-rule">/</span>
+                <span class="text-accent">learning in public</span>
+              </span>
+            </div>
+
+            <h1 class="mt-6 font-serif text-[2.9rem] font-semibold leading-[.98] tracking-[-0.06em] text-ink sm:text-6xl lg:text-[4.6rem]">
+              Build<span class="text-accent">.</span> Break<span class="text-accent">.</span><br />
+              Document<span class="text-accent">.</span>
             </h1>
-            <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] leading-6 text-white/70">
-              <span>Notes on generative models</span>
-              <span aria-hidden="true" class="text-white/35">/</span>
-              <span>扩散模型 · 图像模态转换 · 多模态生成</span>
+            <p class="mt-5 max-w-xl font-serif text-xl leading-snug tracking-[-0.02em] text-ink-soft sm:text-2xl">
+              把想法跑起来，再把过程写下来。
             </p>
+            <p class="mt-4 max-w-xl text-[13px] leading-7 text-muted">
+              这里记录生成模型、深度学习与工程实践：从推导、实验，到真正能跑起来的代码。
+              <span class="text-muted-light">Just broaden my horizons.</span>
+            </p>
+
+            <div class="mt-7 flex flex-wrap items-center gap-3">
+              <a href="/blog/" class="btn btn-primary">
+                阅读笔记 <span aria-hidden="true">→</span>
+              </a>
+              <a href="/lab/" class="btn">
+                打开实验室 <span aria-hidden="true">↗</span>
+              </a>
+              <a
+                href={`https://github.com/${GITHUB_USERNAME}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-mono text-[10px] uppercase tracking-[0.08em] text-muted transition-colors hover:text-accent"
+              >
+                github ↗
+              </a>
+            </div>
+
+            <div class="mt-8 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[9px] uppercase tracking-[0.08em] text-muted-light">
+              {SOCIALS.map((social) => (
+                <a
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="transition-colors hover:text-accent"
+                >
+                  {social.name} <span aria-hidden="true">↗</span>
+                </a>
+              ))}
+              <span class="flex items-center gap-2">
+                <span class="status-dot"></span>
+                {PROFILE.location}
+              </span>
+            </div>
           </div>
+
+          <div class="terminal-window reveal" data-terminal>
+            <div class="terminal-bar">
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="ml-2 font-mono text-[9px] tracking-[0.08em] text-muted-light">
+                risinginsight@blog: ~
+              </span>
+              <span class="ml-auto font-mono text-[8px] uppercase tracking-[0.12em] text-muted-light">
+                zsh
+              </span>
+            </div>
+
+            <div class="flex gap-5 border-b border-rule-soft px-4 pt-2.5" role="tablist" aria-label="终端面板">
+              <button
+                type="button"
+                data-terminal-tab="whoami"
+                role="tab"
+                aria-selected="true"
+                class="terminal-tab is-active"
+              >whoami</button>
+              <button
+                type="button"
+                data-terminal-tab="status"
+                role="tab"
+                aria-selected="false"
+                class="terminal-tab"
+              >status</button>
+              <button
+                type="button"
+                data-terminal-tab="latest"
+                role="tab"
+                aria-selected="false"
+                class="terminal-tab"
+              >latest</button>
+            </div>
+
+            <div class="min-h-[292px] p-4 font-mono text-[11px] leading-6 sm:p-5">
+              <div data-terminal-panel="whoami" role="tabpanel">
+                <div><span class="terminal-prompt">$</span> <span class="text-ink-soft">whoami</span></div>
+                <div class="mt-2 text-accent">{PROFILE.name}</div>
+                <div class="text-muted">{PROFILE.role} · {PROFILE.location}</div>
+                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="text-ink-soft">cat profile.json</span></div>
+                <div class="mt-2 text-muted">
+                  <div>{'{'}</div>
+                  <div class="pl-3"><span class="text-accent">"role"</span>: <span class="text-ink-soft">"Deep Learning"</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"focus"</span>: <span class="text-ink-soft">"generative systems"</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"mode"</span>: <span class="text-ink-soft">"build in public"</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"status"</span>: <span class="text-accent">"online"</span></div>
+                  <div>{'}'}</div>
+                </div>
+                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="cursor-blink"></span></div>
+              </div>
+
+              <div data-terminal-panel="status" role="tabpanel" class="hidden">
+                <div><span class="terminal-prompt">$</span> <span class="text-ink-soft">cat status.json</span></div>
+                <div class="mt-2 text-muted">
+                  <div>{'{'}</div>
+                  <div class="pl-3"><span class="text-accent">"status"</span>: <span class="text-ink-soft">"online"</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"posts"</span>: <span class="text-ink-soft">{allPosts.length}</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"words"</span>: <span class="text-ink-soft">{formatWordCount(totalWords)}</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"commits"</span>: <span class="text-ink-soft">{activity.totalAll}</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"streak"</span>: <span class="text-ink-soft">"{activity.currentStreak}d"</span>,</div>
+                  <div class="pl-3"><span class="text-accent">"last_commit"</span>: <span class="text-ink-soft">"{lastCommitLabel}"</span></div>
+                  <div>{'}'}</div>
+                </div>
+                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="text-accent">uptime</span> <span class="text-muted">→</span> <span class="text-ink">{runDays} days</span></div>
+              </div>
+
+              <div data-terminal-panel="latest" role="tabpanel" class="hidden">
+                <div><span class="terminal-prompt">$</span> <span class="text-ink-soft">ls -t posts/</span></div>
+                <div class="mt-3 space-y-2.5">
+                  {latestPosts.slice(0, 3).map((post) => (
+                    <a href={`/blog/${post.id}/`} class="group flex items-start gap-2 text-muted transition-colors hover:text-accent">
+                      <span class="text-accent">→</span>
+                      <span class="min-w-0">
+                        <span class="block truncate text-ink-soft group-hover:text-accent">{post.data.title}</span>
+                        <span class="block text-[9px] text-muted-light">{formatDate(post.data.pubDate)}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="text-ink-soft">cd /blog</span> <a href="/blog/" class="ml-2 text-accent underline decoration-accent/30 underline-offset-2">open all</a></div>
+                <div class="mt-3"><span class="terminal-prompt">$</span> <span class="cursor-blink"></span></div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-rule-soft px-4 py-2 font-mono text-[8px] uppercase tracking-[0.12em] text-muted-light">
+              <span>UTF-8 · LF · git:(main)</span>
+              <span class="text-accent">● connected</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 grid grid-cols-2 border border-rule bg-surface/40 sm:grid-cols-4">
+          <div class="border-b border-r border-rule px-4 py-4 sm:border-b-0">
+            <div class="mono-label">uptime</div>
+            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-ink">
+              <span data-uptime-days>{runDays}</span><span class="ml-0.5 text-sm text-muted">d</span>
+            </div>
+          </div>
+          <div class="border-b border-rule px-4 py-4 sm:border-b-0 sm:border-r">
+            <div class="mono-label">posts</div>
+            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-ink">{allPosts.length}</div>
+          </div>
+          <div class="border-r border-rule px-4 py-4">
+            <div class="mono-label">words</div>
+            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-ink">{formatWordCount(totalWords)}</div>
+          </div>
+          <div class="px-4 py-4">
+            <div class="mono-label">commits</div>
+            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-accent">{activity.totalAll}</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 border border-t-0 border-rule bg-paper-alt/30 px-4 py-2.5 font-mono text-[8px] uppercase tracking-[0.1em] text-muted-light">
+          <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>traffic</span>
+            <span class="text-muted"><span id="busuanzi_value_site_pv">--</span> views</span>
+            <span class="text-muted"><span id="busuanzi_value_site_uv">--</span> visitors</span>
+          </span>
+          <span>busuanzi / live</span>
         </div>
       </div>
     </section>
 
-    <div class="mx-auto grid max-w-6xl gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-12 lg:px-8 lg:py-14">
-      <div class="min-w-0 lg:order-2">
-        <div class="flex items-baseline justify-between border-b border-rule pb-4">
-          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 class="font-serif text-2xl font-semibold tracking-tight text-ink">笔记索引</h2>
-            <span class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
-              Notes · {sortedPosts.length}
-            </span>
+    <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div class="min-w-0 space-y-10">
+          <div class="reveal">
+            <Heatmap activity={activity} />
           </div>
-          <a href="/blog/" class="text-[12px] text-muted transition-colors hover:text-accent">
-            全部笔记 <span aria-hidden="true">→</span>
-          </a>
-        </div>
 
-        {featuredPost && (
-          <a
-            href={`/blog/${featuredPost.id}/`}
-            class="group relative mt-6 block border border-rule bg-surface p-5 transition-colors hover:border-muted-light sm:p-7"
-          >
-            <span aria-hidden="true" class="absolute inset-y-0 left-0 w-[2px] bg-accent"></span>
-            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-              <span class="text-accent">Selected note · 01</span>
-              <span>
-                {formatDate(featuredPost.data.pubDate)} · {getReadTime(featuredPost.body || '')} · {formatWordCount(
-                  getWordCount(featuredPost.body || '')
-                )} 字
-              </span>
-            </div>
-            <h3 class="mt-4 font-serif text-2xl font-semibold leading-snug text-ink transition-colors group-hover:text-accent sm:text-3xl">
-              {featuredPost.data.title}
-            </h3>
-            <p class="mt-3 max-w-2xl text-[13px] leading-7 text-muted">
-              {featuredPost.data.description}
-            </p>
-            <div class="mt-5 flex flex-wrap items-center gap-2">
-              {featuredPost.data.categories.map((category) => (
-                <span class="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">
-                  {category}
-                </span>
-              ))}
-              {featuredPost.data.tags.slice(0, 4).map((tag) => (
-                <span class="tag">{tag}</span>
-              ))}
-              <span class="mt-2 inline-flex w-full items-center gap-2 text-[12px] text-muted transition-colors group-hover:text-accent sm:ml-auto sm:mt-0 sm:w-auto">
-                阅读笔记
-                <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
-              </span>
-            </div>
-          </a>
-        )}
-
-        <div class="mt-8 flex items-baseline justify-between border-b border-rule pb-3">
-          <h2 class="font-serif text-lg font-semibold tracking-tight text-ink">
-            {featuredPost ? '更多笔记' : '笔记'}
-          </h2>
-          <span class="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-light">Recently</span>
-        </div>
-
-        <div class="divide-y divide-rule">
-          {indexPosts.map((post) => (
-            <a
-              href={`/blog/${post.id}/`}
-              class="group grid gap-3 py-6 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-6"
-            >
-              <div class="min-w-0">
-                <div class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light">
-                  {formatDate(post.data.pubDate)} · {getReadTime(post.body || '')} · {formatWordCount(
-                    getWordCount(post.body || '')
-                  )} 字
-                </div>
-                <h3 class="mt-2 font-serif text-xl font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
-                  {post.data.title}
-                </h3>
-                <p class="mt-1.5 max-w-2xl text-[13px] leading-7 text-muted">
-                  {post.data.description}
-                </p>
-                {post.data.tags.length > 0 && (
-                  <div class="mt-3 flex flex-wrap gap-2">
-                    {post.data.tags.slice(0, 4).map((tag) => <span class="tag">{tag}</span>)}
-                  </div>
-                )}
+          <section aria-labelledby="latest-heading" class="reveal">
+            <div class="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-4">
+              <div>
+                <div class="mono-label text-accent">latest.log</div>
+                <h2 id="latest-heading" class="mt-2 font-serif text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">
+                  最近更新
+                </h2>
               </div>
-              <div class="hidden text-right font-mono text-[9px] uppercase leading-5 tracking-[0.1em] text-muted-light sm:block">
-                {post.data.categories[0] || ''}
-                <br />
-                <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
-              </div>
-            </a>
-          ))}
-          {indexPosts.length === 0 && (
-            <p class="py-10 text-sm text-muted">更多笔记正在整理中。</p>
-          )}
-        </div>
-      </div>
-
-      <aside class="min-w-0 space-y-8 lg:order-1">
-        <section class="border border-rule bg-surface p-5">
-          <div class="flex items-center gap-3.5">
-            <img
-              src={PROFILE.avatar}
-              alt={PROFILE.name}
-              width="460"
-              height="460"
-              class="h-14 w-14 rounded-full border border-rule object-cover"
-            />
-            <div class="min-w-0">
-              <div class="font-serif text-lg font-semibold leading-tight text-ink">{PROFILE.name}</div>
-              <div class="mt-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-                {PROFILE.role} · {PROFILE.location}
-              </div>
-            </div>
-          </div>
-          <p class="mt-4 text-[12px] leading-6 text-muted">{PROFILE.bio}</p>
-          <p class="mt-1 text-[11px] leading-5 text-muted-light">{PROFILE.tagline}</p>
-          <div class="mt-4 flex flex-wrap gap-x-3.5 gap-y-1.5 border-t border-rule-soft pt-3 text-[11px]">
-            {SOCIALS.map((social) => (
-              <a
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-muted transition-colors hover:text-accent"
-              >
-                {social.name} <span aria-hidden="true">↗</span>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <section class="border border-rule bg-paper-alt/40">
-          <div class="grid grid-cols-2">
-            <div class="border-b border-r border-rule px-4 py-3.5">
-              <div class="font-serif text-[22px] leading-none text-ink">{allPosts.length}</div>
-              <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-muted-light">Notes</div>
-            </div>
-            <div class="border-b border-rule px-4 py-3.5">
-              <div class="font-serif text-[22px] leading-none text-ink">{formatWordCount(totalWords)}</div>
-              <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-muted-light">Words</div>
-            </div>
-            <div class="border-r border-rule px-4 py-3.5">
-              <div class="font-serif text-[22px] leading-none text-ink">{categories.length}</div>
-              <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-muted-light">Categories</div>
-            </div>
-            <div class="px-4 py-3.5">
-              <div class="font-serif text-[22px] leading-none text-ink">{tags.length}</div>
-              <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-muted-light">Tags</div>
-            </div>
-          </div>
-          <div class="flex items-center justify-between border-t border-rule px-4 py-2.5 font-mono text-[8px] uppercase tracking-[0.12em] text-muted-light">
-            <span>Running since 2026.01</span>
-            <span><span id="home-run-days" class="text-ink">{runDays}</span> days</span>
-          </div>
-        </section>
-
-        {seriesGroups.length > 0 && (
-          <section>
-            <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
-              <h2 class="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">Series</h2>
-              <a href="/series/" class="text-[10px] text-muted-light transition-colors hover:text-accent">
-                全部 <span aria-hidden="true">→</span>
+              <a href="/blog/" class="font-mono text-[10px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent">
+                all posts <span aria-hidden="true">→</span>
               </a>
             </div>
-            <ul class="mt-3 space-y-2.5">
-              {seriesGroups.map((group) => (
-                <li>
-                  <a
-                    href={`/series/#series-${group.slug}`}
-                    class="group flex items-baseline justify-between gap-3"
-                  >
-                    <span class="text-[13px] leading-5 text-ink transition-colors group-hover:text-accent">
-                      {group.name}
-                    </span>
-                    <span class="font-mono text-[9px] text-muted-light">{group.posts.length}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
 
-        <section>
-          <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
-            <h2 class="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">Categories</h2>
-            <span class="font-mono text-[9px] text-muted-light">{categories.length}</span>
-          </div>
-          <ul class="mt-2 divide-y divide-rule-soft">
-            {categories.map(([category, count]) => (
-              <li>
+            <div class="divide-y divide-rule">
+              {latestPosts.map((post, index) => (
                 <a
-                  href={`/blog/?category=${encodeURIComponent(category)}`}
-                  class="group flex items-baseline justify-between gap-3 py-2 text-[12px] text-muted transition-colors hover:text-accent"
+                  href={`/blog/${post.id}/`}
+                  class="log-row group grid gap-4 py-6 sm:grid-cols-[74px_minmax(0,1fr)_auto] sm:items-start"
                 >
-                  <span>{category}</span>
-                  <span class="font-mono text-[9px] text-muted-light">{count}</span>
+                  <div class="font-mono text-[9px] uppercase leading-5 tracking-[0.1em] text-muted-light">
+                    <span class="text-accent">{String(index + 1).padStart(2, '0')}</span>
+                    <br />
+                    {formatDate(post.data.pubDate)}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      {post.data.featured && (
+                        <span class="border border-accent/40 bg-accent-soft px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.1em] text-accent">
+                          pinned
+                        </span>
+                      )}
+                      <h3 class="font-serif text-xl font-semibold leading-snug tracking-[-0.02em] text-ink transition-colors group-hover:text-accent">
+                        {post.data.title}
+                      </h3>
+                    </div>
+                    <p class="mt-2 max-w-2xl text-[13px] leading-7 text-muted">{post.data.description}</p>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                      {post.data.tags.slice(0, 4).map((tag) => <span class="tag">{tag}</span>)}
+                      <span class="font-mono text-[9px] text-muted-light">
+                        {getReadTime(post.body || '')} · {formatWordCount(getWordCount(post.body || ''))} 字
+                      </span>
+                    </div>
+                  </div>
+                  <div class="hidden items-center gap-2 pt-1 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light sm:flex">
+                    {post.data.categories[0] || 'note'}
+                    <span aria-hidden="true" class="transition-transform group-hover:translate-x-1 group-hover:text-accent">→</span>
+                  </div>
                 </a>
-              </li>
-            ))}
-          </ul>
-        </section>
+              ))}
+            </div>
+          </section>
 
-        <section>
-          <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
-            <h2 class="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">Tags</h2>
-            <span class="font-mono text-[9px] text-muted-light">{tags.length}</span>
-          </div>
-          <div class="mt-3 flex flex-wrap gap-1.5">
-            {tags.map(([tag, count]) => (
-              <a href={`/blog/?tag=${encodeURIComponent(tag)}`} class="tag">
-                {tag} <span class="font-mono text-[9px] text-muted-light">{count}</span>
-              </a>
-            ))}
-          </div>
-        </section>
+          <a href="/guestbook/" class="panel panel-link group flex items-center justify-between gap-6 p-5 sm:p-6 reveal">
+            <div>
+              <div class="mono-label text-accent">guestbook.open()</div>
+              <div class="mt-2 font-serif text-xl font-semibold tracking-[-0.02em] text-ink transition-colors group-hover:text-accent">
+                留下一条记录
+              </div>
+              <p class="mt-1 text-[12px] leading-6 text-muted">
+                登录 GitHub 后留言，聊聊技术、项目或任何你想说的事。
+              </p>
+            </div>
+            <span class="font-mono text-2xl text-accent transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+          </a>
+        </div>
 
-        <a
-          href="/lab/"
-          class="group block border border-rule bg-accent-soft/60 p-4 transition-colors hover:border-muted-light"
-        >
-          <div class="flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.18em] text-muted-light">
-            <span>Lab</span>
-            <span>Interactive</span>
-          </div>
-          <div class="mt-2 font-serif text-base font-semibold text-ink transition-colors group-hover:text-accent">
-            扩散过程实验
-          </div>
-          <p class="mt-1 text-[11px] leading-5 text-muted">
-            拖动时间步，观察一张图片如何被加噪与还原。
-          </p>
-        </a>
-      </aside>
-    </div>
+        <aside class="space-y-8">
+          <section class="panel p-5 reveal">
+            <div class="flex items-center justify-between">
+              <span class="mono-label">operator</span>
+              <span class="flex items-center gap-2 font-mono text-[8px] uppercase tracking-[0.1em] text-accent">
+                <span class="status-dot"></span> online
+              </span>
+            </div>
+            <div class="mt-5 flex items-center gap-3.5">
+              <span class="relative">
+                <img
+                  src={PROFILE.avatar}
+                  alt={PROFILE.name}
+                  width="460"
+                  height="460"
+                  class="h-16 w-16 rounded-full border border-rule object-cover"
+                />
+                <span class="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-accent"></span>
+              </span>
+              <div class="min-w-0">
+                <div class="font-serif text-lg font-semibold leading-tight tracking-[-0.02em] text-ink">{PROFILE.name}</div>
+                <div class="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">{PROFILE.role}</div>
+              </div>
+            </div>
+            <p class="mt-4 text-[12px] leading-6 text-muted">{PROFILE.bio}</p>
+            <p class="mt-1 text-[11px] leading-5 text-muted-light">{PROFILE.tagline}</p>
+            <div class="mt-4 grid grid-cols-2 gap-2 border-t border-rule-soft pt-4 font-mono text-[9px] uppercase tracking-[0.06em]">
+              <div>
+                <div class="text-muted-light">last commit</div>
+                <div class="mt-1 text-ink">{lastCommitLabel}</div>
+              </div>
+              <div>
+                <div class="text-muted-light">streak</div>
+                <div class="mt-1 text-accent">{activity.currentStreak} days</div>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[10px] text-muted">
+              {SOCIALS.map((social) => (
+                <a href={social.href} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
+                  {social.name} <span aria-hidden="true">↗</span>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          {seriesGroups.length > 0 && (
+            <section class="reveal">
+              <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
+                <h2 class="mono-label">series</h2>
+                <a href="/series/" class="font-mono text-[9px] uppercase tracking-[0.08em] text-muted-light transition-colors hover:text-accent">
+                  all <span aria-hidden="true">→</span>
+                </a>
+              </div>
+              <ul class="mt-3 space-y-2.5">
+                {seriesGroups.map((group) => (
+                  <li>
+                    <a href={`/series/#series-${group.slug}`} class="group flex items-baseline justify-between gap-3">
+                      <span class="text-[13px] leading-5 text-ink transition-colors group-hover:text-accent">{group.name}</span>
+                      <span class="font-mono text-[9px] text-muted-light">{group.posts.length}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section class="reveal">
+            <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
+              <h2 class="mono-label">tags</h2>
+              <span class="font-mono text-[9px] text-muted-light">{tags.length}</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              {tags.map(([tag, count]) => (
+                <a href={`/blog/?tag=${encodeURIComponent(tag)}`} class="tag">
+                  {tag} <span class="font-mono text-[9px] text-muted-light">{count}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          <a href="/lab/" class="lab-card panel group relative block overflow-hidden p-5 reveal">
+            <div class="lab-noise" aria-hidden="true"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.16em] text-muted-light">
+                <span>lab.exe</span>
+                <span class="flex items-center gap-1.5 text-accent"><span class="status-dot"></span> live</span>
+              </div>
+              <div class="mt-8 font-serif text-xl font-semibold tracking-[-0.02em] text-ink transition-colors group-hover:text-accent">
+                扩散过程实验
+              </div>
+              <p class="mt-1 text-[11px] leading-5 text-muted">拖动时间步，观察一张图片如何被加噪与还原。</p>
+              <div class="mt-4 font-mono text-[9px] uppercase tracking-[0.1em] text-accent">open lab →</div>
+            </div>
+          </a>
+        </aside>
+      </div>
+    </section>
   </main>
 
   <script define:vars={{ BLOG_START_DATE }}>
-    const runDaysEl = document.getElementById('home-run-days');
-    if (runDaysEl) {
-      const days = Math.max(
-        0,
-        Math.floor((Date.now() - new Date(BLOG_START_DATE).getTime()) / (1000 * 60 * 60 * 24))
-      );
-      runDaysEl.textContent = String(days);
+    const runDaysEls = document.querySelectorAll('[data-uptime-days]');
+    const days = Math.max(
+      0,
+      Math.floor((Date.now() - new Date(BLOG_START_DATE).getTime()) / (1000 * 60 * 60 * 24))
+    );
+    runDaysEls.forEach((el) => { el.textContent = String(days); });
+
+    const tabs = document.querySelectorAll('[data-terminal-tab]');
+    const panels = document.querySelectorAll('[data-terminal-panel]');
+    function selectPanel(name) {
+      tabs.forEach((tab) => {
+        const active = tab.getAttribute('data-terminal-tab') === name;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', String(active));
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle('hidden', panel.getAttribute('data-terminal-panel') !== name);
+      });
     }
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => selectPanel(tab.getAttribute('data-terminal-tab') || 'whoami'));
+    });
   </script>
 </BaseLayout>
+
+<style>
+  .hero-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(700px circle at 15% 30%, rgba(var(--accent-rgb), .12), transparent 55%),
+      radial-gradient(500px circle at 85% 15%, rgba(78, 140, 255, .08), transparent 55%);
+  }
+
+  .hero-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(var(--accent-rgb), .04) 1px, transparent 1px);
+    background-size: 100% 4px;
+    mask-image: linear-gradient(to bottom, black, transparent 80%);
+    opacity: .35;
+  }
+
+  .terminal-prompt {
+    color: var(--accent);
+  }
+
+  .terminal-tab {
+    position: relative;
+    padding: 0 0 9px;
+    border: 0;
+    background: transparent;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .06em;
+    cursor: pointer;
+    transition: color .2s;
+  }
+
+  .terminal-tab:hover {
+    color: var(--ink);
+  }
+
+  .terminal-tab.is-active {
+    color: var(--accent);
+  }
+
+  .terminal-tab.is-active::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .log-row {
+    position: relative;
+    transition: background .2s, padding-left .2s;
+  }
+
+  .log-row:hover {
+    background: var(--accent-soft);
+  }
+
+  .log-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -16px;
+    width: 1px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .log-row:hover::before {
+    opacity: 1;
+  }
+
+  .lab-card {
+    min-height: 180px;
+    background: linear-gradient(145deg, var(--surface), var(--surface-alt));
+  }
+
+  .lab-noise {
+    position: absolute;
+    inset: 0;
+    opacity: .35;
+    background-image:
+      radial-gradient(circle at 72% 18%, rgba(var(--accent-rgb), .35) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 30% 70%, rgba(var(--accent-rgb), .22) 0 1px, transparent 1.5px),
+      linear-gradient(120deg, transparent 30%, rgba(78, 140, 255, .08), transparent 70%);
+    background-size: 13px 13px, 17px 17px, 100% 100%;
+    mask-image: linear-gradient(120deg, transparent, black 35%, black 65%, transparent);
+    transition: opacity .3s, transform .5s;
+  }
+
+  .lab-card:hover .lab-noise {
+    opacity: .6;
+    transform: scale(1.04);
+  }
+
+  @media (max-width: 640px) {
+    .log-row::before {
+      left: -12px;
+    }
+  }
+</style>

@@ -345,13 +345,7 @@
    滚动锚点偏移补偿
    ======================================== */
 .toc-scroll-offset {
-  display: block;
-  position: relative;
-  visibility: hidden;
-  height: 0;
-  margin-top: -5rem;
-  padding-top: 5rem;
-  pointer-events: none;
+  display: none;
 }
 
 /* ========================================
@@ -492,10 +486,63 @@
 #toc-inline-arrow { color: var(--muted-light); }
 #toc-inline-panel { background: transparent; }
 #toc-inline-nav { padding: 0 8px 10px; }
+
+/* tech terminal overrides */
+#toc-float { top: 6.2rem; width: 236px; }
+.toc-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 12px;
+}
+.dark .toc-sidebar {
+  background: var(--surface);
+  border-color: var(--rule);
+}
+.toc-sidebar-title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+  border-color: var(--rule-soft);
+}
+.dark .toc-sidebar-title {
+  color: var(--muted-light);
+  border-color: var(--rule-soft);
+}
+.toc-item-row > a {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.65;
+  color: var(--muted);
+  border-radius: 2px;
+}
+.dark .toc-item-row > a { color: var(--muted); }
+.toc-item-row > a:hover,
+.dark .toc-item-row > a:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.toc-item-row > a.active,
+.dark .toc-item-row > a.active {
+  color: var(--accent) !important;
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+.toc-h1 > .toc-item-row > a { font-size: 10px !important; }
+.toc-h2 > .toc-item-row > a { font-size: 9px !important; }
+.toc-h3 > .toc-item-row > a { font-size: 8.5px !important; }
+.toc-inline-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+#toc-inline { background: var(--surface); }
 </style>
 
 <script is:inline>
 document.addEventListener('DOMContentLoaded', function() {
+  var headerEl = document.querySelector('header');
+  var headerOffset = (headerEl ? headerEl.getBoundingClientRect().height : 64) + 20;
   var tocFloat = document.getElementById('toc-float');
   var tocFloatTitle = document.getElementById('toc-float-title');
   var tocNav = document.getElementById('toc-nav');
@@ -518,14 +565,9 @@ document.addEventListener('DOMContentLoaded', function() {
   var pageTitle = document.querySelector('article > header h1');
   if (pageTitle && tocFloatTitle) tocFloatTitle.innerHTML = pageTitle.innerHTML.trim();
 
-  // 注入锚点
+  // 注入锚点；滚动偏移由全局 scroll-margin-top 处理
   headings.forEach(function(h, idx) {
     if (!h.id) h.id = 'toc-' + idx;
-    if (!h.querySelector('.toc-scroll-offset')) {
-      var anchor = document.createElement('span');
-      anchor.className = 'toc-scroll-offset';
-      h.insertBefore(anchor, h.firstChild);
-    }
   });
 
   // ========================================
@@ -767,7 +809,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var target = document.getElementById(href.slice(1));
         if (target) {
           e.preventDefault();
-          var offset = 80;
+          var offset = headerOffset;
           var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
           window.scrollTo({ top: top, behavior: 'smooth' });
           history.pushState(null, '', href);
@@ -853,7 +895,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+      { rootMargin: '-' + Math.round(headerOffset) + 'px 0px -60% 0px', threshold: 0 }
     );
     headingEls.forEach(function(el) { observer.observe(el); });
 
@@ -863,8 +905,8 @@ document.addEventListener('DOMContentLoaded', function() {
       var closestDist = Infinity;
       headingEls.forEach(function(el) {
         var rect = el.getBoundingClientRect();
-        if (rect.top <= 120 && rect.bottom > 0) {
-          var dist = Math.abs(rect.top - 80);
+        if (rect.top <= headerOffset + 30 && rect.bottom > 0) {
+          var dist = Math.abs(rect.top - headerOffset);
           if (dist < closestDist) { closestDist = dist; closest = el.id; }
         }
       });
@@ -875,7 +917,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', function() {
       if (!ticking) {
         requestAnimationFrame(function() {
-          var scrollPos = window.scrollY + 110;
+          var scrollPos = window.scrollY + headerOffset + 30;
           var activeIdx = 0;
           for (var j = 0; j < headingEls.length; j++) {
             if (headingEls[j].offsetTop <= scrollPos) activeIdx = j;

@@ -1,7 +1,10 @@
 // 站点全局配置
 export const SITE_TITLE = "RisingInsight's Blog";
-export const SITE_DESCRIPTION = '分享一些个人的学习笔记 | 记录一些新鲜的技术';
+export const SITE_DESCRIPTION = '记录生成模型、深度学习与工程实践 | Build in public';
 export const SITE_URL = 'https://risinginsight.github.io';
+export const GITHUB_USERNAME = 'RisingInsight';
+export const GITHUB_REPO = 'RisingInsight/RisingInsight.github.io';
+export const GITHUB_BRANCH = 'main';
 
 // 社交链接
 export const SOCIALS = [
@@ -18,7 +21,7 @@ export const NAV_ITEMS = [
   { label: '系列', href: '/series/' },
   { label: '实验', href: '/lab/' },
   { label: '归档', href: '/archives/' },
-  { label: '时光机', href: '/moments/' },
+  { label: '留言', href: '/guestbook/' },
   { label: '关于', href: '/about/' },
 ];
 
@@ -32,7 +35,7 @@ export const SERIES_INFO: Record<string, string> = {
 export const PROFILE = {
   name: 'RisingInsight',
   role: 'Deep Learning',
-  tagline: 'Diffusion Model · Image-to-Image Translations',
+  tagline: 'Generative Systems · Diffusion · Build in Public',
   avatar: '/avatar.jpg',
   bio: 'Just Broaden My Horizons',
   location: 'China',

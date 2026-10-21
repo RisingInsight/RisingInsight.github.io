@@ -21,9 +21,13 @@ const moments = [
   <main class="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '时光机' }]} />
 
-    <header class="border-b border-rule pb-6">
-      <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">Log</div>
-      <h1 class="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+    <header class="border border-rule bg-surface/55 p-5 sm:p-7">
+      <div class="flex items-center gap-2 border-b border-rule-soft pb-3 font-mono text-[9px] tracking-[0.08em] text-muted-light">
+        <span class="text-accent">~/</span>
+        timeline.log
+      </div>
+      <div class="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-accent">log</div>
+      <h1 class="mt-3 font-serif text-3xl font-semibold tracking-[-0.035em] text-ink sm:text-4xl">
         时光机
       </h1>
       <p class="mt-3 text-sm text-muted">记录生活与研究的碎片瞬间 · {moments.length} 条</p>

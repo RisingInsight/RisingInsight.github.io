@@ -1,0 +1,53 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = 'comments' } = Astro.props;
+---
+
+<div class="giscus-wrapper" data-pagefind-ignore>
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="mono-label text-accent">{title}</div>
+    <span class="font-mono text-[8px] uppercase tracking-[0.12em] text-muted-light">
+      github discussions · oauth
+    </span>
+  </div>
+  <div class="giscus mt-4"></div>
+</div>
+
+<script>
+  const giscusContainer = document.querySelector('.giscus');
+  if (giscusContainer) {
+    const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'RisingInsight/RisingInsight.github.io');
+    script.setAttribute('data-repo-id', 'R_kgDOQx_R_A');
+    script.setAttribute('data-category', 'General');
+    script.setAttribute('data-category-id', 'DIC_kwDOQx_R_M4C0fi2');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'bottom');
+    script.setAttribute('data-theme', theme);
+    script.setAttribute('data-lang', 'zh-CN');
+    script.setAttribute('data-loading', 'lazy');
+    script.setAttribute('crossorigin', 'anonymous');
+    script.async = true;
+    giscusContainer.appendChild(script);
+
+    const observer = new MutationObserver(() => {
+      const iframe = document.querySelector('iframe.giscus-frame') as HTMLIFrameElement;
+      if (iframe) {
+        const newTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        iframe.contentWindow?.postMessage(
+          { giscus: { setConfig: { theme: newTheme } } },
+          'https://giscus.app'
+        );
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  }
+</script>
