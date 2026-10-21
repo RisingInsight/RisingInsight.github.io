@@ -51,12 +51,14 @@ const editUrl = `https://github.com/${GITHUB_REPO}/edit/${GITHUB_BRANCH}/src/con
 const historyUrl = `https://github.com/${GITHUB_REPO}/commits/${GITHUB_BRANCH}/src/content/blog/${contentPath}`;
 const relatedPosts = allPosts
   .filter((post) => post.id !== postId && post.data.tags?.some((tag) => tags?.includes(tag)))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 
 let seriesPosts: { id: string; title: string }[] = [];
 if (series) {
   seriesPosts = allPosts
     .filter((post) => post.data.series === series && post.id !== postId)
+    .sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf())
     .map((post) => ({ id: post.id, title: post.data.title }));
 }
 ---
@@ -218,7 +220,7 @@ if (series) {
       </div>
 
       <div class="mt-10 flex items-center justify-between border-t border-rule pt-6 font-mono text-[11px] uppercase tracking-[0.08em] text-muted">
-        <button id="back-to-top" class="transition-colors hover:text-accent">
+        <button id="back-to-top" type="button" class="transition-colors hover:text-accent">
           ↑ back to top
         </button>
         <a href="/blog/" class="transition-colors hover:text-accent">
@@ -271,13 +273,13 @@ if (series) {
 
   <div id="shortcut-toast" class="shortcut-toast"></div>
 
-  <div id="lightbox" class="lightbox-overlay">
-    <button id="lightbox-close" class="lightbox-close" aria-label="关闭">
+  <div id="lightbox" class="lightbox-overlay" role="dialog" aria-modal="true" aria-label="图片预览" aria-hidden="true">
+    <button id="lightbox-close" class="lightbox-close" type="button" aria-label="关闭图片预览">
       <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
-    <img id="lightbox-img" src="" alt="" />
+    <img id="lightbox-img" alt="" />
   </div>
 </BaseLayout>
 
@@ -363,22 +365,40 @@ if (series) {
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
   const lightboxClose = document.getElementById('lightbox-close');
+  let lightboxTrigger: HTMLImageElement | null = null;
 
   document.querySelectorAll('.prose img').forEach((img) => {
-    img.addEventListener('click', () => {
+    const openLightbox = () => {
       if (lightbox && lightboxImg) {
+        lightboxTrigger = img;
         lightboxImg.src = img.src;
         lightboxImg.alt = img.alt;
         lightbox.classList.add('active');
+        lightbox.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
+        lightboxClose?.focus();
+      }
+    };
+    // 让图片可通过键盘聚焦并打开（Esc 关闭后焦点能回到图片）
+    img.tabIndex = 0;
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', `查看大图${img.alt ? '：' + img.alt : ''}`);
+    img.addEventListener('click', openLightbox);
+    img.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openLightbox();
       }
     });
   });
 
   const closeLightbox = () => {
-    if (lightbox) {
+    if (lightbox && lightbox.classList.contains('active')) {
       lightbox.classList.remove('active');
+      lightbox.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      lightboxTrigger?.focus();
+      lightboxTrigger = null;
     }
   };
 
@@ -427,12 +447,14 @@ if (series) {
       });
     }
   }
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener('pagehide', () => {
     sessionStorage.setItem(SCROLL_POS_KEY + pageId, String(window.scrollY));
   });
-  setInterval(() => {
-    sessionStorage.setItem(SCROLL_POS_KEY + pageId, String(window.scrollY));
-  }, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      sessionStorage.setItem(SCROLL_POS_KEY + pageId, String(window.scrollY));
+    }
+  });
 
   // ==========================================
   // 6. 键盘快捷键
@@ -445,13 +467,15 @@ if (series) {
     setTimeout(() => toast.classList.remove('show'), 1500);
   }
 
-  let isSearchFocused = false;
-  document.addEventListener('focusin', () => {
-    isSearchFocused = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
-  });
+  function isTypingTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+  }
 
   document.addEventListener('keydown', (event) => {
-    if (isSearchFocused) return;
+    // 用事件目标判断，避免“聚焦过输入框后标记一直为 true”导致快捷键失效
+    if (isTypingTarget(event.target)) return;
     if (event.key === 'Escape') {
       closeLightbox();
       return;

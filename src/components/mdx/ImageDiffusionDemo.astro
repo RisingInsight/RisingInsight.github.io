@@ -2,7 +2,7 @@
   <div class="demo-header">
     <div>
       <div class="demo-kicker">IMAGE DIFFUSION / 192 × 192</div>
-      <h3 class="demo-title">从噪声回到这张图</h3>
+      <h3 class="demo-title" data-toc-ignore>从噪声回到这张图</h3>
     </div>
     <div class="demo-status" data-status aria-live="polite">加载中...</div>
   </div>
@@ -91,6 +91,7 @@
       loading: false,
     };
     let timer = 0;
+    let pendingPlay = false;
 
     function setStatus(text: string) {
       status.textContent = text;
@@ -121,6 +122,10 @@
         state.loading = false;
         setStatus('就绪 · 拖动滑块或播放');
         render();
+        if (pendingPlay) {
+          pendingPlay = false;
+          play();
+        }
       } catch {
         state.loading = false;
         setStatus('帧加载失败');
@@ -165,6 +170,7 @@
       slider.disabled = false;
       playBtn.disabled = false;
       resetBtn.disabled = false;
+      modeBtns.forEach((button) => { button.disabled = false; });
       playBtn.textContent = '再次播放';
       setStatus(state.mode === 'forward' ? '加噪完成' : '去噪完成');
     }
@@ -172,8 +178,9 @@
     function play() {
       if (state.playing) return;
       if (!state.loaded) {
+        pendingPlay = true;
         loadSheets();
-        setStatus('帧还没加载完，请稍等');
+        setStatus('帧加载中，完成后自动播放');
         return;
       }
       if (state.mode === 'forward' && state.t >= STEPS) state.t = 0;
@@ -188,6 +195,7 @@
       slider.disabled = true;
       playBtn.disabled = true;
       resetBtn.disabled = true;
+      modeBtns.forEach((button) => { button.disabled = true; });
       setStatus(state.mode === 'forward' ? '加噪中...' : '去噪中...');
       const direction = state.mode === 'forward' ? STEP : -STEP;
       const end = state.mode === 'forward' ? STEPS : 0;
@@ -209,6 +217,7 @@
       slider.disabled = false;
       playBtn.disabled = false;
       resetBtn.disabled = false;
+      modeBtns.forEach((button) => { button.disabled = false; });
       state.mode = 'forward';
       state.t = 0;
       modeBtns.forEach((button) => {
@@ -351,6 +360,7 @@
     cursor: pointer;
   }
   .demo-tabs button:hover { color: var(--ink); }
+  .demo-tabs button:disabled { opacity: .5; cursor: default; }
   .demo-tabs button.is-active {
     border-bottom-color: var(--accent);
     color: var(--ink);

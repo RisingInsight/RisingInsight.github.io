@@ -167,10 +167,30 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
   const iconOpen = document.getElementById('menu-icon-open');
   const iconClose = document.getElementById('menu-icon-close');
 
+  function setMenuOpen(open: boolean) {
+    if (!menu || !btn) return;
+    menu.classList.toggle('hidden', !open);
+    iconOpen?.classList.toggle('hidden', open);
+    iconClose?.classList.toggle('hidden', !open);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+  }
+
   btn?.addEventListener('click', () => {
-    const isHidden = menu?.classList.toggle('hidden');
-    iconOpen?.classList.toggle('hidden', !isHidden);
-    iconClose?.classList.toggle('hidden', isHidden);
-    btn.setAttribute('aria-expanded', String(!isHidden));
+    setMenuOpen(menu?.classList.contains('hidden') ?? false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
+      setMenuOpen(false);
+      btn?.focus();
+    }
+  });
+
+  // 点击菜单外部时收起
+  document.addEventListener('click', (event) => {
+    if (!menu || menu.classList.contains('hidden')) return;
+    const target = event.target as Node;
+    if (!menu.contains(target) && !btn?.contains(target)) setMenuOpen(false);
   });
 </script>

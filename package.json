@@ -7,8 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && npx pagefind --site dist --output-path dist/pagefind",
-    "postbuild": "echo Pagefind index built successfully",
+    "build": "astro build && pagefind --site dist --output-path dist/pagefind",
     "preview": "astro preview",
     "astro": "astro",
     "generate:image-demo": "node scripts/generate-image-diffusion-demo.mjs",

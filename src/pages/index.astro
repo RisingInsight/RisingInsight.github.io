@@ -19,9 +19,14 @@ import {
 import { getCommitActivity } from '../utils/git';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
-const latestPosts = allPosts.sort(
+const postsByDate = [...allPosts].sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
+// featured 文章置顶，其余按时间倒序
+const latestPosts = [...postsByDate].sort((a, b) => {
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+  return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+});
 
 const tagCounts: Record<string, number> = {};
 let totalWords = 0;
@@ -35,9 +40,10 @@ const activity = getCommitActivity();
 const lastCommitLabel = activity.lastCommit ? activity.lastCommit.replace(/-/g, '.') : '—';
 
 const BLOG_START_DATE = '2026-01-01';
+const blogStart = new Date(2026, 0, 1);
 const runDays = Math.max(
   0,
-  Math.floor((Date.now() - new Date(BLOG_START_DATE).getTime()) / (1000 * 60 * 60 * 24))
+  Math.floor((Date.now() - blogStart.getTime()) / (1000 * 60 * 60 * 24))
 );
 ---
 
@@ -136,7 +142,7 @@ const runDays = Math.max(
                 <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">git log --oneline | wc -l</span></div>
                 <div class="term-fg">{activity.totalAll} commits · streak {activity.currentStreak}d · last {lastCommitLabel}</div>
                 <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">ls -t posts | head -3</span></div>
-                {latestPosts.slice(0, 3).map((post) => (
+                {postsByDate.slice(0, 3).map((post) => (
                   <div class="term-accent">→ {post.data.title}</div>
                 ))}
               </span><span class="cursor-blink"></span>
@@ -336,11 +342,14 @@ const runDays = Math.max(
     </section>
   </main>
 
-  <script define:vars={{ BLOG_START_DATE, POST_COUNT: allPosts.length, WORD_COUNT_LABEL: formatWordCount(totalWords), COMMITS: activity.totalAll, STREAK_DAYS: activity.currentStreak, LAST_COMMIT: lastCommitLabel, POST_TITLES: latestPosts.slice(0, 3).map((post) => post.data.title) }}>
+  <script define:vars={{ BLOG_START_DATE, PROFILE_NAME: PROFILE.name, PROFILE_ROLE: PROFILE.role, PROFILE_LOCATION: PROFILE.location, POST_COUNT: allPosts.length, WORD_COUNT_LABEL: formatWordCount(totalWords), COMMITS: activity.totalAll, STREAK_DAYS: activity.currentStreak, LAST_COMMIT: lastCommitLabel, POST_TITLES: postsByDate.slice(0, 3).map((post) => post.data.title) }}>
     const runDaysEls = document.querySelectorAll('[data-uptime-days]');
+    // 按本地时区解析，避免 UTC 解析在部分时区差一天
+    const startParts = BLOG_START_DATE.split('-').map(Number);
+    const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
     const uptimeDays = Math.max(
       0,
-      Math.floor((Date.now() - new Date(BLOG_START_DATE).getTime()) / (1000 * 60 * 60 * 24))
+      Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
     );
     runDaysEls.forEach((el) => { el.textContent = String(uptimeDays); });
 
@@ -355,8 +364,8 @@ const runDays = Math.max(
       const NL = String.fromCharCode(10);
       const segments = [
         ['$', 'term-accent'], [' whoami' + NL, 'term-fg'],
-        ['RisingInsight' + NL, 'term-accent'],
-        ['Deep Learning · China' + NL, 'term-muted'],
+        [PROFILE_NAME + NL, 'term-accent'],
+        [`${PROFILE_ROLE} · ${PROFILE_LOCATION}` + NL, 'term-muted'],
         ['$', 'term-accent'], [' cat profile.json' + NL, 'term-fg'],
         ['{' + NL, 'term-muted'],
         ['  "focus"', 'term-key'], [': ', 'term-muted'], ['"generative systems"', 'term-str'], [',' + NL, 'term-muted'],

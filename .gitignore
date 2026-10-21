@@ -25,6 +25,7 @@ pnpm-debug.log*
 
 # WorkBuddy local state (not project config)
 .workbuddy/memory/
+.workbuddy-ai/memory/
 
 # Hugo backup build artifacts (already archived)
 hugo-backup/public/

@@ -106,8 +106,14 @@ export function getCommitActivity(): CommitActivity {
     weeks.push({ days: weekDays, month });
   }
 
-  const pastDays = days.filter((day) => !day.future);
-  let longestStreak = 0;
+  // 首周可能不包含某月 1 号，补一个月份标签，避免热力图开头没有月份
+  if (weeks.length > 0 && !weeks[0].month) {
+    weeks[0].month = start
+      .toLocaleDateString('en-US', { month: 'short' })
+      .toUpperCase();
+  }
+
+  const pastDays = days.filter((day) => !day.future);  let longestStreak = 0;
   let running = 0;
   for (const day of pastDays) {
     if (day.count > 0) {

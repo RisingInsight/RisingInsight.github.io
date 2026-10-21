@@ -11,7 +11,7 @@
 <div id="toc-float" style="display:none;">
   <div class="toc-sidebar">
     <div class="toc-sidebar-title" id="toc-float-title"></div>
-    <nav id="toc-nav" class="toc-nav"></nav>
+    <nav id="toc-nav" class="toc-nav" aria-label="文章目录"></nav>
   </div>
 </div>
 
@@ -35,7 +35,7 @@
     </svg>
   </button>
   <div id="toc-inline-panel">
-    <nav id="toc-inline-nav" class="toc-nav"></nav>
+    <nav id="toc-inline-nav" class="toc-nav" aria-label="文章目录"></nav>
   </div>
 </div>
 
@@ -557,7 +557,11 @@ document.addEventListener('DOMContentLoaded', function() {
   var article = document.querySelector('article .prose');
   if (!article) { console.warn('[TOC] 未找到 .prose 容器'); return; }
 
-  var headings = article.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  // 组件内部的标题（如交互 Demo 的标题）不属于文章结构，加 data-toc-ignore 排除
+  var headings = Array.prototype.filter.call(
+    article.querySelectorAll('h1, h2, h3, h4, h5, h6'),
+    function (h) { return !h.closest('[data-toc-ignore]'); }
+  );
   if (headings.length < 2) { return; }
 
   var N = headings.length;
@@ -653,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
       result.push('<div class="toc-item-row">');
       result.push('<a href="#' + id + '"><span class="toc-dot"></span>' + displayContent + '</a>');
       if (hasKids) {
-        result.push('<span class="toc-toggle-btn" data-idx="' + i + '">&#9654;</span>');
+        result.push('<button type="button" class="toc-toggle-btn" data-idx="' + i + '" aria-label="展开子目录" aria-expanded="false">&#9654;</button>');
       }
       result.push('</div>');
 
@@ -724,6 +728,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!childrenUl) return;
 
     var isExpanded = expandedNodes[idx];
+    var nextExpanded = !(toggle && isExpanded);
 
     if (toggle && isExpanded) {
       // 折叠
@@ -736,6 +741,9 @@ document.addEventListener('DOMContentLoaded', function() {
       childrenUl.classList.add('toc-expanded');
       li.classList.add('toc-expanded');
     }
+
+    var btn = li.querySelector(':scope > .toc-item-row > .toc-toggle-btn');
+    if (btn) btn.setAttribute('aria-expanded', String(nextExpanded));
   }
 
   /**
@@ -769,13 +777,16 @@ document.addEventListener('DOMContentLoaded', function() {
     for (var i = 0; i < allChildrenUls.length; i++) {
       var parentIdx = parseInt(allChildrenUls[i].getAttribute('data-parent-idx'));
       var parentLi = allChildrenUls[i].closest('li');
-      if (shouldExpand[parentIdx]) {
+      var expanded = !!shouldExpand[parentIdx];
+      if (expanded) {
         allChildrenUls[i].classList.add('toc-expanded');
         if (parentLi) parentLi.classList.add('toc-expanded');
       } else {
         allChildrenUls[i].classList.remove('toc-expanded');
         if (parentLi) parentLi.classList.remove('toc-expanded');
       }
+      var parentBtn = parentLi && parentLi.querySelector(':scope > .toc-item-row > .toc-toggle-btn');
+      if (parentBtn) parentBtn.setAttribute('aria-expanded', String(expanded));
     }
   }
 
@@ -802,6 +813,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ========================================
   // 平滑滚动 + 点击展开一层
   // ========================================
+  var headingEls = Array.prototype.slice.call(headings);
   var allTocLinks = document.querySelectorAll('#toc-nav a, #toc-inline-nav a');
   allTocLinks.forEach(function(link) {
     link.addEventListener('click', function(e) {
@@ -813,7 +825,8 @@ document.addEventListener('DOMContentLoaded', function() {
           var offset = headerOffset;
           var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
           window.scrollTo({ top: top, behavior: 'smooth' });
-          history.pushState(null, '', href);
+          // 用 replaceState：目录跳转不应把每条标题都塞进浏览器历史
+          history.replaceState(null, '', href);
 
           // 找到点击的节点 idx，展开其直接子目录
           var targetId = href.slice(1);
@@ -838,7 +851,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // ========================================
   var floatLinks = tocNav ? tocNav.querySelectorAll('a') : [];
   var inlineLinks = tocInlineNav ? tocInlineNav.querySelectorAll('a') : [];
-  var headingEls = Array.prototype.slice.call(headings);
   var lastActiveIdx = -1;
 
   function updateActive(id) {

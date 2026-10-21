@@ -262,7 +262,7 @@ $$
 
 即得到：
 $$
-\sum_{k=1}^t \left[\left(\prod_{s=k+1}^t a_s\right)b_k\right]^2 = \sum_{k=1}^t \left(\prod_{s=k+1}^t a_s\right)^2 b_k^2，\sum_{k=1}^t \left(\prod_{s=k+1}^t a_s\right)b_k \boldsymbol{\varepsilon}_k =
+\sum_{k=1}^t \left[\left(\prod_{s=k+1}^t a_s\right)b_k\right]^2 = \sum_{k=1}^t \left(\prod_{s=k+1}^t a_s\right)^2 b_k^2,\quad \sum_{k=1}^t \left(\prod_{s=k+1}^t a_s\right)b_k \boldsymbol{\varepsilon}_k =
 {\sqrt{\sum_{k=1}^t \left(\prod_{s=k+1}^t a_s\right)^2 b_k^2} \cdot{\boldsymbol{\varepsilon}}_k}
 $$
 

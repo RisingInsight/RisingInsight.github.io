@@ -1,6 +1,11 @@
+---
+// 每个实例使用独立渐变 id：开屏与灵宠会同时挂载两个 SVG
+const gradientId = `mascot-fur-${Math.random().toString(36).slice(2, 9)}`;
+---
+
 <svg class="mascot-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
   <defs>
-    <linearGradient id="mascotFur" x1="78" y1="48" x2="166" y2="218" gradientUnits="userSpaceOnUse">
+    <linearGradient id={gradientId} x1="78" y1="48" x2="166" y2="218" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#f3b978"/>
       <stop offset="1" stop-color="#df8e4e"/>
     </linearGradient>
@@ -22,22 +27,22 @@
   <g class="cat-animal">
     <g class="cat-tail">
       <path d="M164 194C196 194 205 167 190 154C183 148 173 153 177 162C185 177 177 183 160 183" fill="none" stroke="var(--cat-line)" stroke-width="18" stroke-linecap="round"/>
-      <path d="M164 194C196 194 205 167 190 154C183 148 173 153 177 162C185 177 177 183 160 183" fill="none" stroke="url(#mascotFur)" stroke-width="12" stroke-linecap="round"/>
+      <path d="M164 194C196 194 205 167 190 154C183 148 173 153 177 162C185 177 177 183 160 183" fill="none" stroke={`url(#${gradientId})`} stroke-width="12" stroke-linecap="round"/>
     </g>
 
     <g class="cat-body">
-      <path d="M72 197C72 164 84 148 104 141L136 141C156 148 168 164 168 197C168 212 158 220 144 220L96 220C82 220 72 212 72 197Z" fill="url(#mascotFur)" stroke="var(--cat-line)" stroke-width="3"/>
+      <path d="M72 197C72 164 84 148 104 141L136 141C156 148 168 164 168 197C168 212 158 220 144 220L96 220C82 220 72 212 72 197Z" fill={`url(#${gradientId})`} stroke="var(--cat-line)" stroke-width="3"/>
       <path d="M99 199C99 174 108 161 120 161C132 161 141 174 141 199C141 211 132 217 120 217C108 217 99 211 99 199Z" fill="var(--cat-cream)"/>
       <ellipse cx="91" cy="213" rx="14" ry="7" fill="var(--cat-cream)" stroke="var(--cat-line)" stroke-width="2.4"/>
       <ellipse cx="149" cy="213" rx="14" ry="7" fill="var(--cat-cream)" stroke="var(--cat-line)" stroke-width="2.4"/>
     </g>
 
     <g class="cat-head">
-      <path d="M66 88L58 45L96 64Z" fill="url(#mascotFur)" stroke="var(--cat-line)" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M174 88L182 45L144 64Z" fill="url(#mascotFur)" stroke="var(--cat-line)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M66 88L58 45L96 64Z" fill={`url(#${gradientId})`} stroke="var(--cat-line)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M174 88L182 45L144 64Z" fill={`url(#${gradientId})`} stroke="var(--cat-line)" stroke-width="3" stroke-linejoin="round"/>
       <path d="M68 56L64 79L86 68Z" fill="var(--cat-pink)" opacity=".75"/>
       <path d="M172 56L176 79L154 68Z" fill="var(--cat-pink)" opacity=".75"/>
-      <path d="M60 94C60 67 84 52 120 52C156 52 180 67 180 94C180 126 158 144 120 144C82 144 60 126 60 94Z" fill="url(#mascotFur)" stroke="var(--cat-line)" stroke-width="3"/>
+      <path d="M60 94C60 67 84 52 120 52C156 52 180 67 180 94C180 126 158 144 120 144C82 144 60 126 60 94Z" fill={`url(#${gradientId})`} stroke="var(--cat-line)" stroke-width="3"/>
       <path d="M76 82C84 66 100 58 114 56" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="4" stroke-linecap="round"/>
       <path d="M112 58L120 70L128 58" fill="none" stroke="var(--cat-fur-dark)" stroke-width="4" stroke-linecap="round" opacity=".55"/>
       <path d="M94 105C104 98 136 98 146 105C151 119 140 134 120 134C100 134 89 119 94 105Z" fill="var(--cat-cream)"/>

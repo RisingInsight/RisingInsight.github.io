@@ -47,6 +47,7 @@ const searchData = allPosts
   const triggers = document.querySelectorAll('[data-search-trigger]');
 
   let pagefindLoaded = false;
+  let pagefindFailed = false;
   let pagefind = null;
   let lastTrigger = null;
   let searchSeq = 0;
@@ -101,20 +102,27 @@ const searchData = allPosts
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSearch();
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      openSearch();
+      if (modal?.classList.contains('active')) {
+        input?.focus();
+        input?.select();
+      } else {
+        openSearch();
+      }
     }
   });
 
   async function loadPagefind() {
-    if (pagefindLoaded) return pagefind;
+    if (pagefindLoaded || pagefindFailed) return pagefind;
     try {
       pagefind = await import('/pagefind/pagefind.js');
       await pagefind.init();
       pagefindLoaded = true;
       return pagefind;
     } catch {
+      // 开发环境没有索引：标记失败，后续直接走本地标题/标签搜索，避免每次输入都重复请求
+      pagefindFailed = true;
       return null;
     }
   }
@@ -228,7 +236,9 @@ const searchData = allPosts
 
   function highlight(text, q) {
     if (!q) return escapeHtml(text);
-    const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    // 先转义查询词，避免 & < > 等字符破坏转义后的实体
+    const safeQuery = escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${safeQuery})`, 'gi');
     return escapeHtml(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 </script>

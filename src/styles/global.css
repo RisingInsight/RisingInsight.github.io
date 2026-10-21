@@ -354,6 +354,8 @@ body::before {
   font-size: 1.08rem;
   line-height: 1.9;
   color: var(--ink-soft);
+  /* 长路径、版本号、URL 等连续拉丁串在窄屏必须可断行 */
+  overflow-wrap: anywhere;
 }
 
 .prose h1,
@@ -411,6 +413,9 @@ body::before {
   text-decoration-color: rgba(var(--accent-rgb), .35);
   text-underline-offset: 3px;
   transition: color .2s, text-decoration-color .2s;
+  /* 长 URL / 连续拉丁串在窄屏下必须能断行，否则整页横向溢出 */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .prose a:hover {
   color: var(--accent-strong);
@@ -525,6 +530,20 @@ body::before {
   margin: 1.6em 0;
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+/* 窄屏下超宽行内公式：允许在公式内部横向滚动，而不是撑破整页 */
+@media (max-width: 520px) {
+  .prose p .katex,
+  .prose li .katex,
+  .prose td .katex,
+  .prose th .katex {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: middle;
+  }
 }
 
 /* ===== 标签 ===== */
