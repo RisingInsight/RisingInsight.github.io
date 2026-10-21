@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
-import { formatDate, getReadTime } from '../../utils/blog';
+import { formatDate, formatWordCount, getReadTime, getWordCount } from '../../utils/blog';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = allPosts.sort(
@@ -10,12 +10,17 @@ const sortedPosts = allPosts.sort(
 );
 
 const tagCounts: Record<string, number> = {};
+const categoryCounts: Record<string, number> = {};
 for (const post of allPosts) {
   for (const tag of post.data.tags || []) {
     tagCounts[tag] = (tagCounts[tag] || 0) + 1;
   }
+  for (const category of post.data.categories || []) {
+    categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+  }
 }
 const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+const allCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
 ---
 
 <BaseLayout title="笔记" description={`共 ${sortedPosts.length} 篇笔记`}>
@@ -28,34 +33,52 @@ const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
         笔记
       </h1>
       <p class="mt-3 text-sm text-muted">
-        共 <span id="post-count" class="text-ink">{sortedPosts.length}</span> 篇 · 按标签筛选
+        显示 <span id="post-count" class="text-ink">{sortedPosts.length}</span> / {sortedPosts.length} 篇 · 按分类或标签筛选
       </p>
     </header>
 
-    <div class="flex flex-wrap gap-x-5 gap-y-2 border-b border-rule py-4" id="tag-filter">
-      <button type="button" data-tag="all" class="filter-btn is-active">
-        全部 <span>{sortedPosts.length}</span>
-      </button>
-      {allTags.map(([tag, count]) => (
-        <button type="button" data-tag={tag} class="filter-btn">
-          {tag} <span>{count}</span>
+    <div class="mt-6 border-y border-rule py-4">
+      <div id="category-filter" class="flex flex-wrap items-baseline gap-x-5 gap-y-1.5">
+        <span class="w-10 shrink-0 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">分类</span>
+        <button type="button" data-category="all" class="filter-btn category-filter-btn is-active">
+          全部
         </button>
-      ))}
+        {allCategories.map(([category, count]) => (
+          <button type="button" data-category={category} class="filter-btn category-filter-btn">
+            {category} <span>{count}</span>
+          </button>
+        ))}
+      </div>
+      <div id="tag-filter" class="mt-2 flex flex-wrap items-baseline gap-x-5 gap-y-1.5">
+        <span class="w-10 shrink-0 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">标签</span>
+        <button type="button" data-tag="all" class="filter-btn tag-filter-btn is-active">
+          全部
+        </button>
+        {allTags.map(([tag, count]) => (
+          <button type="button" data-tag={tag} class="filter-btn tag-filter-btn">
+            {tag} <span>{count}</span>
+          </button>
+        ))}
+      </div>
     </div>
 
     <div id="posts-grid" class="divide-y divide-rule">
       {sortedPosts.map((post) => {
         const postTags = (post.data.tags || []).join(',');
+        const postCategories = (post.data.categories || []).join(',');
         return (
           <a
             href={`/blog/${post.id}/`}
             data-tags={postTags}
+            data-categories={postCategories}
             class="post-item group grid gap-4 py-7 sm:grid-cols-[90px_1fr_auto] sm:items-baseline"
           >
             <div class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
               {formatDate(post.data.pubDate)}
               <br />
-              <span class="text-muted-light">{getReadTime(post.body || '')}</span>
+              <span class="text-muted-light">
+                {getReadTime(post.body || '')} · {formatWordCount(getWordCount(post.body || ''))} 字
+              </span>
             </div>
             <div>
               <h2 class="font-serif text-xl font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
@@ -79,13 +102,13 @@ const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
     </div>
 
     <div id="no-results" class="hidden py-16 text-center">
-      <p class="font-serif text-lg text-ink">这个标签下还没有笔记</p>
+      <p class="font-serif text-lg text-ink">没有匹配的笔记</p>
       <button
         id="clear-filter"
         type="button"
         class="mt-4 text-[12px] text-muted underline decoration-rule underline-offset-4 transition-colors hover:text-accent"
       >
-        查看全部
+        清除筛选
       </button>
     </div>
 
@@ -96,60 +119,85 @@ const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
 </BaseLayout>
 
 <script>
-  const filterBtns = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const tagBtns = document.querySelectorAll<HTMLButtonElement>('.tag-filter-btn');
+  const categoryBtns = document.querySelectorAll<HTMLButtonElement>('.category-filter-btn');
   const postItems = document.querySelectorAll<HTMLElement>('.post-item');
   const noResults = document.getElementById('no-results');
   const clearFilter = document.getElementById('clear-filter');
   const postCount = document.getElementById('post-count');
   let activeTag = 'all';
+  let activeCategory = 'all';
 
-  function updateFilterButtons() {
-    filterBtns.forEach((btn) => {
-      btn.classList.toggle('is-active', (btn.dataset.tag || 'all') === activeTag);
-    });
+  function syncUrl() {
+    const url = new URL(location.href);
+    if (activeTag === 'all') {
+      url.searchParams.delete('tag');
+    } else {
+      url.searchParams.set('tag', activeTag);
+    }
+    if (activeCategory === 'all') {
+      url.searchParams.delete('category');
+    } else {
+      url.searchParams.set('category', activeCategory);
+    }
+    history.replaceState(null, '', url);
   }
 
-  function filterPosts(tag: string) {
-    activeTag = tag;
+  function applyFilter() {
     let visibleCount = 0;
     postItems.forEach((item) => {
       const tags = (item.dataset.tags || '').split(',');
-      const visible = tag === 'all' || tags.includes(tag);
+      const categories = (item.dataset.categories || '').split(',');
+      const visible =
+        (activeTag === 'all' || tags.includes(activeTag)) &&
+        (activeCategory === 'all' || categories.includes(activeCategory));
       item.style.display = visible ? '' : 'none';
       if (visible) visibleCount++;
     });
 
-    if (noResults) {
-      noResults.classList.toggle('hidden', visibleCount > 0 || tag === 'all');
-    }
-    if (postCount) {
-      postCount.textContent = tag === 'all' ? String(postItems.length) : String(visibleCount);
-    }
+    if (noResults) noResults.classList.toggle('hidden', visibleCount > 0);
+    if (postCount) postCount.textContent = String(visibleCount);
 
-    const url = new URL(location.href);
-    if (tag === 'all') {
-      url.searchParams.delete('tag');
-    } else {
-      url.searchParams.set('tag', tag);
-    }
-    history.replaceState(null, '', url);
+    tagBtns.forEach((btn) => {
+      btn.classList.toggle('is-active', (btn.dataset.tag || 'all') === activeTag);
+    });
+    categoryBtns.forEach((btn) => {
+      btn.classList.toggle('is-active', (btn.dataset.category || 'all') === activeCategory);
+    });
 
-    updateFilterButtons();
+    syncUrl();
   }
 
-  filterBtns.forEach((btn) => {
-    btn.addEventListener('click', () => filterPosts(btn.dataset.tag || 'all'));
+  tagBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTag = btn.dataset.tag || 'all';
+      applyFilter();
+    });
   });
 
-  clearFilter?.addEventListener('click', () => filterPosts('all'));
+  categoryBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.category || 'all';
+      applyFilter();
+    });
+  });
 
-  const initialTag = new URLSearchParams(location.search).get('tag');
-  const hasInitialTag = initialTag && [...filterBtns].some((btn) => btn.dataset.tag === initialTag);
-  if (hasInitialTag && initialTag) {
-    filterPosts(initialTag);
-  } else {
-    updateFilterButtons();
+  clearFilter?.addEventListener('click', () => {
+    activeTag = 'all';
+    activeCategory = 'all';
+    applyFilter();
+  });
+
+  const params = new URLSearchParams(location.search);
+  const initialTag = params.get('tag');
+  const initialCategory = params.get('category');
+  if (initialTag && [...tagBtns].some((btn) => btn.dataset.tag === initialTag)) {
+    activeTag = initialTag;
   }
+  if (initialCategory && [...categoryBtns].some((btn) => btn.dataset.category === initialCategory)) {
+    activeCategory = initialCategory;
+  }
+  applyFilter();
 </script>
 
 <style>

@@ -13,6 +13,7 @@ tags:
   - GAN
 categories:
   - 深度学习理论
+series: 生成模型笔记
 ---
 # 图片
 

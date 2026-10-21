@@ -24,7 +24,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
       </span>
     </a>
 
-    <div class="hidden items-center gap-6 sm:flex">
+    <div class="hidden items-center gap-4 sm:flex md:gap-5 lg:gap-6">
       {NAV_ITEMS.map((item) => {
         const isActive = isNavActive(pathname, item.href);
         return (
@@ -44,7 +44,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
       <span class="h-4 w-px bg-rule"></span>
       <button
         data-search-trigger
-        class="rounded-md p-2 text-muted transition-colors hover:bg-rule-soft hover:text-ink"
+        class="rounded-md p-2 text-muted transition-colors hover:bg-rule-soft hover:text-ink lg:hidden"
         aria-label="搜索"
         aria-controls="search-modal"
         aria-haspopup="dialog"
@@ -53,6 +53,22 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
         <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
+      </button>
+      <button
+        data-search-trigger
+        class="hidden h-8 w-48 items-center gap-2 border border-rule bg-surface/70 px-2.5 text-left text-[12px] text-muted transition-colors hover:border-muted-light hover:text-ink lg:flex xl:w-56"
+        aria-label="搜索文章"
+        aria-controls="search-modal"
+        aria-haspopup="dialog"
+        title="搜索文章 (Ctrl+K)"
+      >
+        <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span class="flex-1 truncate">搜索笔记</span>
+        <kbd class="border border-rule bg-paper px-1 py-0.5 font-mono text-[8px] uppercase tracking-[0.08em] text-muted-light">
+          Ctrl K
+        </kbd>
       </button>
       <ThemeToggle />
     </div>
