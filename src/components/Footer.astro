@@ -9,18 +9,18 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
   <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <div class="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
       <div>
-        <div class="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-light">
+        <div class="flex items-center gap-3 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-light">
           <span class="text-accent">$</span>
           <span>echo "keep building"</span>
           <span class="cursor-blink"></span>
         </div>
         <a href="/" class="mt-5 inline-flex items-center gap-3 font-serif text-3xl font-semibold tracking-[-0.03em] text-ink transition-colors hover:text-accent">
           {PROFILE.name}
-          <span class="font-mono text-[10px] font-normal tracking-[0.12em] text-accent">/LOG</span>
+          <span class="font-mono text-[12px] font-normal tracking-[0.12em] text-accent">/LOG</span>
         </a>
         <p class="mt-4 max-w-md text-sm leading-7 text-muted">{PROFILE.bio}</p>
-        <p class="mt-1 text-[12px] text-muted-light">{PROFILE.role} · {PROFILE.tagline}</p>
-        <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+        <p class="mt-1 text-[13px] text-muted-light">{PROFILE.role} · {PROFILE.tagline}</p>
+        <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[12px] uppercase tracking-[0.08em] text-muted">
           {SOCIALS.map((s) => (
             <a
               href={s.href}
@@ -40,7 +40,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:justify-items-end">
         <div>
           <div class="mono-label">System</div>
-          <ul class="mt-4 space-y-2 text-[12px] text-muted">
+          <ul class="mt-4 space-y-2 text-[13px] text-muted">
             <li>{PROFILE.location}</li>
             <li>{PROFILE.school}</li>
             <li>
@@ -48,13 +48,13 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
             </li>
             <li class="flex items-center gap-2">
               <span class="status-dot"></span>
-              <span class="font-mono text-[10px] text-accent">online</span>
+              <span class="font-mono text-[12px] text-accent">online</span>
             </li>
           </ul>
         </div>
         <div>
           <div class="mono-label">Index</div>
-          <ul class="mt-4 space-y-2 text-[12px] text-muted">
+          <ul class="mt-4 space-y-2 text-[13px] text-muted">
             <li><a href="/blog/" class="transition-colors hover:text-accent">笔记</a></li>
             <li><a href="/series/" class="transition-colors hover:text-accent">系列</a></li>
             <li><a href="/archives/" class="transition-colors hover:text-accent">归档</a></li>
@@ -64,7 +64,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
         </div>
         <div class="hidden sm:block">
           <div class="mono-label">Elsewhere</div>
-          <ul class="mt-4 space-y-2 text-[12px] text-muted">
+          <ul class="mt-4 space-y-2 text-[13px] text-muted">
             <li>
               <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
                 GitHub ↗
@@ -77,7 +77,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       </div>
     </div>
 
-    <div class="mt-12 flex flex-col gap-2 border-t border-rule pt-5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light sm:flex-row sm:items-center sm:justify-between">
+    <div class="mt-12 flex flex-col gap-2 border-t border-rule pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light sm:flex-row sm:items-center sm:justify-between">
       <span>© {new Date().getFullYear()} RisingInsight · all systems nominal</span>
       <span>astro@6 · tailwind · github pages · build {buildDate}</span>
     </div>

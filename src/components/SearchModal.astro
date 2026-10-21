@@ -294,7 +294,7 @@ const searchData = allPosts
     background: transparent;
     color: var(--ink);
     font-family: var(--font-mono);
-    font-size: .88rem;
+    font-size: .95rem;
   }
   .search-input::placeholder {
     color: var(--muted-light);
@@ -306,7 +306,7 @@ const searchData = allPosts
     background: var(--surface-alt);
     color: var(--muted);
     font-family: var(--font-mono);
-    font-size: .65rem;
+    font-size: .7rem;
   }
   .search-close {
     display: flex;
@@ -333,69 +333,69 @@ const searchData = allPosts
     overflow-y: auto;
     padding: 6px;
   }
-  .search-empty-state {
+  :global(.search-empty-state) {
     padding: 38px 20px;
     text-align: center;
   }
-  .search-empty-title {
+  :global(.search-empty-title) {
     font-family: var(--font-serif);
-    font-size: .98rem;
+    font-size: 1.02rem;
     color: var(--ink);
   }
-  .search-empty-hint {
+  :global(.search-empty-hint) {
     margin-top: 5px;
     color: var(--muted-light);
     font-family: var(--font-mono);
-    font-size: .62rem;
+    font-size: .7rem;
     letter-spacing: .06em;
   }
-  .search-result-item {
+  :global(.search-result-item) {
     display: block;
     padding: 11px 13px;
     border-radius: 4px;
     text-decoration: none;
     transition: background .15s;
   }
-  .search-result-item + .search-result-item {
+  :global(.search-result-item + .search-result-item) {
     border-top: 1px solid var(--rule);
     border-radius: 0;
   }
-  .search-result-item:hover {
+  :global(.search-result-item:hover) {
     background: var(--accent-soft);
   }
-  .search-result-title {
+  :global(.search-result-title) {
     margin-bottom: 3px;
     color: var(--ink);
     font-family: var(--font-serif);
-    font-size: .92rem;
+    font-size: 1rem;
     font-weight: 600;
   }
-  .search-result-desc {
+  :global(.search-result-desc) {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
     margin-bottom: 5px;
     color: var(--muted);
-    font-size: .76rem;
+    font-size: .82rem;
     line-height: 1.6;
   }
-  .search-result-meta {
+  :global(.search-result-meta) {
     display: flex;
     align-items: center;
     gap: 7px;
     color: var(--muted-light);
     font-family: var(--font-mono);
-    font-size: .65rem;
+    font-size: .7rem;
   }
-  .search-result-tag {
+  :global(.search-result-tag) {
     padding: 1px 5px;
     border: 1px solid var(--rule);
     border-radius: 3px;
     color: var(--muted);
-    font-size: .62rem;
+    font-size: .7rem;
   }
-  .search-highlight {
+  :global(.search-highlight) {
     padding: 0 1px;
     border-radius: 2px;
     background: var(--accent-soft);

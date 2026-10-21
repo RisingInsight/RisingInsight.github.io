@@ -20,11 +20,11 @@ const seriesNotes = seriesGroups.reduce((sum, group) => sum + group.posts.length
     <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '系列' }]} />
 
     <header class="border border-rule bg-surface/55 p-5 sm:p-7">
-      <div class="flex items-center gap-2 border-b border-rule-soft pb-3 font-mono text-[9px] tracking-[0.08em] text-muted-light">
+      <div class="flex items-center gap-2 border-b border-rule-soft pb-3 font-mono text-[11px] tracking-[0.08em] text-muted-light">
         <span class="text-accent">~/</span>
         series.index
       </div>
-      <div class="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-accent">series</div>
+      <div class="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-accent">series</div>
       <h1 class="mt-3 font-serif text-3xl font-semibold tracking-[-0.035em] text-ink sm:text-4xl">
         系列
       </h1>
@@ -42,20 +42,20 @@ const seriesNotes = seriesGroups.reduce((sum, group) => sum + group.posts.length
             <section id={`series-${group.slug}`} class="scroll-mt-24">
               <div class="flex flex-col gap-3 border-b border-rule pb-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <div class="font-mono text-[9px] uppercase tracking-[0.18em] text-accent">
+                  <div class="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
                     Series {String(index + 1).padStart(2, '0')}
                   </div>
                   <h2 class="mt-2 font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
                     {group.name}
                   </h2>
                 </div>
-                <div class="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">
+                <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light">
                   {group.posts.length} notes · {formatWordCount(group.words)} 字
                 </div>
               </div>
 
               {description && (
-                <p class="mt-4 max-w-2xl text-[13px] leading-7 text-muted">{description}</p>
+                <p class="mt-4 max-w-2xl text-[14px] leading-7 text-muted">{description}</p>
               )}
 
               <div class="mt-6 divide-y divide-rule border border-rule bg-surface">
@@ -68,13 +68,13 @@ const seriesNotes = seriesGroups.reduce((sum, group) => sum + group.posts.length
                       {String(postIndex + 1).padStart(2, '0')}
                     </span>
                     <div class="min-w-0">
-                      <div class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light">
+                      <div class="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-light">
                         {formatDate(post.data.pubDate)} · {formatWordCount(getWordCount(post.body || ''))} 字
                       </div>
                       <h3 class="mt-2 font-serif text-lg font-semibold leading-snug text-ink transition-colors group-hover:text-accent sm:text-xl">
                         {post.data.title}
                       </h3>
-                      <p class="mt-1.5 text-[13px] leading-7 text-muted">{post.data.description}</p>
+                      <p class="mt-1.5 text-[14px] leading-7 text-muted">{post.data.description}</p>
                       {post.data.tags.length > 0 && (
                         <div class="mt-3 flex flex-wrap gap-2">
                           {post.data.tags.slice(0, 4).map((tag) => (

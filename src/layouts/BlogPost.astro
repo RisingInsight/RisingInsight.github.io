@@ -75,11 +75,11 @@ if (series) {
     <article>
       <header class="border border-rule bg-surface/55 p-5 sm:p-7">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
-          <div class="flex min-w-0 items-center gap-2 font-mono text-[10px] tracking-[0.04em] text-muted">
+          <div class="flex min-w-0 items-center gap-2 font-mono text-[12px] tracking-[0.04em] text-muted">
             <span class="text-accent">~/</span>
             <span class="truncate">posts/{contentPath}</span>
           </div>
-          <div class="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.1em]">
+          <div class="flex flex-wrap items-center gap-3 font-mono text-[12px] uppercase tracking-[0.1em]">
             {series && (
               <a
                 href={`/series/#series-${seriesSlug(series)}`}
@@ -97,7 +97,7 @@ if (series) {
           </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12px] uppercase tracking-[0.1em] text-muted">
           <span class="flex items-center gap-1.5 text-accent"><span class="status-dot"></span> published</span>
           <span class="text-rule">/</span>
           <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
@@ -115,9 +115,9 @@ if (series) {
         <h1 class="mt-4 text-balance font-serif text-3xl font-semibold leading-[1.12] tracking-[-0.035em] text-ink sm:text-[2.6rem]">
           {title}
         </h1>
-        <p class="mt-4 max-w-2xl text-[14px] leading-7 text-muted">{description}</p>
+        <p class="mt-4 max-w-2xl text-[15px] leading-7 text-muted">{description}</p>
         {updatedDate && (
-          <div class="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+          <div class="mt-4 font-mono text-[12px] uppercase tracking-[0.12em] text-muted">
             updated {formatDate(updatedDate)}
           </div>
         )}
@@ -144,12 +144,12 @@ if (series) {
       {series && seriesPosts.length > 0 && (
         <section class="mt-14 border-t border-rule pt-8">
           <div class="flex items-baseline justify-between">
-            <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+            <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
               Series · {series}
             </div>
             <a
               href={`/series/#series-${seriesSlug(series)}`}
-              class="text-[11px] text-muted transition-colors hover:text-accent"
+              class="text-[12px] text-muted transition-colors hover:text-accent"
             >
               查看文集 <span aria-hidden="true">→</span>
             </a>
@@ -163,7 +163,7 @@ if (series) {
                 <span>{post.title}</span>
                 <span
                   aria-hidden="true"
-                  class="font-mono text-[10px] text-muted-light transition-transform group-hover:translate-x-0.5"
+                  class="font-mono text-[12px] text-muted-light transition-transform group-hover:translate-x-0.5"
                 >→</span>
               </a>
             ))}
@@ -173,7 +173,7 @@ if (series) {
 
       {relatedPosts.length > 0 && (
         <section class="mt-14 border-t border-rule pt-8">
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
             Related notes
           </div>
           <div class="mt-3 divide-y divide-rule-soft">
@@ -185,7 +185,7 @@ if (series) {
                 <span class="font-serif text-sm font-semibold text-ink transition-colors group-hover:text-accent">
                   {post.data.title}
                 </span>
-                <span class="font-mono text-[9px] text-muted-light">
+                <span class="font-mono text-[11px] text-muted-light">
                   {formatDate(post.data.pubDate)}
                 </span>
               </a>
@@ -203,11 +203,11 @@ if (series) {
         <div class="min-w-0">
           <div class="mono-label">operator</div>
           <div class="mt-1 font-serif text-base font-semibold text-ink">{PROFILE.name}</div>
-          <div class="mt-1 font-mono text-[9px] leading-5 text-muted">
+          <div class="mt-1 font-mono text-[11px] leading-5 text-muted">
             {PROFILE.role} · {PROFILE.tagline}
           </div>
         </div>
-        <div class="ml-auto flex flex-col items-start gap-2 font-mono text-[9px] uppercase tracking-[0.08em] sm:items-end">
+        <div class="ml-auto flex flex-col items-start gap-2 font-mono text-[11px] uppercase tracking-[0.08em] sm:items-end">
           <a href={editUrl} target="_blank" rel="noopener noreferrer" class="text-muted transition-colors hover:text-accent">
             edit on github ↗
           </a>
@@ -217,7 +217,7 @@ if (series) {
         </div>
       </div>
 
-      <div class="mt-10 flex items-center justify-between border-t border-rule pt-6 font-mono text-[9px] uppercase tracking-[0.08em] text-muted">
+      <div class="mt-10 flex items-center justify-between border-t border-rule pt-6 font-mono text-[11px] uppercase tracking-[0.08em] text-muted">
         <button id="back-to-top" class="transition-colors hover:text-accent">
           ↑ back to top
         </button>
@@ -230,7 +230,7 @@ if (series) {
         <nav class="mt-10 grid gap-4 border-t border-rule pt-6 sm:grid-cols-2" aria-label="上下篇">
           {prevPost ? (
             <a href={`/blog/${prevPost.id}/`} class="group">
-              <div class="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">
+              <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light">
                 ← 上一篇
               </div>
               <div class="mt-2 font-serif text-sm font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
@@ -242,7 +242,7 @@ if (series) {
           )}
           {nextPost ? (
             <a href={`/blog/${nextPost.id}/`} class="group sm:text-right">
-              <div class="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">
+              <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light">
                 下一篇 →
               </div>
               <div class="mt-2 font-serif text-sm font-semibold leading-snug text-ink transition-colors group-hover:text-accent">

@@ -197,9 +197,9 @@ body::before {
 /* ===== 通用界面语言 ===== */
 .mono-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.6;
-  letter-spacing: .16em;
+  letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--muted-light);
 }
@@ -262,8 +262,8 @@ body::before {
   background: var(--surface);
   color: var(--ink-soft);
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: .08em;
+  font-size: 12px;
+  letter-spacing: .06em;
   text-transform: uppercase;
   text-decoration: none;
   transition: border-color .2s, color .2s, background .2s, box-shadow .2s;
@@ -359,7 +359,7 @@ body::before {
 /* ===== 文章排版 ===== */
 .prose {
   font-family: var(--font-sans);
-  font-size: 1.03rem;
+  font-size: 1.08rem;
   line-height: 1.9;
   color: var(--ink-soft);
 }
@@ -380,12 +380,12 @@ body::before {
 }
 
 .prose h1 {
-  font-size: 1.8rem;
+  font-size: 1.85rem;
   margin-top: 0;
 }
 
 .prose h2 {
-  font-size: 1.45rem;
+  font-size: 1.5rem;
   padding-bottom: .35em;
   border-bottom: 1px solid var(--rule);
 }
@@ -400,8 +400,8 @@ body::before {
   letter-spacing: -.08em;
 }
 
-.prose h3 { font-size: 1.2rem; }
-.prose h4 { font-size: 1.06rem; }
+.prose h3 { font-size: 1.25rem; }
+.prose h4 { font-size: 1.1rem; }
 
 .prose p {
   margin: 0 0 1.35em;
@@ -544,7 +544,7 @@ body::before {
   border: 1px solid var(--rule);
   border-radius: 3px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.6;
   letter-spacing: .02em;
   color: var(--muted);
@@ -590,7 +590,7 @@ a.tag:hover {
   background: rgba(255, 255, 255, .06);
   color: rgba(255, 255, 255, .66);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
   opacity: 0;
   transition: opacity .2s, background .2s, color .2s;
@@ -672,7 +672,7 @@ a.tag:hover {
   color: var(--ink);
   box-shadow: var(--shadow);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0;
   pointer-events: none;
   transition: opacity .2s, transform .2s;
@@ -690,7 +690,7 @@ a.tag:hover {
   background: var(--surface-alt);
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* ===== 评论 ===== */

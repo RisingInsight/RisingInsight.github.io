@@ -35,7 +35,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
     <header class="border border-rule bg-surface/55 p-5 sm:p-7">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
-        <div class="flex items-center gap-2 font-mono text-[9px] tracking-[0.08em] text-muted-light">
+        <div class="flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-muted-light">
           <span class="text-accent">~/</span>
           about.md
         </div>
@@ -43,7 +43,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
           href={`https://github.com/${GITHUB_REPO}/edit/${GITHUB_BRANCH}/src/pages/about.astro`}
           target="_blank"
           rel="noopener noreferrer"
-          class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
+          class="font-mono text-[11px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
         >
           edit ↗
         </a>
@@ -55,16 +55,16 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
           class="h-20 w-20 rounded-full border border-accent/30 object-cover"
         />
         <div class="min-w-0">
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-accent">about</div>
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">about</div>
           <h1 class="mt-2 font-serif text-3xl font-semibold tracking-[-0.035em] text-ink sm:text-4xl">
             {PROFILE.name}
           </h1>
-          <p class="mt-2 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{PROFILE.role} · {PROFILE.location}</p>
+          <p class="mt-2 font-mono text-[12px] uppercase tracking-[0.08em] text-muted">{PROFILE.role} · {PROFILE.location}</p>
           <p class="mt-4 max-w-2xl text-sm leading-7 text-ink-soft">
             你好，我是 {PROFILE.name}。我关注生成模型与深度学习，喜欢把论文里的东西跑起来，
             再把实现过程、踩坑记录和一些技术想法写在这里。
           </p>
-          <p class="mt-2 max-w-2xl text-[12px] leading-6 text-muted">
+          <p class="mt-2 max-w-2xl text-[13px] leading-6 text-muted">
             {PROFILE.bio} · {PROFILE.tagline}
           </p>
         </div>
@@ -74,7 +74,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
     <div class="mt-12 grid gap-12 md:grid-cols-[1fr_240px]">
       <div>
         <section>
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
             Focus areas
           </div>
           <div class="mt-4 divide-y divide-rule">
@@ -85,7 +85,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
                 </span>
                 <div>
                   <h2 class="font-serif text-base font-semibold text-ink">{item.label}</h2>
-                  <p class="mt-1 text-[12px] leading-6 text-muted">{item.detail}</p>
+                  <p class="mt-1 text-[13px] leading-6 text-muted">{item.detail}</p>
                 </div>
               </div>
             ))}
@@ -93,16 +93,16 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         </section>
 
         <section class="mt-12">
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
             Stack
           </div>
           <div class="mt-4 divide-y divide-rule">
             {toolbox.map((group) => (
               <div class="grid gap-2 py-4 sm:grid-cols-[90px_1fr]">
-                <div class="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light">
+                <div class="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-light">
                   {group.category}
                 </div>
-                <div class="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink">
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-[14px] text-ink">
                   {group.items.map((item) => <span>{item}</span>)}
                 </div>
               </div>
@@ -112,10 +112,10 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
         <section class="mt-12">
           <div class="flex items-baseline justify-between">
-            <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">
+            <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
               Recent logs
             </div>
-            <a href="/blog/" class="text-[11px] text-muted transition-colors hover:text-accent">
+            <a href="/blog/" class="text-[12px] text-muted transition-colors hover:text-accent">
               全部 <span aria-hidden="true">→</span>
             </a>
           </div>
@@ -128,7 +128,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
                 <span class="font-serif text-sm font-semibold text-ink transition-colors group-hover:text-accent">
                   {post.data.title}
                 </span>
-                <span class="font-mono text-[9px] text-muted-light">
+                <span class="font-mono text-[11px] text-muted-light">
                   {formatDate(post.data.pubDate)}
                 </span>
               </a>
@@ -139,8 +139,8 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
       <aside class="space-y-10">
         <section>
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Profile</div>
-          <dl class="mt-4 space-y-3 text-[12px]">
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">Profile</div>
+          <dl class="mt-4 space-y-3 text-[13px]">
             <div>
               <dt class="text-muted-light">Role</dt>
               <dd class="mt-0.5 text-ink">{PROFILE.role}</dd>
@@ -157,21 +157,21 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         </section>
 
         <section>
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Site log</div>
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">Site log</div>
           <div class="mt-4 space-y-4">
             {timeline.map((item) => (
               <div>
-                <div class="font-mono text-[9px] text-muted-light">{item.year}</div>
-                <div class="mt-1 text-[12px] font-medium text-ink">{item.title}</div>
-                <p class="mt-0.5 text-[11px] leading-6 text-muted">{item.desc}</p>
+                <div class="font-mono text-[11px] text-muted-light">{item.year}</div>
+                <div class="mt-1 text-[13px] font-medium text-ink">{item.title}</div>
+                <p class="mt-0.5 text-[12px] leading-6 text-muted">{item.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
         <section>
-          <div class="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Contact</div>
-          <div class="mt-4 flex flex-col gap-2 text-[12px]">
+          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">Contact</div>
+          <div class="mt-4 flex flex-col gap-2 text-[13px]">
             {SOCIALS.map((social) => (
               <a
                 href={social.href}

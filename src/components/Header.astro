@@ -18,7 +18,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
 <header data-pagefind-ignore class="sticky top-0 z-40 border-b border-rule/80 bg-paper/80 backdrop-blur-xl">
   <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8" aria-label="主导航">
     <a href="/" class="group flex shrink-0 items-center gap-3">
-      <span class="relative flex h-9 w-9 items-center justify-center border border-accent/35 bg-accent-soft font-mono text-[10px] tracking-[0.08em] text-accent transition-all group-hover:border-accent group-hover:shadow-[0_0_24px_rgba(94,234,212,.18)]">
+      <span class="relative flex h-9 w-9 items-center justify-center border border-accent/35 bg-accent-soft font-mono text-[12px] tracking-[0.08em] text-accent transition-all group-hover:border-accent group-hover:shadow-[0_0_24px_rgba(94,234,212,.18)]">
         RI
         <span class="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]"></span>
       </span>
@@ -26,7 +26,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
         <span class="block font-serif text-[16px] font-semibold leading-tight tracking-[-0.02em] text-ink transition-colors group-hover:text-accent">
           {PROFILE.name}
         </span>
-        <span class="mt-0.5 block font-mono text-[8px] uppercase tracking-[0.2em] text-muted-light">
+        <span class="mt-0.5 block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-light">
           engineering log
         </span>
       </span>
@@ -40,7 +40,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
             href={item.href}
             aria-current={isActive ? 'page' : undefined}
             class:list={[
-              'relative py-2 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors',
+              'relative py-2 font-mono text-[12px] uppercase tracking-[0.1em] transition-colors',
               isActive ? 'text-accent' : 'text-muted hover:text-ink',
             ]}
           >
@@ -64,7 +64,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       </button>
       <button
         data-search-trigger
-        class="hidden h-8 w-48 items-center gap-2 border border-rule bg-surface/60 px-2.5 text-left font-mono text-[10px] text-muted transition-all hover:border-accent/50 hover:text-ink hover:shadow-[0_0_24px_rgba(94,234,212,.08)] lg:flex xl:w-56"
+        class="hidden h-8 w-48 items-center gap-2 border border-rule bg-surface/60 px-2.5 text-left font-mono text-[12px] text-muted transition-all hover:border-accent/50 hover:text-ink hover:shadow-[0_0_24px_rgba(94,234,212,.08)] lg:flex xl:w-56"
         aria-label="搜索文章"
         aria-controls="search-modal"
         aria-haspopup="dialog"
@@ -72,7 +72,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
       >
         <span class="text-accent">$</span>
         <span class="flex-1 truncate">grep notes...</span>
-        <kbd class="border border-rule bg-paper px-1 py-0.5 text-[8px] uppercase tracking-[0.08em] text-muted-light">
+        <kbd class="border border-rule bg-paper px-1 py-0.5 text-[11px] uppercase tracking-[0.08em] text-muted-light">
           Ctrl K
         </kbd>
       </button>
@@ -123,7 +123,7 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
   </nav>
 
   <div class="hidden border-t border-rule/60 md:block">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 font-mono text-[8px] uppercase tracking-[0.16em] text-muted-light sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light sm:px-6 lg:px-8">
       <span class="flex items-center gap-2">
         <span class="status-dot"></span>
         system online
@@ -142,17 +142,17 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
             href={item.href}
             aria-current={isActive ? 'page' : undefined}
             class:list={[
-              'flex items-center justify-between border-b border-rule-soft py-3.5 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors last:border-b-0',
+              'flex items-center justify-between border-b border-rule-soft py-3.5 font-mono text-[12px] uppercase tracking-[0.1em] transition-colors last:border-b-0',
               isActive ? 'text-accent' : 'text-ink hover:text-accent',
             ]}
           >
             <span>{item.label}</span>
-            <span class="text-[10px] text-muted-light">→</span>
+            <span class="text-[12px] text-muted-light">→</span>
           </a>
         );
       })}
     </div>
-    <div class="flex items-center justify-between border-t border-rule px-4 py-3 font-mono text-[8px] uppercase tracking-[0.14em] text-muted-light">
+    <div class="flex items-center justify-between border-t border-rule px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-light">
       <span class="flex items-center gap-2"><span class="status-dot"></span> online</span>
       <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noopener noreferrer" class="hover:text-accent">github ↗</a>
     </div>
