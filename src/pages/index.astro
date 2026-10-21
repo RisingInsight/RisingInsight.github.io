@@ -45,7 +45,7 @@ const runDays = Math.max(
   <main>
     <section class="relative overflow-hidden border-b border-rule">
       <div class="hero-glow" aria-hidden="true"></div>
-      <div class="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 lg:px-8 lg:pb-14 lg:pt-24">
+      <div class="relative mx-auto max-w-7xl px-4 pb-6 pt-16 sm:px-6 lg:px-8 lg:pb-8 lg:pt-24">
         <div class="grid items-center gap-12 lg:grid-cols-[1.04fr_.96fr]">
           <div>
             <div class="flex flex-wrap items-center gap-3 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-light">
@@ -232,12 +232,10 @@ const runDays = Math.max(
       </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <section class="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
       <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0 space-y-10">
-          <div class="reveal">
-            <Heatmap activity={activity} />
-          </div>
+          <Heatmap activity={activity} />
 
           <section aria-labelledby="latest-heading" class="reveal">
             <div class="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-4">
