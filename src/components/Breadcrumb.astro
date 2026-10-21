@@ -7,7 +7,7 @@ const { items } = Astro.props;
 ---
 
 <nav class="mb-8" aria-label="Breadcrumb">
-  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light">
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
     {items.map((item, index) => (
       <li class="flex min-w-0 items-center gap-2">
         {index > 0 && <span aria-hidden="true" class="text-rule">/</span>}

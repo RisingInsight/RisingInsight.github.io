@@ -28,8 +28,8 @@ const imageUrl = new URL(typeof ogImage === 'string' ? ogImage : ogImage.src, SI
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="theme-color" content="#06090c" />
-<meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#f6f8fb" />
+<meta name="color-scheme" content="light dark" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="/avatar.jpg" type="image/jpeg" />
 <link rel="sitemap" href="/sitemap-index.xml" />
@@ -38,7 +38,7 @@ const imageUrl = new URL(typeof ogImage === 'string' ? ogImage : ogImage.src, SI
 
 <!-- 防闪烁内联脚本（尽早执行，在任何 CSS 之前） -->
 <script is:inline>
-  (function(){try{var d=document.documentElement;d.classList.add('js');var t=localStorage.getItem('theme');if(t==='light'){d.classList.remove('dark')}else{d.classList.add('dark')}}catch(e){}})();
+  (function(){try{var d=document.documentElement;d.classList.add('js');var t=localStorage.getItem('theme');if(t==='dark'){d.classList.add('dark')}else{d.classList.remove('dark')}}catch(e){}})();
 </script>
 
 <!-- Canonical URL -->

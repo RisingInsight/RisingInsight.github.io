@@ -12,6 +12,10 @@
 - Giscus 评论与留言板（GitHub Discussions）
 - GitHub Pages + GitHub Actions
 
+## 主题
+
+默认亮色（冷白 + 深海军蓝文字），右上角可切换暗色。终端固定使用深色表面和独立的 `--term-*` 颜色 token，亮色模式下不会复用页面文字色，避免低对比。
+
 ## 本地开发
 
 ```sh

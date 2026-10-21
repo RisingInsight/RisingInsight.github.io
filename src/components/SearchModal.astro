@@ -356,6 +356,10 @@ const searchData = allPosts
     text-decoration: none;
     transition: background .15s;
   }
+  .search-result-item + .search-result-item {
+    border-top: 1px solid var(--rule);
+    border-radius: 0;
+  }
   .search-result-item:hover {
     background: var(--accent-soft);
   }
@@ -382,14 +386,14 @@ const searchData = allPosts
     gap: 7px;
     color: var(--muted-light);
     font-family: var(--font-mono);
-    font-size: .6rem;
+    font-size: .65rem;
   }
   .search-result-tag {
     padding: 1px 5px;
     border: 1px solid var(--rule);
     border-radius: 3px;
     color: var(--muted);
-    font-size: .58rem;
+    font-size: .62rem;
   }
   .search-highlight {
     padding: 0 1px;

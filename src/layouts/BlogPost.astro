@@ -72,14 +72,14 @@ if (series) {
 
     <Breadcrumb items={breadcrumbItems} />
 
-    <article data-pagefind-body>
+    <article>
       <header class="border border-rule bg-surface/55 p-5 sm:p-7">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
-          <div class="flex min-w-0 items-center gap-2 font-mono text-[9px] tracking-[0.04em] text-muted-light">
+          <div class="flex min-w-0 items-center gap-2 font-mono text-[10px] tracking-[0.04em] text-muted">
             <span class="text-accent">~/</span>
             <span class="truncate">posts/{contentPath}</span>
           </div>
-          <div class="flex flex-wrap items-center gap-3 font-mono text-[9px] uppercase tracking-[0.1em]">
+          <div class="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.1em]">
             {series && (
               <a
                 href={`/series/#series-${seriesSlug(series)}`}
@@ -97,7 +97,7 @@ if (series) {
           </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
+        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
           <span class="flex items-center gap-1.5 text-accent"><span class="status-dot"></span> published</span>
           <span class="text-rule">/</span>
           <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
@@ -117,7 +117,7 @@ if (series) {
         </h1>
         <p class="mt-4 max-w-2xl text-[14px] leading-7 text-muted">{description}</p>
         {updatedDate && (
-          <div class="mt-4 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">
+          <div class="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
             updated {formatDate(updatedDate)}
           </div>
         )}
@@ -137,7 +137,7 @@ if (series) {
 
       <TableOfContents />
 
-      <div class="prose mt-8">
+      <div class="prose mt-8" data-pagefind-body>
         <slot />
       </div>
 
