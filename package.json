@@ -10,7 +10,8 @@
     "build": "astro build && npx pagefind --site dist --output-path dist/pagefind",
     "postbuild": "echo Pagefind index built successfully",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "generate:image-demo": "node scripts/generate-image-diffusion-demo.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.3",

@@ -1,0 +1,422 @@
+<div class="image-diffusion-demo" data-image-demo>
+  <div class="demo-header">
+    <div>
+      <div class="demo-kicker">IMAGE DIFFUSION / 192 × 192</div>
+      <h3 class="demo-title">从噪声回到这张图</h3>
+    </div>
+    <div class="demo-status" data-status aria-live="polite">加载中...</div>
+  </div>
+
+  <div class="demo-body">
+    <figure class="demo-figure">
+      <div class="demo-canvas-wrap">
+        <canvas
+          class="demo-canvas"
+          data-canvas
+          width="384"
+          height="384"
+          role="img"
+          aria-label="同一张猫的图片在扩散过程中的加噪与去噪"
+        >你的浏览器不支持 canvas。</canvas>
+        <span class="demo-mode-badge" data-mode-badge>前向加噪</span>
+      </div>
+      <figcaption>示例图像：站点头像 · 拖动时间步或播放动画</figcaption>
+    </figure>
+
+    <div class="demo-panel">
+      <div class="demo-tabs" role="group" aria-label="扩散方向">
+        <button type="button" data-mode="forward" class="is-active" aria-pressed="true">加噪</button>
+        <button type="button" data-mode="reverse" aria-pressed="false">去噪</button>
+      </div>
+
+      <label class="demo-range">
+        <span>时间步</span>
+        <input type="range" data-timestep min="0" max="200" step="10" value="0" />
+        <span class="demo-t" data-t-label>t = 0</span>
+      </label>
+
+      <div class="demo-actions">
+        <button type="button" class="demo-btn demo-btn-primary" data-play>播放加噪</button>
+        <button type="button" class="demo-btn" data-reset>重置</button>
+      </div>
+
+      <p class="demo-note">
+        前向是 DDPM 的精确加噪；逆向使用这张图本身的经验 score，等价于一个只记住了这张图的玩具模型，用来展示逐帧去噪轨迹，不是训练好的图像生成器。
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  interface DemoState {
+    mode: 'forward' | 'reverse';
+    t: number;
+    playing: boolean;
+    loaded: boolean;
+    loading: boolean;
+    forwardSheet?: HTMLImageElement;
+    reverseSheet?: HTMLImageElement;
+  }
+
+  const FRAME = 192;
+  const COLS = 7;
+  const CAPTURES = 21;
+  const STEPS = 200;
+  const STEP = 10;
+  const FORWARD_SRC = '/demo/image-forward.webp';
+  const REVERSE_SRC = '/demo/image-reverse.webp';
+
+  function initDemo(root: HTMLElement) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
+    const ctx = canvas?.getContext('2d');
+    const status = root.querySelector<HTMLElement>('[data-status]');
+    const badge = root.querySelector<HTMLElement>('[data-mode-badge]');
+    const slider = root.querySelector<HTMLInputElement>('[data-timestep]');
+    const label = root.querySelector<HTMLElement>('[data-t-label]');
+    const playBtn = root.querySelector<HTMLButtonElement>('[data-play]');
+    const resetBtn = root.querySelector<HTMLButtonElement>('[data-reset]');
+    const modeBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-mode]')];
+    if (!canvas || !ctx || !status || !badge || !slider || !label || !playBtn || !resetBtn) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = 384 * dpr;
+    canvas.height = 384 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const state: DemoState = {
+      mode: 'forward',
+      t: 0,
+      playing: false,
+      loaded: false,
+      loading: false,
+    };
+    let timer = 0;
+
+    function setStatus(text: string) {
+      status.textContent = text;
+    }
+
+    function loadImage(src: string) {
+      return new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error(`Failed to load ${src}`));
+        image.src = src;
+      });
+    }
+
+    async function loadSheets() {
+      if (state.loaded || state.loading) return;
+      state.loading = true;
+      setStatus('加载帧...');
+      try {
+        const [forward, reverse] = await Promise.all([
+          loadImage(FORWARD_SRC),
+          loadImage(REVERSE_SRC),
+        ]);
+        state.forwardSheet = forward;
+        state.reverseSheet = reverse;
+        state.loaded = true;
+        state.loading = false;
+        setStatus('就绪 · 拖动滑块或播放');
+        render();
+      } catch {
+        state.loading = false;
+        setStatus('帧加载失败');
+      }
+    }
+
+    function render() {
+      if (!state.loaded) return;
+      const sheet = state.mode === 'forward' ? state.forwardSheet : state.reverseSheet;
+      if (!sheet) return;
+      const index =
+        state.mode === 'forward'
+          ? Math.min(CAPTURES - 1, Math.round(state.t / STEP))
+          : Math.min(CAPTURES - 1, Math.round((STEPS - state.t) / STEP));
+      const col = index % COLS;
+      const row = Math.floor(index / COLS);
+      ctx.clearRect(0, 0, 384, 384);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sheet, col * FRAME, row * FRAME, FRAME, FRAME, 0, 0, 384, 384);
+      slider.value = String(state.t);
+      label.textContent = `t = ${state.t}`;
+      badge.textContent = state.mode === 'forward' ? '前向加噪' : '逆向去噪';
+    }
+
+    function setMode(mode: 'forward' | 'reverse') {
+      if (state.playing) return;
+      state.mode = mode;
+      state.t = mode === 'forward' ? 0 : STEPS;
+      modeBtns.forEach((button) => {
+        const active = button.dataset.mode === mode;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      playBtn.textContent = mode === 'forward' ? '播放加噪' : '播放去噪';
+      render();
+      setStatus(mode === 'forward' ? '前向起点 · t = 0' : '逆向起点 · t = 200');
+    }
+
+    function finishPlayback() {
+      state.playing = false;
+      slider.disabled = false;
+      playBtn.disabled = false;
+      resetBtn.disabled = false;
+      playBtn.textContent = '再次播放';
+      setStatus(state.mode === 'forward' ? '加噪完成' : '去噪完成');
+    }
+
+    function play() {
+      if (state.playing) return;
+      if (!state.loaded) {
+        loadSheets();
+        setStatus('帧还没加载完，请稍等');
+        return;
+      }
+      if (state.mode === 'forward' && state.t >= STEPS) state.t = 0;
+      if (state.mode === 'reverse' && state.t <= 0) state.t = STEPS;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        state.t = state.mode === 'forward' ? STEPS : 0;
+        render();
+        setStatus(state.mode === 'forward' ? '已显示加噪结果' : '已显示去噪结果');
+        return;
+      }
+      state.playing = true;
+      slider.disabled = true;
+      playBtn.disabled = true;
+      resetBtn.disabled = true;
+      setStatus(state.mode === 'forward' ? '加噪中...' : '去噪中...');
+      const direction = state.mode === 'forward' ? STEP : -STEP;
+      const end = state.mode === 'forward' ? STEPS : 0;
+      const tick = () => {
+        state.t = Math.max(0, Math.min(STEPS, state.t + direction));
+        render();
+        if (state.t !== end) {
+          timer = window.setTimeout(tick, 100);
+        } else {
+          finishPlayback();
+        }
+      };
+      timer = window.setTimeout(tick, 120);
+    }
+
+    function reset() {
+      window.clearTimeout(timer);
+      state.playing = false;
+      slider.disabled = false;
+      playBtn.disabled = false;
+      resetBtn.disabled = false;
+      state.mode = 'forward';
+      state.t = 0;
+      modeBtns.forEach((button) => {
+        const active = button.dataset.mode === 'forward';
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      playBtn.textContent = '播放加噪';
+      render();
+      setStatus('就绪 · 拖动滑块或播放');
+    }
+
+    modeBtns.forEach((button) => {
+      button.addEventListener('click', () => setMode(button.dataset.mode as 'forward' | 'reverse'));
+    });
+    slider.addEventListener('input', () => {
+      if (state.playing) return;
+      state.t = Number(slider.value);
+      render();
+      setStatus(`${state.mode === 'forward' ? '前向' : '逆向'} · t = ${state.t}`);
+    });
+    playBtn.addEventListener('click', play);
+    resetBtn.addEventListener('click', reset);
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          loadSheets();
+        }
+      }, { rootMargin: '300px' });
+      observer.observe(root);
+    } else {
+      loadSheets();
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-image-demo]').forEach(initDemo);
+</script>
+
+<style>
+  .image-diffusion-demo {
+    margin: 2.2em 0;
+    padding: 16px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+  }
+  .demo-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .demo-kicker {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: .16em;
+    color: var(--accent);
+  }
+  .demo-title {
+    margin: 4px 0 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .demo-status {
+    padding-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted-light);
+    white-space: nowrap;
+  }
+  .demo-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 220px;
+    gap: 18px;
+    align-items: start;
+    margin-top: 14px;
+  }
+  .demo-figure {
+    min-width: 0;
+    margin: 0;
+  }
+  .demo-canvas-wrap {
+    position: relative;
+  }
+  .demo-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper);
+  }
+  .demo-mode-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 2px 7px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: .08em;
+    backdrop-filter: blur(4px);
+  }
+  .demo-figure figcaption {
+    margin-top: .55rem;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    line-height: 1.6;
+    color: var(--muted-light);
+  }
+  .demo-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 2px;
+  }
+  .demo-tabs {
+    display: flex;
+    gap: 14px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 8px;
+  }
+  .demo-tabs button {
+    padding: 2px 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    color: var(--muted-light);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .demo-tabs button:hover { color: var(--ink); }
+  .demo-tabs button.is-active {
+    border-bottom-color: var(--accent);
+    color: var(--ink);
+  }
+  .demo-range {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .demo-range input {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .demo-t {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted-light);
+  }
+  .demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .demo-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--surface-alt);
+    color: var(--ink-soft);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .demo-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .demo-btn:disabled {
+    cursor: wait;
+    opacity: .55;
+  }
+  .demo-btn-primary {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .demo-note {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+  @media (max-width: 720px) {
+    .demo-body {
+      grid-template-columns: 1fr;
+    }
+    .demo-panel {
+      padding-top: 0;
+    }
+    .demo-title {
+      font-size: 18px;
+    }
+    .demo-status {
+      display: none;
+    }
+  }
+</style>

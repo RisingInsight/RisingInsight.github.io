@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
-import DiffusionDemo from '../components/mdx/DiffusionDemo.astro';
+import ImageDiffusionDemo from '../components/mdx/ImageDiffusionDemo.astro';
 ---
 
 <BaseLayout title="实验" description="交互式可视化与小型实验">
@@ -19,13 +19,13 @@ import DiffusionDemo from '../components/mdx/DiffusionDemo.astro';
     </header>
 
     <section class="mt-10">
-      <DiffusionDemo />
+      <ImageDiffusionDemo />
       <p class="mt-4 text-[12px] leading-6 text-muted">
         完整推导和解释见
         <a
-          href="/blog/diffusion-toy-demo/"
+          href="/blog/image-diffusion-demo/"
           class="text-ink underline decoration-rule underline-offset-4 transition-colors hover:text-accent"
-        >《扩散模型去噪：一个可交互的二维玩具模型》</a>。
+        >《图像扩散：一张图片的加噪与去噪》</a>。
       </p>
     </section>
   </main>

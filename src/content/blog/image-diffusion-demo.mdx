@@ -1,0 +1,73 @@
+---
+title: "图像扩散：一张图片的加噪与去噪"
+description: "从站点头像出发，观察 DDPM 的前向加噪和逐帧去噪；同时说明这个 Demo 的单图经验 score 边界。"
+pubDate: 2026-10-21
+math: true
+tags:
+  - 扩散模型
+  - DDPM
+  - 图像生成
+  - 交互可视化
+categories:
+  - 深度学习理论
+---
+
+import { Callout, Equation, ImageDiffusionDemo } from '../../components/mdx';
+
+扩散模型最直观的画面，是一张图片逐渐变成噪声，再一步步从噪声里还原。下面的 Demo 用同一张图片展示这两个过程：前向加噪使用精确的 DDPM 公式；逆向轨迹使用一个单图经验 score 的玩具扩散，便于把每一步都看清楚。
+
+## 前向加噪
+
+给定一张图片 $x_0$，前向过程是一个固定的马尔可夫链：
+
+<Equation
+  number="1"
+  label="Forward process"
+  latex={String.raw`q(x_t \mid x_{t-1}) = \mathcal{N}\left(x_t;\sqrt{1-\beta_t}x_{t-1},\beta_t I\right)`}
+/>
+
+利用高斯分布的可加性，可以直接采样任意时刻：
+
+<Equation
+  number="2"
+  label="Closed form"
+  latex={String.raw`x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon,\qquad \epsilon\sim\mathcal{N}(0,I)`}
+/>
+
+Demo 中取 $T=200$，采用从 $10^{-4}$ 到 $0.04$ 的线性 $\beta_t$，并在加噪轨迹上采样 21 帧。点击“加噪”或拖动时间步，可以看到猫的图像逐渐被噪声覆盖。
+
+<ImageDiffusionDemo />
+
+## 逆向去噪
+
+如果知道每个噪声水平下数据分布的 score，即 $\nabla_{x_t}\log q(x_t)$，就可以用 DDPM 的祖先采样公式：
+
+<Equation
+  number="3"
+  label="Reverse step"
+  latex={String.raw`x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\left(x_t + \beta_t\,\nabla_{x_t}\log q(x_t)\right) + \sqrt{\beta_t}\,z`}
+/>
+
+在真实的图像扩散模型中，这个 score 由神经网络 $\epsilon_\theta(x_t,t)$ 估计。Demo 为了让逆向过程完全可见，使用了一个非常特殊的分布：数据分布只包含这一张图片。此时 score 可以写成解析形式：
+
+<Equation
+  number="4"
+  label="Single-image score"
+  latex={String.raw`\nabla_{x_t}\log q(x_t) = \frac{x_0 - x_t}{1-\bar{\alpha}_t}`}
+/>
+
+这等价于一个“只记住了这张图”的模型；它不是生成新图片的模型，但逆向采样公式与真实 DDPM 完全一致。
+
+<Callout type="warning" title="这不是训练好的图像生成器">
+  Demo 的逆向轨迹用到了原图本身，因此它展示的是“如何从噪声回到这张图”，而不是“如何从噪声生成一张新图”。真实模型需要从大规模数据中学习 score，并通常配合条件控制、更多步数和更精细的噪声调度。
+</Callout>
+
+## 这个演示说明了什么
+
+- 前向过程没有可学习参数；它只是按 schedule 加噪。
+- 逆向过程的每一步都需要一个“往哪个方向去噪”的估计；真实模型用网络学习它，Demo 用单图经验分布替代它。
+- 把公式 4 换成网络预测的 score 或噪声，再加上文本/图像条件，就得到 Stable Diffusion 一类模型的基本采样循环。
+
+<Callout type="idea" title="继续实验">
+  你可以把示例图片换成自己的图，运行 `npm run generate:image-demo` 重新生成帧；也可以把逆向 score 换成训练好的模型输出，复用同一个交互组件。
+</Callout>

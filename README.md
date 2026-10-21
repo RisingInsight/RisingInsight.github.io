@@ -40,6 +40,10 @@ ogImage: "/posts/my-post/og.png"       # 可选，分享图；默认 og-default.
 
 文章图片放在 `public/posts/<slug>/` 下，正文中用绝对路径引用。
 
+## 交互 Demo
+
+`npm run generate:image-demo` 会从 `public/avatar.jpg` 生成 `public/demo/*.webp` 的扩散帧，供 `/lab` 和图像扩散文章使用。
+
 ## 部署
 
 推送到 `main` 后由 `.github/workflows/deploy-astro.yml` 自动构建并部署到 GitHub Pages。
