@@ -45,6 +45,12 @@ ogImage: "/posts/my-post/og.png"       # 可选，分享图；默认 og-default.
 
 文章图片放在 `public/posts/<slug>/` 下，正文中用绝对路径引用。
 
+## 灵宠与开屏
+
+- 每个会话首次进入时播放一次「终端唤醒」开屏：矢量橘猫从扫描线中出现，随后页面淡入；点击任意位置或按 Esc 可跳过，`prefers-reduced-motion` 下直接跳过。
+- 左下角橘猫灵宠可点击互动、可隐藏；隐藏后从页脚 System →「灵宠」唤回，状态保存在 localStorage。
+- 想重看开屏，在地址后加 `?intro=1`。
+
 ## 在线编辑与审核
 
 - 文章页右上角提供 `edit ↗` / `history`，指向 GitHub 网页编辑器和提交历史。

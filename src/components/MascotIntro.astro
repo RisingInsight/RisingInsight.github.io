@@ -1,0 +1,297 @@
+---
+import CatMascot from './CatMascot.astro';
+---
+
+<div id="mascot-intro" class="mascot-intro" aria-hidden="true">
+  <div class="intro-frame">
+    <div class="intro-top">
+      <span>SPIRIT.BOOT / WAKE</span>
+      <span>v1.0 · 2026</span>
+    </div>
+
+    <div class="intro-stage">
+      <div class="intro-cat-wrap">
+        <span class="intro-scan"></span>
+        <CatMascot />
+      </div>
+
+      <div class="intro-terminal">
+        <div class="intro-term-bar">
+          <i class="intro-dot"></i><i class="intro-dot"></i><i class="intro-dot"></i>
+          <span>wake.log</span>
+          <b>zsh</b>
+        </div>
+        <pre class="intro-term-body"><span id="intro-typed"></span><span class="intro-cursor"></span></pre>
+      </div>
+    </div>
+
+    <div class="intro-bottom">
+      <span>initialising presence...</span>
+      <span>click to skip</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mascot-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #070b12;
+    color: #dbe7f3;
+    opacity: 0;
+  }
+
+  :global(html.intro-pending) .mascot-intro {
+    display: flex;
+    opacity: 1;
+    animation: intro-in .35s ease both;
+  }
+
+  .mascot-intro::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(126, 231, 199, .045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(126, 231, 199, .045) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(circle at center, black 0%, transparent 78%);
+    pointer-events: none;
+  }
+
+  .mascot-intro::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(500px circle at 28% 44%, rgba(126, 231, 199, .11), transparent 60%),
+      radial-gradient(420px circle at 76% 62%, rgba(78, 140, 255, .07), transparent 60%);
+    pointer-events: none;
+  }
+
+  .intro-frame {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: min(800px, calc(100% - 40px));
+  }
+
+  .intro-top,
+  .intro-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #93a6bb;
+  }
+
+  .intro-stage {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 26px;
+    align-items: end;
+  }
+
+  .intro-cat-wrap {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    overflow: hidden;
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+    transition: opacity .45s ease, clip-path .8s cubic-bezier(.16, 1, .3, 1);
+    filter: drop-shadow(0 0 30px rgba(126, 231, 199, .12));
+  }
+
+  .mascot-intro.is-awake .intro-cat-wrap {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+
+  .intro-scan {
+    position: absolute;
+    left: -10%;
+    right: -10%;
+    top: 0;
+    z-index: 2;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #7ee7c7, transparent);
+    box-shadow: 0 0 18px #7ee7c7;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .mascot-intro.is-awake .intro-scan {
+    animation: intro-scan .9s ease-out forwards;
+  }
+
+  .intro-terminal {
+    min-width: 0;
+    border: 1px solid #1f3047;
+    background: #0b1220;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  }
+
+  .intro-term-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border-bottom: 1px solid #1f3047;
+    background: #101a2a;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #93a6bb;
+  }
+
+  .intro-term-bar .intro-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff6b6b;
+  }
+  .intro-term-bar .intro-dot:nth-child(2) { background: #f2cc60; }
+  .intro-term-bar .intro-dot:nth-child(3) { background: #7ee7c7; }
+  .intro-term-bar span { margin-left: 4px; flex: 1; }
+  .intro-term-bar b { font-weight: 400; }
+
+  .intro-term-body {
+    margin: 0;
+    min-height: 118px;
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    color: #dbe7f3;
+  }
+
+  .intro-cursor {
+    display: inline-block;
+    width: 7px;
+    height: 14px;
+    margin-left: 2px;
+    vertical-align: -2px;
+    background: #7ee7c7;
+    animation: intro-blink 1.1s steps(2, start) infinite;
+  }
+
+  .mascot-intro.is-leaving {
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+
+  @keyframes intro-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes intro-scan {
+    0% { top: 0; opacity: 0; }
+    12% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  @keyframes intro-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  @media (max-width: 700px) {
+    .intro-frame { width: calc(100% - 32px); gap: 14px; }
+    .intro-stage {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      justify-items: center;
+    }
+    .intro-cat-wrap { width: 170px; height: 170px; }
+    .intro-terminal { width: 100%; }
+    .intro-term-body { min-height: 96px; font-size: 11px; }
+    .intro-top, .intro-bottom { font-size: 10px; }
+  }
+
+  @media (max-width: 380px) {
+    .intro-cat-wrap { width: 140px; height: 140px; }
+  }
+
+  @media (max-height: 660px) {
+    .intro-cat-wrap { width: 140px; height: 140px; }
+    .intro-term-body { min-height: 84px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mascot-intro { display: none !important; }
+    .intro-cursor { animation: none; }
+  }
+</style>
+
+<script>
+  const intro = document.getElementById('mascot-intro');
+  if (intro) {
+    const root = document.documentElement;
+    if (!root.classList.contains('intro-pending')) {
+      intro.hidden = true;
+    } else {
+      const typed = document.getElementById('intro-typed');
+      const text = '$ spirit --wake\n> loading orange cat ...\n> hello, human.';
+      let index = 0;
+      let typer = 0;
+      let finished = false;
+      let revealTimer = 0;
+      let finishTimer = 0;
+
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        window.clearInterval(typer);
+        window.clearTimeout(revealTimer);
+        window.clearTimeout(finishTimer);
+        try { sessionStorage.setItem('mascot-intro-seen', '1'); } catch {}
+        intro.classList.add('is-leaving');
+        window.setTimeout(() => {
+          root.classList.remove('intro-pending');
+          intro.hidden = true;
+          intro.style.display = 'none';
+        }, 400);
+      };
+
+      const reveal = () => {
+        if (finished) return;
+        intro.classList.add('is-awake');
+        revealTimer = window.setTimeout(finish, 900);
+      };
+
+      const start = () => {
+        if (finished) return;
+        if (!typed || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          reveal();
+          return;
+        }
+        typer = window.setInterval(() => {
+          if (finished) return;
+          index += 1;
+          typed.textContent = text.slice(0, index);
+          if (index >= text.length) {
+            window.clearInterval(typer);
+            window.setTimeout(reveal, 220);
+          }
+        }, 15);
+      };
+
+      intro.addEventListener('click', finish);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') finish();
+      }, { once: true });
+      window.setTimeout(start, 150);
+      finishTimer = window.setTimeout(finish, 6000);
+    }
+  }
+</script>

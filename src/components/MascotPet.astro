@@ -1,0 +1,268 @@
+---
+import CatMascot from './CatMascot.astro';
+---
+
+<div class="mascot-pet" id="mascot-pet" data-mascot-pet>
+  <div class="mascot-bubble" id="mascot-bubble" data-mascot-bubble role="status" aria-live="polite" aria-hidden="true">
+    <span data-mascot-message></span>
+  </div>
+
+  <div class="mascot-pet-control">
+    <button
+      type="button"
+      class="mascot-pet-btn"
+      data-mascot-toggle
+      aria-label="和橘猫灵宠互动"
+      aria-expanded="false"
+      aria-controls="mascot-bubble"
+    >
+      <span class="mascot-pet-art"><CatMascot /></span>
+      <span class="mascot-pet-ring" aria-hidden="true"></span>
+      <span class="mascot-pet-live" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="mascot-pet-hide" data-mascot-hide aria-label="隐藏灵宠" title="隐藏灵宠">×</button>
+  </div>
+</div>
+
+<style>
+  .mascot-pet {
+    position: fixed;
+    left: max(16px, env(safe-area-inset-left));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mascot-bubble {
+    position: relative;
+    max-width: 240px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0;
+    transform: translateY(6px) scale(.98);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+
+  .mascot-bubble.is-open {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mascot-bubble::after {
+    content: "";
+    position: absolute;
+    left: 24px;
+    bottom: -6px;
+    width: 10px;
+    height: 10px;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+    transform: rotate(45deg);
+  }
+
+  .mascot-pet-control {
+    position: relative;
+    width: 88px;
+    height: 88px;
+  }
+
+  .mascot-pet-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .mascot-pet-btn:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--rule));
+    box-shadow: 0 16px 36px rgba(15, 23, 42, .14), 0 0 22px rgba(var(--accent-rgb), .1);
+  }
+
+  .mascot-pet-btn:focus-visible,
+  .mascot-pet-hide:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .mascot-pet-art {
+    display: block;
+    width: 78px;
+    height: 78px;
+  }
+
+  .mascot-pet-ring {
+    position: absolute;
+    inset: -7px;
+    border: 1px dashed color-mix(in srgb, var(--accent) 32%, transparent);
+    border-radius: 50%;
+    animation: pet-orbit 16s linear infinite;
+    pointer-events: none;
+  }
+
+  .mascot-pet-live {
+    position: absolute;
+    top: 5px;
+    right: 7px;
+    width: 7px;
+    height: 7px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .mascot-pet-hide {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: .78;
+    transition: opacity .2s, color .2s, border-color .2s;
+  }
+
+  .mascot-pet-hide:hover {
+    opacity: 1;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @keyframes pet-orbit {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 640px) {
+    .mascot-pet {
+      left: max(12px, env(safe-area-inset-left));
+      bottom: max(14px, env(safe-area-inset-bottom));
+    }
+    .mascot-bubble {
+      max-width: 220px;
+      font-size: 13px;
+    }
+    .mascot-pet-control,
+    .mascot-pet-btn {
+      width: 66px;
+      height: 66px;
+    }
+    .mascot-pet-art {
+      width: 58px;
+      height: 58px;
+    }
+    .mascot-pet-hide {
+      width: 21px;
+      height: 21px;
+      font-size: 14px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mascot-pet-ring { animation: none; }
+    .mascot-pet-btn, .mascot-bubble { transition: none; }
+  }
+</style>
+
+<script>
+  const pet = document.querySelector<HTMLElement>('[data-mascot-pet]');
+  if (pet) {
+    const root = document.documentElement;
+    const bubble = pet.querySelector<HTMLElement>('[data-mascot-bubble]');
+    const messageEl = pet.querySelector<HTMLElement>('[data-mascot-message]');
+    const toggle = pet.querySelector<HTMLButtonElement>('[data-mascot-toggle]');
+    const hide = pet.querySelector<HTMLButtonElement>('[data-mascot-hide]');
+    const messages = [
+      '今天也要 build 点什么。',
+      '写不出来时，先跑一个最小例子。',
+      '记得喝水，顺便看看最近更新。',
+      '我在这儿，陪你调 bug。',
+      '要不要去留言板打个招呼？',
+      '灵光一现的时候，赶紧记下来。',
+    ];
+    let bubbleTimer = 0;
+    let lastIndex = -1;
+
+    function setBubble(open: boolean, message = '') {
+      if (!bubble || !messageEl || !toggle) return;
+      window.clearTimeout(bubbleTimer);
+      if (open) {
+        messageEl.textContent = message;
+        bubble.classList.add('is-open');
+        bubble.setAttribute('aria-hidden', 'false');
+        toggle.setAttribute('aria-expanded', 'true');
+        bubbleTimer = window.setTimeout(() => setBubble(false), 5000);
+      } else {
+        bubble.classList.remove('is-open');
+        bubble.setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function nextMessage() {
+      let index = Math.floor(Math.random() * messages.length);
+      if (index === lastIndex) index = (index + 1) % messages.length;
+      lastIndex = index;
+      return messages[index];
+    }
+
+    function showPet() {
+      root.classList.remove('mascot-pet-hidden');
+      try { localStorage.removeItem('mascot-pet-hidden'); } catch {}
+    }
+
+    function hidePet() {
+      setBubble(false);
+      root.classList.add('mascot-pet-hidden');
+      try { localStorage.setItem('mascot-pet-hidden', '1'); } catch {}
+    }
+
+    toggle?.addEventListener('click', () => {
+      const isOpen = bubble?.classList.contains('is-open');
+      setBubble(!isOpen, isOpen ? '' : nextMessage());
+    });
+
+    hide?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      hidePet();
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-mascot-restore]').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        showPet();
+        setBubble(true, '我回来啦。');
+      });
+    });
+  }
+</script>
