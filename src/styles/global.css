@@ -333,10 +333,6 @@ body::before {
 .terminal-dot:nth-child(2) { background: #f2cc60; }
 .terminal-dot:nth-child(3) { background: var(--term-accent); }
 
-.terminal-tabs {
-  border-bottom: 1px solid var(--term-border);
-}
-
 .terminal-foot {
   border-top: 1px solid var(--term-border);
   background: var(--term-bar);
@@ -347,18 +343,6 @@ body::before {
 .term-accent { color: var(--term-accent); }
 .term-key { color: var(--term-key); }
 .term-str { color: var(--term-str); }
-
-.term-link {
-  color: var(--term-muted);
-  text-decoration: none;
-  transition: color .2s;
-}
-.term-link:hover { color: var(--term-accent); }
-.term-link-title {
-  color: var(--term-fg);
-  transition: color .2s;
-}
-.term-link:hover .term-link-title { color: var(--term-accent); }
 
 .terminal-window .cursor-blink::after {
   color: var(--term-accent);

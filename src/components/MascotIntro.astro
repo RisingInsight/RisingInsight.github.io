@@ -246,6 +246,7 @@ import CatMascot from './CatMascot.astro';
       let typer = 0;
       let finished = false;
       let revealTimer = 0;
+      let holdTimer = 0;
       let finishTimer = 0;
 
       const finish = () => {
@@ -253,6 +254,7 @@ import CatMascot from './CatMascot.astro';
         finished = true;
         window.clearInterval(typer);
         window.clearTimeout(revealTimer);
+        window.clearTimeout(holdTimer);
         window.clearTimeout(finishTimer);
         try { sessionStorage.setItem('mascot-intro-seen', '1'); } catch {}
         intro.classList.add('is-leaving');
@@ -266,7 +268,7 @@ import CatMascot from './CatMascot.astro';
       const reveal = () => {
         if (finished) return;
         intro.classList.add('is-awake');
-        revealTimer = window.setTimeout(finish, 900);
+        holdTimer = window.setTimeout(finish, 1500);
       };
 
       const start = () => {
@@ -275,13 +277,13 @@ import CatMascot from './CatMascot.astro';
           reveal();
           return;
         }
+        revealTimer = window.setTimeout(reveal, 500);
         typer = window.setInterval(() => {
           if (finished) return;
           index += 1;
           typed.textContent = text.slice(0, index);
           if (index >= text.length) {
             window.clearInterval(typer);
-            window.setTimeout(reveal, 220);
           }
         }, 15);
       };

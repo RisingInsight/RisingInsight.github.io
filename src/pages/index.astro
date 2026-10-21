@@ -116,78 +116,30 @@ const runDays = Math.max(
               </span>
             </div>
 
-            <div class="terminal-tabs flex gap-5 px-4 pt-2.5" role="tablist" aria-label="终端面板">
-              <button
-                type="button"
-                data-terminal-tab="whoami"
-                role="tab"
-                aria-selected="true"
-                class="terminal-tab is-active"
-              >whoami</button>
-              <button
-                type="button"
-                data-terminal-tab="status"
-                role="tab"
-                aria-selected="false"
-                class="terminal-tab"
-              >status</button>
-              <button
-                type="button"
-                data-terminal-tab="latest"
-                role="tab"
-                aria-selected="false"
-                class="terminal-tab"
-              >latest</button>
-            </div>
-
-            <div class="min-h-[292px] p-4 font-mono text-[12px] leading-6 sm:p-5">
-              <div data-terminal-panel="whoami" role="tabpanel">
+            <div
+              class="min-h-[400px] whitespace-pre-wrap p-4 font-mono text-[12px] leading-6 sm:p-5"
+              data-terminal-type
+              aria-hidden="true"
+            >
+              <span data-terminal-typed>
                 <div><span class="terminal-prompt">$</span> <span class="term-fg">whoami</span></div>
-                <div class="mt-2 term-accent">{PROFILE.name}</div>
+                <div class="term-accent">{PROFILE.name}</div>
                 <div class="term-muted">{PROFILE.role} · {PROFILE.location}</div>
-                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="term-fg">cat profile.json</span></div>
-                <div class="mt-2 term-muted">
-                  <div>{'{'}</div>
-                  <div class="pl-3"><span class="term-key">"role"</span>: <span class="term-str">"Deep Learning"</span>,</div>
-                  <div class="pl-3"><span class="term-key">"focus"</span>: <span class="term-str">"generative systems"</span>,</div>
-                  <div class="pl-3"><span class="term-key">"mode"</span>: <span class="term-str">"build in public"</span>,</div>
-                  <div class="pl-3"><span class="term-key">"status"</span>: <span class="term-accent">"online"</span></div>
-                  <div>{'}'}</div>
-                </div>
-                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="cursor-blink"></span></div>
-              </div>
-
-              <div data-terminal-panel="status" role="tabpanel" class="hidden">
-                <div><span class="terminal-prompt">$</span> <span class="term-fg">cat status.json</span></div>
-                <div class="mt-2 term-muted">
-                  <div>{'{'}</div>
-                  <div class="pl-3"><span class="term-key">"status"</span>: <span class="term-accent">"online"</span>,</div>
-                  <div class="pl-3"><span class="term-key">"posts"</span>: <span class="term-fg">{allPosts.length}</span>,</div>
-                  <div class="pl-3"><span class="term-key">"words"</span>: <span class="term-fg">{formatWordCount(totalWords)}</span>,</div>
-                  <div class="pl-3"><span class="term-key">"commits"</span>: <span class="term-fg">{activity.totalAll}</span>,</div>
-                  <div class="pl-3"><span class="term-key">"streak"</span>: <span class="term-str">"{activity.currentStreak}d"</span>,</div>
-                  <div class="pl-3"><span class="term-key">"last_commit"</span>: <span class="term-str">"{lastCommitLabel}"</span></div>
-                  <div>{'}'}</div>
-                </div>
-                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="term-accent">uptime</span> <span class="term-muted">→</span> <span class="term-fg">{runDays} days</span></div>
-              </div>
-
-              <div data-terminal-panel="latest" role="tabpanel" class="hidden">
-                <div><span class="terminal-prompt">$</span> <span class="term-fg">ls -t posts/</span></div>
-                <div class="mt-3 space-y-2.5">
-                  {latestPosts.slice(0, 3).map((post) => (
-                    <a href={`/blog/${post.id}/`} class="term-link group flex items-start gap-2">
-                      <span class="term-accent">→</span>
-                      <span class="min-w-0">
-                        <span class="term-link-title block truncate">{post.data.title}</span>
-                        <span class="block text-[11px] term-muted">{formatDate(post.data.pubDate)}</span>
-                      </span>
-                    </a>
-                  ))}
-                </div>
-                <div class="mt-4"><span class="terminal-prompt">$</span> <span class="term-fg">cd /blog</span> <a href="/blog/" class="ml-2 term-accent underline decoration-[rgba(126,231,199,.3)] underline-offset-2">open all</a></div>
-                <div class="mt-3"><span class="terminal-prompt">$</span> <span class="cursor-blink"></span></div>
-              </div>
+                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">cat profile.json</span></div>
+                <div class="term-muted">{'{'}</div>
+                <div class="pl-3"><span class="term-key">"focus"</span>: <span class="term-str">"generative systems"</span>,</div>
+                <div class="pl-3"><span class="term-key">"mode"</span>: <span class="term-str">"build in public"</span>,</div>
+                <div class="pl-3"><span class="term-key">"status"</span>: <span class="term-accent">"online"</span></div>
+                <div class="term-muted">{'}'}</div>
+                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">uptime</span></div>
+                <div class="term-fg">{runDays} days · {allPosts.length} posts · {formatWordCount(totalWords)} words</div>
+                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">git log --oneline | wc -l</span></div>
+                <div class="term-fg">{activity.totalAll} commits · streak {activity.currentStreak}d · last {lastCommitLabel}</div>
+                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">ls -t posts | head -3</span></div>
+                {latestPosts.slice(0, 3).map((post) => (
+                  <div class="term-accent">→ {post.data.title}</div>
+                ))}
+              </span><span class="cursor-blink"></span>
             </div>
 
             <div class="terminal-foot flex items-center justify-between px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] term-muted">
@@ -384,29 +336,119 @@ const runDays = Math.max(
     </section>
   </main>
 
-  <script define:vars={{ BLOG_START_DATE }}>
+  <script define:vars={{ BLOG_START_DATE, POST_COUNT: allPosts.length, WORD_COUNT_LABEL: formatWordCount(totalWords), COMMITS: activity.totalAll, STREAK_DAYS: activity.currentStreak, LAST_COMMIT: lastCommitLabel, POST_TITLES: latestPosts.slice(0, 3).map((post) => post.data.title) }}>
     const runDaysEls = document.querySelectorAll('[data-uptime-days]');
-    const days = Math.max(
+    const uptimeDays = Math.max(
       0,
       Math.floor((Date.now() - new Date(BLOG_START_DATE).getTime()) / (1000 * 60 * 60 * 24))
     );
-    runDaysEls.forEach((el) => { el.textContent = String(days); });
+    runDaysEls.forEach((el) => { el.textContent = String(uptimeDays); });
 
-    const tabs = document.querySelectorAll('[data-terminal-tab]');
-    const panels = document.querySelectorAll('[data-terminal-panel]');
-    function selectPanel(name) {
-      tabs.forEach((tab) => {
-        const active = tab.getAttribute('data-terminal-tab') === name;
-        tab.classList.toggle('is-active', active);
-        tab.setAttribute('aria-selected', String(active));
-      });
-      panels.forEach((panel) => {
-        panel.classList.toggle('hidden', panel.getAttribute('data-terminal-panel') !== name);
-      });
+    const terminal = document.querySelector('[data-terminal]');
+    const typedEl = document.querySelector('[data-terminal-typed]');
+    const typeBody = document.querySelector('[data-terminal-type]');
+    if (terminal && typedEl && typeBody) {
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[ch]));
+
+      const NL = String.fromCharCode(10);
+      const segments = [
+        ['$', 'term-accent'], [' whoami' + NL, 'term-fg'],
+        ['RisingInsight' + NL, 'term-accent'],
+        ['Deep Learning · China' + NL, 'term-muted'],
+        ['$', 'term-accent'], [' cat profile.json' + NL, 'term-fg'],
+        ['{' + NL, 'term-muted'],
+        ['  "focus"', 'term-key'], [': ', 'term-muted'], ['"generative systems"', 'term-str'], [',' + NL, 'term-muted'],
+        ['  "mode"', 'term-key'], [': ', 'term-muted'], ['"build in public"', 'term-str'], [',' + NL, 'term-muted'],
+        ['  "status"', 'term-key'], [': ', 'term-muted'], ['"online"', 'term-accent'], [NL, 'term-muted'],
+        ['}' + NL, 'term-muted'],
+        ['$', 'term-accent'], [' uptime' + NL, 'term-fg'],
+        [`${uptimeDays} days`, 'term-fg'], [' · ', 'term-muted'], [`${POST_COUNT} posts`, 'term-fg'], [' · ', 'term-muted'], [`${WORD_COUNT_LABEL} words`, 'term-fg'], [NL, 'term-muted'],
+        ['$', 'term-accent'], [' git log --oneline | wc -l' + NL, 'term-fg'],
+        [`${COMMITS} commits`, 'term-fg'], [' · ', 'term-muted'], [`streak ${STREAK_DAYS}d`, 'term-fg'], [' · ', 'term-muted'], [`last ${LAST_COMMIT}`, 'term-fg'], [NL, 'term-muted'],
+        ['$', 'term-accent'], [' ls -t posts | head -3' + NL, 'term-fg'],
+        ...POST_TITLES.map((title, i) => [`→ ${title}${i < POST_TITLES.length - 1 ? NL : ''}`, i === 0 ? 'term-accent' : 'term-fg']),
+      ];
+      const totalLength = segments.reduce((sum, [text]) => sum + text.length, 0);
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const SPEED = 14;
+      const HOLD = 3800;
+      const RESUME_DELAY = 1200;
+      let index = 0;
+      let state = 'typing';
+      let tickTimer = 0;
+      let holdTimer = 0;
+      let fadeTimer = 0;
+      let rendered = -1;
+
+      function render(count) {
+        if (count === rendered) return;
+        rendered = count;
+        let used = 0;
+        let html = '';
+        for (const [text, cls] of segments) {
+          if (used >= count) break;
+          const take = Math.min(text.length, count - used);
+          if (take > 0) html += `<span class="${cls}">${escapeHtml(text.slice(0, take))}</span>`;
+          used += take;
+        }
+        typedEl.innerHTML = html;
+      }
+
+      function clearAndType() {
+        index = 0;
+        render(0);
+        state = 'typing';
+        typeBody.classList.add('is-fading');
+        fadeTimer = window.setTimeout(() => {
+          typeBody.classList.remove('is-fading');
+          tickTimer = window.setTimeout(tick, SPEED);
+        }, 220);
+      }
+
+      function tick() {
+        if (state !== 'typing') return;
+        index = Math.min(totalLength, index + 1);
+        render(index);
+        if (index >= totalLength) {
+          state = 'hold';
+          holdTimer = window.setTimeout(() => {
+            if (state === 'hold') clearAndType();
+          }, HOLD);
+        } else {
+          tickTimer = window.setTimeout(tick, SPEED);
+        }
+      }
+
+      function pauseAndShowFull() {
+        if (state === 'paused') return;
+        window.clearTimeout(tickTimer);
+        window.clearTimeout(holdTimer);
+        window.clearTimeout(fadeTimer);
+        state = 'paused';
+        render(totalLength);
+      }
+
+      function resumeLoop() {
+        if (state !== 'paused') return;
+        state = 'hold';
+        holdTimer = window.setTimeout(() => {
+          if (state === 'hold') clearAndType();
+        }, RESUME_DELAY);
+      }
+
+      terminal.addEventListener('mouseenter', pauseAndShowFull);
+      terminal.addEventListener('mouseleave', resumeLoop);
+
+      if (reduced) {
+        state = 'hold';
+        render(totalLength);
+      } else {
+        render(0);
+        window.setTimeout(tick, 700);
+      }
     }
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => selectPanel(tab.getAttribute('data-terminal-tab') || 'whoami'));
-    });
   </script>
 </BaseLayout>
 
@@ -434,36 +476,12 @@ const runDays = Math.max(
     color: var(--term-accent);
   }
 
-  .terminal-tab {
-    position: relative;
-    padding: 0 0 9px;
-    border: 0;
-    background: transparent;
-    color: var(--term-muted);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: .04em;
-    cursor: pointer;
-    transition: color .2s;
+  [data-terminal-type] {
+    transition: opacity .2s ease;
   }
 
-  .terminal-tab:hover {
-    color: var(--term-fg);
-  }
-
-  .terminal-tab.is-active {
-    color: var(--term-accent);
-  }
-
-  .terminal-tab.is-active::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    bottom: -1px;
-    left: 0;
-    height: 1px;
-    background: var(--term-accent);
-    box-shadow: 0 0 8px var(--term-accent);
+  [data-terminal-type].is-fading {
+    opacity: .18;
   }
 
   .log-row {
