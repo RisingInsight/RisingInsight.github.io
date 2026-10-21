@@ -19,7 +19,6 @@ export const NAV_ITEMS = [
   { label: '首页', href: '/' },
   { label: '文章', href: '/blog/' },
   { label: '系列', href: '/series/' },
-  { label: '实验', href: '/lab/' },
   { label: '归档', href: '/archives/' },
   { label: '留言', href: '/guestbook/' },
   { label: '关于', href: '/about/' },
