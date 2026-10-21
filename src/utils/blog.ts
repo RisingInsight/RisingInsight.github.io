@@ -22,9 +22,9 @@ export function formatWordCount(count: number): string {
   return count.toLocaleString('zh-CN');
 }
 
-// 计算阅读时间（中文按字符数估算）
+// 计算阅读时间（按中英文词数估算）
 export function getReadTime(content: string): string {
-  const minutes = Math.max(1, Math.ceil(content.length / 500));
+  const minutes = Math.max(1, Math.ceil(getWordCount(content) / 400));
   return `${minutes} min`;
 }
 
