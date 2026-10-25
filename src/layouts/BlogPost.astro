@@ -69,58 +69,50 @@ if (series) {
   type="article"
   image={ogImage || heroImage}
 >
-  <main class="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+  <main id="main" class="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <div id="reading-progress" class="reading-progress" style="width: 0%"></div>
 
     <Breadcrumb items={breadcrumbItems} />
 
     <article>
-      <header class="border border-rule bg-surface/55 p-5 sm:p-7">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
-          <div class="flex min-w-0 items-center gap-2 font-mono text-[12px] tracking-[0.04em] text-muted">
-            <span class="text-accent">~/</span>
-            <span class="truncate">posts/{contentPath}</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-3 font-mono text-[12px] uppercase tracking-[0.1em]">
+      <header class="border-b border-rule pb-10">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span class="font-mono text-[12px] text-muted-light">~/posts/{contentPath}</span>
+          <div class="flex flex-wrap items-center gap-4 text-[12px] text-muted-light">
             {series && (
-              <a
-                href={`/series/#series-${seriesSlug(series)}`}
-                class="text-accent transition-colors hover:text-accent-strong"
-              >
-                series: {series}
+              <a href={`/series/#series-${seriesSlug(series)}`} class="transition-colors hover:text-accent">
+                系列 · {series}
               </a>
             )}
-            <a href={editUrl} target="_blank" rel="noopener noreferrer" class="text-muted transition-colors hover:text-accent">
-              edit ↗
+            <a href={editUrl} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
+              编辑 <span aria-hidden="true">↗</span>
             </a>
-            <a href={historyUrl} target="_blank" rel="noopener noreferrer" class="text-muted transition-colors hover:text-accent">
-              history
+            <a href={historyUrl} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
+              历史
             </a>
           </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12px] uppercase tracking-[0.1em] text-muted">
-          <span class="flex items-center gap-1.5 text-accent"><span class="status-dot"></span> published</span>
-          <span class="text-rule">/</span>
+        <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
           <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
-          <span class="text-rule">/</span>
+          <span class="text-rule-soft" aria-hidden="true">·</span>
           <span>{readTime}</span>
-          <span class="text-rule">/</span>
+          <span class="text-rule-soft" aria-hidden="true">·</span>
           <span>{formatWordCount(wordCount)} 字</span>
           {categories.length > 0 && (
             <>
-              <span class="text-rule">/</span>
+              <span class="text-rule-soft" aria-hidden="true">·</span>
               <span>{categories.join(' / ')}</span>
             </>
           )}
         </div>
-        <h1 class="mt-4 text-balance font-serif text-3xl font-semibold leading-[1.12] tracking-[-0.035em] text-ink sm:text-[2.6rem]">
+        <h1 class="mt-4 text-balance font-serif text-[2.1rem] font-semibold leading-[1.3] tracking-[.01em] text-ink sm:text-[2.5rem]">
           {title}
         </h1>
-        <p class="mt-4 max-w-2xl text-[15px] leading-7 text-muted">{description}</p>
+        <p class="mt-5 max-w-2xl text-[15px] leading-8 text-muted">{description}</p>
         {updatedDate && (
-          <div class="mt-4 font-mono text-[12px] uppercase tracking-[0.12em] text-muted">
-            updated {formatDate(updatedDate)}
+          <div class="mt-4 text-[12px] text-muted-light">
+            最后更新于 {formatDate(updatedDate)}
           </div>
         )}
         {tags.length > 0 && (
@@ -131,7 +123,7 @@ if (series) {
           </div>
         )}
         {heroImage && (
-          <div class="mt-6 overflow-hidden border border-rule">
+          <div class="mt-8 overflow-hidden rounded-[var(--r-md)] border border-rule">
             <img src={heroImage} alt={title} class="w-full" loading="lazy" />
           </div>
         )}
@@ -139,16 +131,16 @@ if (series) {
 
       <TableOfContents />
 
-      <div class="prose mt-8" data-pagefind-body>
+      <div class="prose mt-8 max-w-[68ch]" data-pagefind-body>
         <slot />
       </div>
 
       {series && seriesPosts.length > 0 && (
         <section class="mt-14 border-t border-rule pt-8">
           <div class="flex items-baseline justify-between">
-            <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
-              Series · {series}
-            </div>
+          <div class="mono-label">
+            系列 · {series}
+          </div>
             <a
               href={`/series/#series-${seriesSlug(series)}`}
               class="text-[12px] text-muted transition-colors hover:text-accent"
@@ -175,8 +167,8 @@ if (series) {
 
       {relatedPosts.length > 0 && (
         <section class="mt-14 border-t border-rule pt-8">
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
-            Related notes
+          <div class="mono-label">
+            相关文章
           </div>
           <div class="mt-3 divide-y divide-rule-soft">
             {relatedPosts.map((post) => (
@@ -196,46 +188,46 @@ if (series) {
         </section>
       )}
 
-      <div class="panel mt-12 flex flex-wrap items-start gap-4 p-5">
+      <div class="mt-12 flex flex-wrap items-start gap-4 border-t border-rule pt-8">
         <img
           src={PROFILE.avatar}
           alt={PROFILE.name}
-          class="h-11 w-11 rounded-full border border-accent/30 object-cover"
+          width="88"
+          height="88"
+          loading="lazy"
+          class="h-11 w-11 rounded-full border border-rule object-cover"
         />
         <div class="min-w-0">
-          <div class="mono-label">operator</div>
-          <div class="mt-1 font-serif text-base font-semibold text-ink">{PROFILE.name}</div>
-          <div class="mt-1 font-mono text-[11px] leading-5 text-muted">
+          <div class="text-[15px] font-medium text-ink">{PROFILE.name}</div>
+          <div class="mt-1 text-[13px] leading-6 text-muted">
             {PROFILE.role} · {PROFILE.tagline}
           </div>
         </div>
-        <div class="ml-auto flex flex-col items-start gap-2 font-mono text-[11px] uppercase tracking-[0.08em] sm:items-end">
+        <div class="ml-auto flex flex-col items-start gap-2 text-[13px] sm:items-end">
           <a href={editUrl} target="_blank" rel="noopener noreferrer" class="text-muted transition-colors hover:text-accent">
-            edit on github ↗
+            在 GitHub 上编辑 <span aria-hidden="true">↗</span>
           </a>
           <a href="/about/" class="text-muted transition-colors hover:text-accent">
-            about →
+            关于我 <span aria-hidden="true">→</span>
           </a>
         </div>
       </div>
 
-      <div class="mt-10 flex items-center justify-between border-t border-rule pt-6 font-mono text-[11px] uppercase tracking-[0.08em] text-muted">
+      <div class="mt-10 flex items-center justify-between border-t border-rule-soft pt-6 text-[13px] text-muted">
         <button id="back-to-top" type="button" class="transition-colors hover:text-accent">
-          ↑ back to top
+          ↑ 回到顶部
         </button>
         <a href="/blog/" class="transition-colors hover:text-accent">
-          all posts <span aria-hidden="true">→</span>
+          全部文章 <span aria-hidden="true">→</span>
         </a>
       </div>
 
       {(prevPost || nextPost) && (
-        <nav class="mt-10 grid gap-4 border-t border-rule pt-6 sm:grid-cols-2" aria-label="上下篇">
+        <nav class="mt-8 grid gap-6 border-t border-rule pt-8 sm:grid-cols-2" aria-label="上下篇">
           {prevPost ? (
-            <a href={`/blog/${prevPost.id}/`} class="group">
-              <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light">
-                ← 上一篇
-              </div>
-              <div class="mt-2 font-serif text-sm font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
+            <a href={`/blog/${prevPost.id}/`} class="group block">
+              <div class="text-[12px] text-muted-light">← 上一篇</div>
+              <div class="mt-2 font-serif text-[15px] font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
                 {prevPost.data.title}
               </div>
             </a>
@@ -243,11 +235,9 @@ if (series) {
             <div></div>
           )}
           {nextPost ? (
-            <a href={`/blog/${nextPost.id}/`} class="group sm:text-right">
-              <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light">
-                下一篇 →
-              </div>
-              <div class="mt-2 font-serif text-sm font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
+            <a href={`/blog/${nextPost.id}/`} class="group block sm:text-right">
+              <div class="text-[12px] text-muted-light">下一篇 →</div>
+              <div class="mt-2 font-serif text-[15px] font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
                 {nextPost.data.title}
               </div>
             </a>

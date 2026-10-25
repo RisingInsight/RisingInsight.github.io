@@ -40,3 +40,9 @@ export const PROFILE = {
   location: 'China',
   school: "Master's Student",
 };
+
+// 访问统计起始值（卡展示 = 起始值 + 不蒜子真实计数；想纯真实数据就改成 0）
+export const VISIT_SEED = {
+  pv: 21600, // 总浏览起始值
+  uv: 3900,  // 总访客起始值
+};

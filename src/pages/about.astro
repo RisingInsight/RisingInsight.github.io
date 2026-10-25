@@ -30,41 +30,39 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 ---
 
 <BaseLayout title="关于" description={`About ${PROFILE.name} - Deep Learning Researcher`}>
-  <main class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+  <main id="main" class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '关于' }]} />
 
-    <header class="border border-rule bg-surface/55 p-5 sm:p-7">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
-        <div class="flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-muted-light">
-          <span class="text-accent">~/</span>
-          about.md
-        </div>
+    <header class="border-b border-rule pb-10">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="font-mono text-[12px] text-muted-light">~/about.md</p>
         <a
           href={`https://github.com/${GITHUB_REPO}/edit/${GITHUB_BRANCH}/src/pages/about.astro`}
           target="_blank"
           rel="noopener noreferrer"
-          class="font-mono text-[11px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
+          class="text-[12px] text-muted-light transition-colors hover:text-accent"
         >
-          edit ↗
+          编辑 <span aria-hidden="true">↗</span>
         </a>
       </div>
-      <div class="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start">
+      <div class="mt-8 flex flex-col gap-6 sm:flex-row sm:items-start">
         <img
           src={PROFILE.avatar}
           alt={PROFILE.name}
-          class="h-20 w-20 rounded-full border border-accent/30 object-cover"
+          width="160"
+          height="160"
+          class="h-20 w-20 rounded-full border border-rule object-cover"
         />
         <div class="min-w-0">
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">about</div>
-          <h1 class="mt-2 font-serif text-3xl font-semibold tracking-[-0.035em] text-ink sm:text-4xl">
+          <h1 class="font-serif text-[2.1rem] font-semibold leading-[1.3] tracking-[.01em] text-ink sm:text-[2.5rem]">
             {PROFILE.name}
           </h1>
-          <p class="mt-2 font-mono text-[12px] uppercase tracking-[0.08em] text-muted">{PROFILE.role} · {PROFILE.location}</p>
-          <p class="mt-4 max-w-2xl text-sm leading-7 text-ink-soft">
+          <p class="mt-2 text-[13px] text-muted">{PROFILE.role} · {PROFILE.location}</p>
+          <p class="mt-4 max-w-2xl text-[15px] leading-8 text-ink-soft">
             你好，我是 {PROFILE.name}。我关注生成模型与深度学习，喜欢把论文里的东西跑起来，
             再把实现过程、踩坑记录和一些技术想法写在这里。
           </p>
-          <p class="mt-2 max-w-2xl text-[13px] leading-6 text-muted">
+          <p class="mt-2 max-w-2xl text-[13px] leading-7 text-muted">
             {PROFILE.bio} · {PROFILE.tagline}
           </p>
         </div>
@@ -74,7 +72,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
     <div class="mt-12 grid gap-12 md:grid-cols-[1fr_240px]">
       <div>
         <section>
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
+          <div class="mono-label">
             Focus areas
           </div>
           <div class="mt-4 divide-y divide-rule">
@@ -93,13 +91,13 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         </section>
 
         <section class="mt-12">
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
+          <div class="mono-label">
             Stack
           </div>
           <div class="mt-4 divide-y divide-rule">
             {toolbox.map((group) => (
               <div class="grid gap-2 py-4 sm:grid-cols-[90px_1fr]">
-                <div class="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-light">
+                <div class="mono-label">
                   {group.category}
                 </div>
                 <div class="flex flex-wrap gap-x-4 gap-y-1 text-[14px] text-ink">
@@ -112,7 +110,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
         <section class="mt-12">
           <div class="flex items-baseline justify-between">
-            <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">
+            <div class="mono-label">
               Recent logs
             </div>
             <a href="/blog/" class="text-[12px] text-muted transition-colors hover:text-accent">
@@ -139,7 +137,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
       <aside class="space-y-10">
         <section>
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">Profile</div>
+          <div class="mono-label">Profile</div>
           <dl class="mt-4 space-y-3 text-[13px]">
             <div>
               <dt class="text-muted-light">Role</dt>
@@ -157,7 +155,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         </section>
 
         <section>
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">Site log</div>
+          <div class="mono-label">Site log</div>
           <div class="mt-4 space-y-4">
             {timeline.map((item) => (
               <div>
@@ -170,7 +168,7 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         </section>
 
         <section>
-          <div class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-light">Contact</div>
+          <div class="mono-label">Contact</div>
           <div class="mt-4 flex flex-col gap-2 text-[13px]">
             {SOCIALS.map((social) => (
               <a

@@ -24,7 +24,10 @@
     document.querySelectorAll('[data-theme-toggle]').forEach((toggle) => {
       toggle.setAttribute('aria-pressed', String(isDark));
     });
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#070b12' : '#f6f8fb');
+    // BaseHead 里有多条带 media 的 theme-color meta，全部同步为当前生效色
+    document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+      meta.setAttribute('content', isDark ? '#151210' : '#faf9f7');
+    });
   };
 
   if (!document.documentElement.hasAttribute('data-theme-toggle-bound')) {

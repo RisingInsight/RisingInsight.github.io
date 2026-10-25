@@ -7,10 +7,10 @@ const { items } = Astro.props;
 ---
 
 <nav class="mb-8" aria-label="Breadcrumb">
-  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[12px] uppercase tracking-[0.1em] text-muted">
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-light">
     {items.map((item, index) => (
       <li class="flex min-w-0 items-center gap-2">
-        {index > 0 && <span aria-hidden="true" class="text-rule">/</span>}
+        {index > 0 && <span aria-hidden="true" class="text-rule-soft">/</span>}
         {item.href ? (
           <a href={item.href} class="transition-colors hover:text-accent">
             {item.label}

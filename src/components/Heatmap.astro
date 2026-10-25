@@ -9,21 +9,33 @@ interface Props {
 const activity = Astro.props.activity ?? getCommitActivity();
 const weekCount = activity.weeks.length;
 const summary = `过去 12 个月共 ${activity.totalYear} 次提交，当前连续 ${activity.currentStreak} 天。`;
+
+// 月份标签：只在新月份出现且与上一个已渲染标签间隔 ≥3 周时渲染，避免相邻标签互相重叠；
+// 末尾 3 周内的标签会被横向滚动容器裁切，同样跳过
+const monthLabelIdx = new Set<number>();
+let lastLabelIdx = -99;
+activity.weeks.forEach((week, i) => {
+  const prev = activity.weeks[i - 1];
+  if (
+    (!prev || week.month !== prev.month) &&
+    i - lastLabelIdx >= 3 &&
+    i < activity.weeks.length - 4
+  ) {
+    monthLabelIdx.add(i);
+    lastLabelIdx = i;
+  }
+});
 ---
 
-<section class="panel overflow-hidden" data-heatmap>
-  <div class="flex flex-wrap items-start justify-between gap-4 border-b border-rule px-5 py-4 sm:px-6">
+<section class="overflow-hidden" data-heatmap>
+  <div class="flex flex-wrap items-start justify-between gap-4 pb-5">
     <div>
-      <div class="flex items-center gap-2">
-        <span class="mono-label text-accent">activity.log</span>
-        <span class="h-px w-8 bg-accent/50"></span>
-      </div>
-      <h2 class="mt-2 font-serif text-xl font-semibold tracking-[-0.02em] text-ink sm:text-2xl">
+      <h2 class="font-serif text-xl font-semibold text-ink">
         创作热力图
       </h2>
-      <p class="mt-1 text-[13px] text-muted">过去 12 个月的真实 git 提交记录</p>
+      <p class="mt-1.5 text-[13px] text-muted">过去 12 个月的真实 git 提交记录</p>
     </div>
-    <div class="grid grid-cols-3 gap-5 text-right">
+    <div class="grid grid-cols-3 gap-6 text-right">
       <div>
         <div class="font-serif text-xl text-ink">{activity.totalYear}</div>
         <div class="mono-label mt-1">commits</div>
@@ -39,12 +51,12 @@ const summary = `过去 12 个月共 ${activity.totalYear} 次提交，当前连
     </div>
   </div>
 
-  <div class="px-5 py-5 sm:px-6">
+  <div class="pb-2">
     <div class="heatmap-scroll">
       <div class="heatmap-inner" style={`--weeks:${weekCount}`}>
         <div class="heatmap-months" aria-hidden="true">
-          {activity.weeks.map((week) => (
-            <span class="heatmap-month">{week.month}</span>
+          {activity.weeks.map((week, i) => (
+            <span class="heatmap-month">{monthLabelIdx.has(i) ? week.month : ''}</span>
           ))}
         </div>
 
@@ -105,7 +117,11 @@ const summary = `过去 12 个月共 ${activity.totalYear} 次提交，当前连
   .heatmap-scroll {
     overflow-x: auto;
     padding-bottom: 4px;
-    scrollbar-width: thin;
+    /* 可横向滚动但隐藏滚动条（移动端有 swipe 提示） */
+    scrollbar-width: none;
+  }
+  .heatmap-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   .heatmap-inner {
@@ -182,16 +198,13 @@ const summary = `过去 12 个月共 ${activity.totalYear} 次提交，当前连
     position: relative;
     z-index: 2;
     transform: scale(1.35);
-    box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(var(--accent-rgb), .45);
+    box-shadow: 0 0 0 1px var(--accent);
   }
 
   .heatmap-cell.level-1 { background: rgba(var(--accent-rgb), .22); }
   .heatmap-cell.level-2 { background: rgba(var(--accent-rgb), .42); }
   .heatmap-cell.level-3 { background: rgba(var(--accent-rgb), .66); }
-  .heatmap-cell.level-4 {
-    background: var(--accent);
-    box-shadow: 0 0 8px rgba(var(--accent-rgb), .28);
-  }
+  .heatmap-cell.level-4 { background: var(--accent); }
 
   .heatmap-cell.is-future {
     background: transparent;

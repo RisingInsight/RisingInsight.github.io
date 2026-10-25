@@ -100,6 +100,26 @@ const searchData = allPosts
     }
   });
 
+  // 结果列表 ↑/↓ 导航：焦点在输入框与结果项之间移动，Enter 由链接默认行为打开
+  function visibleResults() {
+    return Array.from(results?.querySelectorAll('a.search-result-item') || []);
+  }
+
+  modal?.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const items = visibleResults();
+    if (items.length === 0) return;
+    const active = document.activeElement;
+    const idx = items.indexOf(active);
+    if (active !== input && idx === -1) return;
+    event.preventDefault();
+    if (event.key === 'ArrowDown') {
+      (items[idx + 1] || items[0]).focus();
+    } else {
+      (items[idx - 1] || items[items.length - 1]).focus();
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSearch();
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -275,7 +295,7 @@ const searchData = allPosts
     max-height: 70vh;
     overflow: hidden;
     border: 1px solid var(--rule);
-    border-radius: 4px;
+    border-radius: var(--r-md);
     background: var(--surface);
     box-shadow: var(--shadow), 0 0 0 1px rgba(var(--accent-rgb), .04);
     transform: scale(.98) translateY(-6px);
@@ -372,6 +392,11 @@ const searchData = allPosts
   }
   :global(.search-result-item:hover) {
     background: var(--accent-soft);
+  }
+  :global(.search-result-item:focus-visible) {
+    background: var(--accent-soft);
+    outline: 1px solid var(--accent);
+    outline-offset: -1px;
   }
   :global(.search-result-title) {
     margin-bottom: 3px;

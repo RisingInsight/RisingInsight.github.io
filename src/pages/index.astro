@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import DenoiseLoop from '../components/DenoiseLoop.astro';
 import Heatmap from '../components/Heatmap.astro';
+import VisitStats from '../components/VisitStats.astro';
 import {
   SITE_TITLE,
   SITE_DESCRIPTION,
@@ -38,489 +40,703 @@ const tags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
 const seriesGroups = getSeriesGroups(allPosts);
 const activity = getCommitActivity();
 const lastCommitLabel = activity.lastCommit ? activity.lastCommit.replace(/-/g, '.') : '—';
+// 首屏视频：破晓实拍（Pexels #857251，免费免署名），位于 public/media/
 
-const BLOG_START_DATE = '2026-01-01';
-const blogStart = new Date(2026, 0, 1);
-const runDays = Math.max(
-  0,
-  Math.floor((Date.now() - blogStart.getTime()) / (1000 * 60 * 60 * 24))
-);
+// 首屏巨字拆成单字，供逐字入场使用（--d 为跨行连续序号，形成一道自上而下的波）
+const HERO_LINES = ['把想法', '跑起来，', '再把过程写下来。'];
+let heroCharCursor = 0;
+const heroLines = HERO_LINES.map((line) => ({
+  chars: Array.from(line).map((ch) => ({ ch, d: heroCharCursor++ })),
+}));
+const HERO_TEXT = HERO_LINES.join('');
 ---
 
 <BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <main>
-    <section class="relative overflow-hidden border-b border-rule">
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="relative mx-auto max-w-7xl px-4 pb-6 pt-16 sm:px-6 lg:px-8 lg:pb-8 lg:pt-24">
-        <div class="grid items-center gap-12 lg:grid-cols-[1.04fr_.96fr]">
-          <div>
-            <div class="flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-light">
-              <span class="status-dot"></span>
-              <span>build log</span>
-              <span class="text-rule">/</span>
-              <span>2026</span>
-              <span class="hidden items-center gap-2 sm:flex">
-                <span class="text-rule">/</span>
-                <span class="text-accent">learning in public</span>
-              </span>
-            </div>
+  <main id="main">
+    <!-- 首屏：底部锚定的编辑式构图 —— 顶部 HUD、贴底巨字、1px 分隔线下的说明与 CTA。
+         视频播放一次即停在末帧（源素材已倒放成「破晓」），滚动时镜头缓缓推进、文案上移淡出。 -->
+    <section id="hero-dawn" class="hero">
+      <div class="hero-media" aria-hidden="true">
+        <div class="hero-video-wrap">
+          <video
+            class="hero-video"
+            muted
+            playsinline
+            preload="none"
+            poster="/media/hero-dawn-poster.jpg"
+            tabindex="-1"
+          >
+            <source data-src="/media/hero-dawn.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <span class="hero-veil"></span>
+        <span class="hero-grain"></span>
+      </div>
 
-            <h1 class="mt-6 font-serif text-[2.9rem] font-semibold leading-[.98] tracking-[-0.06em] text-ink sm:text-6xl lg:text-[4.6rem]">
-              Build<span class="text-accent">.</span> Break<span class="text-accent">.</span><br />
-              Document<span class="text-accent">.</span>
-            </h1>
-            <p class="mt-5 max-w-xl font-serif text-xl leading-snug tracking-[-0.02em] text-ink-soft sm:text-2xl">
-              把想法跑起来，再把过程写下来。
-            </p>
-            <p class="mt-4 max-w-xl text-[14px] leading-7 text-muted">
-              这里记录生成模型、深度学习与工程实践：从推导、实验，到真正能跑起来的代码。
-              <span class="text-muted-light">Just broaden my horizons.</span>
-            </p>
+      <!-- 入场：一道极淡的暖光横扫；光圈从上下收拢处张开；四角取景框落位 -->
+      <span class="hero-aperture hero-aperture--top" aria-hidden="true"></span>
+      <span class="hero-aperture hero-aperture--bottom" aria-hidden="true"></span>
+      <span class="hero-streak" aria-hidden="true"></span>
+      <span class="hero-streak hero-streak--late" aria-hidden="true"></span>
+      <span class="hero-corners" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </span>
 
-            <div class="mt-7 flex flex-wrap items-center gap-3">
-              <a href="/blog/" class="btn btn-primary">
-                阅读笔记 <span aria-hidden="true">→</span>
-              </a>
-              <a
-                href={`https://github.com/${GITHUB_USERNAME}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="font-mono text-[12px] uppercase tracking-[0.08em] text-muted transition-colors hover:text-accent"
-              >
-                github ↗
-              </a>
-            </div>
+      <div class="hero-inner hero-hud">
+        <span class="hero-brand" aria-label={PROFILE.name}>
+          {Array.from(PROFILE.name).map((ch, i) => (
+            <span class="brand-ch" aria-hidden="true" style={`--bi:${i}`}>{ch}</span>
+          ))}
+        </span>
+        <span class="hero-meta">
+          {allPosts.length} posts · {formatWordCount(totalWords)} words · last commit {lastCommitLabel}
+        </span>
+      </div>
 
-            <div class="mt-8 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-light">
-              {SOCIALS.map((social) => (
-                <a
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="transition-colors hover:text-accent"
-                >
-                  {social.name} <span aria-hidden="true">↗</span>
-                </a>
+      <div class="hero-inner hero-foot">
+        <h1 class="hero-title" aria-label={HERO_TEXT}>
+          {heroLines.map((line) => (
+            <span class="hero-line" aria-hidden="true">
+              {line.chars.map((c) => (
+                <span class="hero-ch" style={`--d:${c.d}`}>{c.ch}</span>
               ))}
-              <span class="flex items-center gap-2">
-                <span class="status-dot"></span>
-                {PROFILE.location}
-              </span>
-            </div>
-          </div>
+            </span>
+          ))}
+        </h1>
 
-          <div class="terminal-window reveal" data-terminal>
-            <div class="terminal-bar">
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
-              <span class="ml-2 font-mono text-[11px] tracking-[0.08em] term-muted">
-                risinginsight@blog: ~
-              </span>
-              <span class="ml-auto font-mono text-[11px] uppercase tracking-[0.12em] term-muted">
-                zsh
-              </span>
-            </div>
-
-            <div
-              class="min-h-[400px] whitespace-pre-wrap p-4 font-mono text-[12px] leading-6 sm:p-5"
-              data-terminal-type
-              aria-hidden="true"
+        <div class="hero-bar">
+          <p class="hero-desc">
+            这里记录生成模型、深度学习与工程实践：从推导、实验，到真正能跑起来的代码。
+          </p>
+          <div class="hero-actions">
+            <a href="/blog/" class="hero-cta">开始阅读<span class="hero-cta-arrow" aria-hidden="true">→</span></a>
+            <a
+              href={`https://github.com/${GITHUB_USERNAME}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hero-ghost"
             >
-              <span data-terminal-typed>
-                <div><span class="terminal-prompt">$</span> <span class="term-fg">whoami</span></div>
-                <div class="term-accent">{PROFILE.name}</div>
-                <div class="term-muted">{PROFILE.role} · {PROFILE.location}</div>
-                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">cat profile.json</span></div>
-                <div class="term-muted">{'{'}</div>
-                <div class="pl-3"><span class="term-key">"focus"</span>: <span class="term-str">"generative systems"</span>,</div>
-                <div class="pl-3"><span class="term-key">"mode"</span>: <span class="term-str">"build in public"</span>,</div>
-                <div class="pl-3"><span class="term-key">"status"</span>: <span class="term-accent">"online"</span></div>
-                <div class="term-muted">{'}'}</div>
-                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">uptime</span></div>
-                <div class="term-fg">{runDays} days · {allPosts.length} posts · {formatWordCount(totalWords)} words</div>
-                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">git log --oneline | wc -l</span></div>
-                <div class="term-fg">{activity.totalAll} commits · streak {activity.currentStreak}d · last {lastCommitLabel}</div>
-                <div class="mt-2"><span class="terminal-prompt">$</span> <span class="term-fg">ls -t posts | head -3</span></div>
-                {postsByDate.slice(0, 3).map((post) => (
-                  <div class="term-accent">→ {post.data.title}</div>
-                ))}
-              </span><span class="cursor-blink"></span>
-            </div>
-
-            <div class="terminal-foot flex items-center justify-between px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] term-muted">
-              <span>UTF-8 · LF · git:(main)</span>
-              <span class="term-accent">● connected</span>
-            </div>
+              GitHub <span aria-hidden="true">↗</span>
+            </a>
           </div>
-        </div>
-
-        <div class="mt-12 grid grid-cols-2 border border-rule bg-surface/40 sm:grid-cols-4">
-          <div class="border-b border-r border-rule px-4 py-4 sm:border-b-0">
-            <div class="mono-label">uptime</div>
-            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-ink">
-              <span data-uptime-days>{runDays}</span><span class="ml-0.5 text-sm text-muted">d</span>
-            </div>
-          </div>
-          <div class="border-b border-rule px-4 py-4 sm:border-b-0 sm:border-r">
-            <div class="mono-label">posts</div>
-            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-ink">{allPosts.length}</div>
-          </div>
-          <div class="border-r border-rule px-4 py-4">
-            <div class="mono-label">words</div>
-            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-ink">{formatWordCount(totalWords)}</div>
-          </div>
-          <div class="px-4 py-4">
-            <div class="mono-label">commits</div>
-            <div class="mt-2 font-serif text-2xl tracking-[-0.03em] text-accent">{activity.totalAll}</div>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-2 border border-t-0 border-rule bg-paper-alt/30 px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-light">
-          <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>traffic</span>
-            <span class="text-muted"><span id="busuanzi_value_site_pv">--</span> views</span>
-            <span class="text-muted"><span id="busuanzi_value_site_uv">--</span> visitors</span>
-          </span>
-          <span>busuanzi / live</span>
         </div>
       </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
-      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div class="min-w-0 space-y-10">
-          <Heatmap activity={activity} />
+    <!-- 内容区：首屏底部已溶入纸面，无需再画分界线 -->
+    <section>
+      <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <div class="grid gap-14 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div class="min-w-0 space-y-14">
+            <DenoiseLoop />
 
-          <section aria-labelledby="latest-heading" class="reveal">
-            <div class="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-4">
-              <div>
-                <div class="mono-label text-accent">latest.log</div>
-                <h2 id="latest-heading" class="mt-2 font-serif text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">
+            <section aria-labelledby="latest-heading">
+              <div class="sec-head">
+                <h2 id="latest-heading" class="font-serif text-xl font-semibold text-ink">
                   最近更新
                 </h2>
+                <a href="/blog/" class="text-[13px] text-muted transition-colors hover:text-accent">
+                  全部文章 <span aria-hidden="true">→</span>
+                </a>
               </div>
-              <a href="/blog/" class="font-mono text-[12px] uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent">
-                all posts <span aria-hidden="true">→</span>
-              </a>
-            </div>
 
-            <div class="divide-y divide-rule">
-              {latestPosts.map((post, index) => (
-                <a
-                  href={`/blog/${post.id}/`}
-                  class="log-row group grid gap-4 py-6 sm:grid-cols-[74px_minmax(0,1fr)_auto] sm:items-start"
-                >
-                  <div class="font-mono text-[11px] uppercase leading-5 tracking-[0.1em] text-muted-light">
-                    <span class="text-accent">{String(index + 1).padStart(2, '0')}</span>
-                    <br />
-                    {formatDate(post.data.pubDate)}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      {post.data.featured && (
-                        <span class="border border-accent/40 bg-accent-soft px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.1em] text-accent">
-                          pinned
-                        </span>
-                      )}
-                      <h3 class="font-serif text-xl font-semibold leading-snug tracking-[-0.02em] text-ink transition-colors group-hover:text-accent">
+              <div>
+                {latestPosts.map((post) => (
+                  <a href={`/blog/${post.id}/`} class="group block border-b border-rule-soft py-7 last:border-b-0">
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                      <h3 class="font-serif text-[1.3rem] font-semibold leading-snug text-ink transition-colors group-hover:text-accent sm:text-[1.42rem]">
+                        {post.data.featured && (
+                          <span class="mr-2 inline-block translate-y-[-2px] rounded-full bg-accent-soft px-2 py-0.5 align-middle text-[11px] font-normal text-accent">
+                            置顶
+                          </span>
+                        )}
                         {post.data.title}
                       </h3>
+                      <time datetime={post.data.pubDate.toISOString()} class="shrink-0 font-mono text-[12px] text-muted-light">
+                        {formatDate(post.data.pubDate)}
+                      </time>
                     </div>
                     <p class="mt-2 max-w-2xl text-[14px] leading-7 text-muted">{post.data.description}</p>
                     <div class="mt-3 flex flex-wrap items-center gap-2">
-                      {post.data.tags.slice(0, 4).map((tag) => <span class="tag">{tag}</span>)}
+                      {post.data.tags.slice(0, 3).map((tag) => <span class="tag">{tag}</span>)}
                       <span class="font-mono text-[11px] text-muted-light">
                         {getReadTime(post.body || '')} · {formatWordCount(getWordCount(post.body || ''))} 字
                       </span>
                     </div>
-                  </div>
-                  <div class="hidden items-center gap-2 pt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-light sm:flex">
-                    {post.data.categories[0] || 'note'}
-                    <span aria-hidden="true" class="transition-transform group-hover:translate-x-1 group-hover:text-accent">→</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </section>
-
-          <a href="/guestbook/" class="panel panel-link group flex items-center justify-between gap-6 p-5 sm:p-6 reveal">
-            <div>
-              <div class="mono-label text-accent">guestbook.open()</div>
-              <div class="mt-2 font-serif text-xl font-semibold tracking-[-0.02em] text-ink transition-colors group-hover:text-accent">
-                留下一条记录
+                  </a>
+                ))}
               </div>
-              <p class="mt-1 text-[13px] leading-6 text-muted">
-                登录 GitHub 后留言，聊聊技术、项目或任何你想说的事。
-              </p>
-            </div>
-            <span class="font-mono text-2xl text-accent transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
-          </a>
-        </div>
+            </section>
 
-        <aside class="space-y-8">
-          <section class="panel p-5 reveal">
-            <div class="flex items-center justify-between">
-              <span class="mono-label">operator</span>
-              <span class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-accent">
-                <span class="status-dot"></span> online
-              </span>
-            </div>
-            <div class="mt-5 flex items-center gap-3.5">
-              <span class="relative">
+            <a
+              href="/guestbook/"
+              class="group flex items-center justify-between gap-6 rounded-[var(--r-lg)] border border-rule bg-surface px-5 py-4 transition-colors hover:border-muted-light"
+            >
+              <div>
+                <div class="text-[15px] font-medium text-ink transition-colors group-hover:text-accent">
+                  去留言板说点什么
+                </div>
+                <p class="mt-1 text-[13px] leading-6 text-muted">
+                  登录 GitHub 后留言，聊聊技术、项目或任何你想说的事。
+                </p>
+              </div>
+              <span class="text-muted-light transition-all group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden="true">→</span>
+            </a>
+
+            <Heatmap activity={activity} />
+          </div>
+
+          <aside class="space-y-12">
+            <section>
+              <div class="sec-head">
+                <h2 class="font-serif text-base font-semibold text-ink">关于我</h2>
+                <a href="/about/" class="text-[12px] text-muted transition-colors hover:text-accent">
+                  更多 <span aria-hidden="true">→</span>
+                </a>
+              </div>
+              <div class="flex items-center gap-3.5 pt-4">
                 <img
                   src={PROFILE.avatar}
                   alt={PROFILE.name}
-                  width="460"
-                  height="460"
-                  class="h-16 w-16 rounded-full border border-rule object-cover"
+                  width="96"
+                  height="96"
+                  loading="lazy"
+                  class="h-12 w-12 rounded-full border border-rule object-cover"
                 />
-                <span class="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-accent"></span>
-              </span>
-              <div class="min-w-0">
-                <div class="font-serif text-lg font-semibold leading-tight tracking-[-0.02em] text-ink">{PROFILE.name}</div>
-                <div class="mt-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{PROFILE.role}</div>
+                <div class="min-w-0">
+                  <div class="text-[15px] font-medium text-ink">{PROFILE.name}</div>
+                  <div class="mt-0.5 text-[12px] text-muted-light">{PROFILE.role} · {PROFILE.location}</div>
+                </div>
               </div>
-            </div>
-            <p class="mt-4 text-[13px] leading-6 text-muted">{PROFILE.bio}</p>
-            <p class="mt-1 text-[12px] leading-5 text-muted-light">{PROFILE.tagline}</p>
-            <div class="mt-4 grid grid-cols-2 gap-2 border-t border-rule-soft pt-4 font-mono text-[11px] uppercase tracking-[0.06em]">
-              <div>
-                <div class="text-muted-light">last commit</div>
-                <div class="mt-1 text-ink">{lastCommitLabel}</div>
-              </div>
-              <div>
-                <div class="text-muted-light">streak</div>
-                <div class="mt-1 text-accent">{activity.currentStreak} days</div>
-              </div>
-            </div>
-            <div class="mt-4 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12px] text-muted">
-              {SOCIALS.map((social) => (
-                <a href={social.href} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
-                  {social.name} <span aria-hidden="true">↗</span>
-                </a>
-              ))}
-            </div>
-          </section>
-
-          {seriesGroups.length > 0 && (
-            <section class="reveal">
-              <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
-                <h2 class="mono-label">series</h2>
-                <a href="/series/" class="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-light transition-colors hover:text-accent">
-                  all <span aria-hidden="true">→</span>
-                </a>
-              </div>
-              <ul class="mt-3 space-y-2.5">
-                {seriesGroups.map((group) => (
-                  <li>
-                    <a href={`/series/#series-${group.slug}`} class="group flex items-baseline justify-between gap-3">
-                      <span class="text-[14px] leading-5 text-ink transition-colors group-hover:text-accent">{group.name}</span>
-                      <span class="font-mono text-[11px] text-muted-light">{group.posts.length}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <p class="mt-3.5 text-[13px] leading-6 text-muted">{PROFILE.bio}</p>
+              <p class="mt-1 text-[12px] leading-5 text-muted-light">{PROFILE.tagline}</p>
             </section>
-          )}
 
-          <section class="reveal">
-            <div class="flex items-baseline justify-between border-b border-rule pb-2.5">
-              <h2 class="mono-label">tags</h2>
-              <span class="font-mono text-[11px] text-muted-light">{tags.length}</span>
-            </div>
-            <div class="mt-3 flex flex-wrap gap-1.5">
-              {tags.map(([tag, count]) => (
-                <a href={`/blog/?tag=${encodeURIComponent(tag)}`} class="tag">
-                  {tag} <span class="font-mono text-[11px] text-muted-light">{count}</span>
-                </a>
-              ))}
-            </div>
-          </section>
-        </aside>
+            {seriesGroups.length > 0 && (
+              <section>
+                <div class="mono-label">系列</div>
+                <ul class="mt-4 space-y-2.5">
+                  {seriesGroups.map((group) => (
+                    <li>
+                      <a href={`/series/#series-${group.slug}`} class="group flex items-baseline justify-between gap-3">
+                        <span class="text-[14px] leading-5 text-ink-soft transition-colors group-hover:text-accent">{group.name}</span>
+                        <span class="font-mono text-[11px] text-muted-light">{group.posts.length}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <section>
+              <div class="mono-label">标签</div>
+              <div class="flex flex-wrap gap-1.5 pt-4">
+                {tags.map(([tag, count]) => (
+                  <a href={`/blog/?tag=${encodeURIComponent(tag)}`} class="tag">
+                    {tag} <span class="text-[11px] text-muted-light">{count}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <div class="mono-label">找到我</div>
+              <div class="mt-4 flex flex-col gap-2 text-[13px]">
+                {SOCIALS.map((social) => (
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-muted transition-colors hover:text-accent"
+                  >
+                    {social.name} <span aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+
+            <VisitStats />
+          </aside>
+        </div>
       </div>
     </section>
   </main>
-
-  <script define:vars={{ BLOG_START_DATE, PROFILE_NAME: PROFILE.name, PROFILE_ROLE: PROFILE.role, PROFILE_LOCATION: PROFILE.location, POST_COUNT: allPosts.length, WORD_COUNT_LABEL: formatWordCount(totalWords), COMMITS: activity.totalAll, STREAK_DAYS: activity.currentStreak, LAST_COMMIT: lastCommitLabel, POST_TITLES: postsByDate.slice(0, 3).map((post) => post.data.title) }}>
-    const runDaysEls = document.querySelectorAll('[data-uptime-days]');
-    // 按本地时区解析，避免 UTC 解析在部分时区差一天
-    const startParts = BLOG_START_DATE.split('-').map(Number);
-    const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-    const uptimeDays = Math.max(
-      0,
-      Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-    );
-    runDaysEls.forEach((el) => { el.textContent = String(uptimeDays); });
-
-    const terminal = document.querySelector('[data-terminal]');
-    const typedEl = document.querySelector('[data-terminal-typed]');
-    const typeBody = document.querySelector('[data-terminal-type]');
-    if (terminal && typedEl && typeBody) {
-      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-      }[ch]));
-
-      const NL = String.fromCharCode(10);
-      const segments = [
-        ['$', 'term-accent'], [' whoami' + NL, 'term-fg'],
-        [PROFILE_NAME + NL, 'term-accent'],
-        [`${PROFILE_ROLE} · ${PROFILE_LOCATION}` + NL, 'term-muted'],
-        ['$', 'term-accent'], [' cat profile.json' + NL, 'term-fg'],
-        ['{' + NL, 'term-muted'],
-        ['  "focus"', 'term-key'], [': ', 'term-muted'], ['"generative systems"', 'term-str'], [',' + NL, 'term-muted'],
-        ['  "mode"', 'term-key'], [': ', 'term-muted'], ['"build in public"', 'term-str'], [',' + NL, 'term-muted'],
-        ['  "status"', 'term-key'], [': ', 'term-muted'], ['"online"', 'term-accent'], [NL, 'term-muted'],
-        ['}' + NL, 'term-muted'],
-        ['$', 'term-accent'], [' uptime' + NL, 'term-fg'],
-        [`${uptimeDays} days`, 'term-fg'], [' · ', 'term-muted'], [`${POST_COUNT} posts`, 'term-fg'], [' · ', 'term-muted'], [`${WORD_COUNT_LABEL} words`, 'term-fg'], [NL, 'term-muted'],
-        ['$', 'term-accent'], [' git log --oneline | wc -l' + NL, 'term-fg'],
-        [`${COMMITS} commits`, 'term-fg'], [' · ', 'term-muted'], [`streak ${STREAK_DAYS}d`, 'term-fg'], [' · ', 'term-muted'], [`last ${LAST_COMMIT}`, 'term-fg'], [NL, 'term-muted'],
-        ['$', 'term-accent'], [' ls -t posts | head -3' + NL, 'term-fg'],
-        ...POST_TITLES.map((title, i) => [`→ ${title}${i < POST_TITLES.length - 1 ? NL : ''}`, i === 0 ? 'term-accent' : 'term-fg']),
-      ];
-      const totalLength = segments.reduce((sum, [text]) => sum + text.length, 0);
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const SPEED = 14;
-      const HOLD = 3800;
-      const RESUME_DELAY = 1200;
-      let index = 0;
-      let state = 'typing';
-      let tickTimer = 0;
-      let holdTimer = 0;
-      let fadeTimer = 0;
-      let rendered = -1;
-
-      function render(count) {
-        if (count === rendered) return;
-        rendered = count;
-        let used = 0;
-        let html = '';
-        for (const [text, cls] of segments) {
-          if (used >= count) break;
-          const take = Math.min(text.length, count - used);
-          if (take > 0) html += `<span class="${cls}">${escapeHtml(text.slice(0, take))}</span>`;
-          used += take;
-        }
-        typedEl.innerHTML = html;
-      }
-
-      function clearAndType() {
-        index = 0;
-        render(0);
-        state = 'typing';
-        typeBody.classList.add('is-fading');
-        fadeTimer = window.setTimeout(() => {
-          typeBody.classList.remove('is-fading');
-          tickTimer = window.setTimeout(tick, SPEED);
-        }, 220);
-      }
-
-      function tick() {
-        if (state !== 'typing') return;
-        index = Math.min(totalLength, index + 1);
-        render(index);
-        if (index >= totalLength) {
-          state = 'hold';
-          holdTimer = window.setTimeout(() => {
-            if (state === 'hold') clearAndType();
-          }, HOLD);
-        } else {
-          tickTimer = window.setTimeout(tick, SPEED);
-        }
-      }
-
-      function pauseAndShowFull() {
-        if (state === 'paused') return;
-        window.clearTimeout(tickTimer);
-        window.clearTimeout(holdTimer);
-        window.clearTimeout(fadeTimer);
-        state = 'paused';
-        render(totalLength);
-      }
-
-      function resumeLoop() {
-        if (state !== 'paused') return;
-        state = 'hold';
-        holdTimer = window.setTimeout(() => {
-          if (state === 'hold') clearAndType();
-        }, RESUME_DELAY);
-      }
-
-      terminal.addEventListener('mouseenter', pauseAndShowFull);
-      terminal.addEventListener('mouseleave', resumeLoop);
-
-      if (reduced) {
-        state = 'hold';
-        render(totalLength);
-      } else {
-        render(0);
-        window.setTimeout(tick, 700);
-      }
-    }
-  </script>
 </BaseLayout>
 
 <style>
-  .hero-glow {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(700px circle at 15% 30%, var(--glow-a), transparent 55%),
-      radial-gradient(500px circle at 85% 15%, var(--glow-b), transparent 55%);
+  /* ===== 首屏：底部锚定的编辑式构图 =====
+     顶部一条等宽 HUD；巨字贴底、三行；1px 分隔线下左侧小字介绍、右侧 CTA。
+     视频播放一次后停在末帧；入场动画纯 CSS，无 JS 加类、无会话级标记，
+     因此不存在「先亮一下再消失重入」的闪烁。 */
+
+  .hero {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(100svh - 3.5rem);
+    padding: 26px 0 clamp(96px, 15vh, 168px);
+    overflow: hidden;
+    background: #080b10;
+    color: #f6efe4;
   }
 
-  .hero-glow::after {
+  /* 底部溶入纸面：挂在 .hero 上，不随指针视差平移，末端正好落在首屏下边界 */
+  .hero::after {
     content: "";
     position: absolute;
-    inset: 0;
-    background-image: linear-gradient(rgba(var(--accent-rgb), .04) 1px, transparent 1px);
-    background-size: 100% 4px;
-    mask-image: linear-gradient(to bottom, black, transparent 80%);
-    opacity: .35;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: clamp(100px, 16vh, 180px);
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--paper) 50%, transparent) 52%, var(--paper) 100%);
+    pointer-events: none;
   }
 
-  .terminal-prompt {
-    color: var(--term-accent);
-  }
-
-  [data-terminal-type] {
-    transition: opacity .2s ease;
-  }
-
-  [data-terminal-type].is-fading {
-    opacity: .18;
-  }
-
-  .log-row {
+  .hero-inner {
     position: relative;
-    transition: background .2s, padding-left .2s;
+    z-index: 3;
+    width: 100%;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  @media (min-width: 640px) { .hero-inner { padding: 0 1.5rem; } }
+  @media (min-width: 1024px) { .hero-inner { padding: 0 2rem; } }
+
+  .hero-media {
+    position: absolute;
+    inset: -32px;
+    z-index: 0;
+    pointer-events: none;
+    transform: translate3d(var(--hx, 0px), var(--hy, 0px), 0);
+    will-change: transform;
+  }
+  .hero-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 42%;
+    transform: scale(1.04);
+    transform-origin: 50% 42%;
+    will-change: transform;
+  }
+  .hero-veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(6, 9, 14, .52) 0%, rgba(6, 9, 14, .2) 12%, rgba(6, 9, 14, 0) 26%),
+      linear-gradient(180deg, rgba(6, 9, 14, 0) 38%, rgba(6, 9, 14, .46) 62%, rgba(6, 9, 14, .88) 100%);
+  }
+  .hero-grain {
+    position: absolute;
+    inset: -44px;
+    opacity: .09;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    transform: translate3d(calc(var(--hx, 0px) * -1.8), calc(var(--hy, 0px) * -1.8), 0);
+    will-change: transform;
   }
 
-  .log-row:hover {
-    background: var(--accent-soft);
+  .hero-hud {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: rgba(246, 239, 228, .6);
+  }
+  .hero-brand {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: 2px;
+    margin-bottom: -2px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    letter-spacing: .06em;
+    color: rgba(246, 239, 228, .94);
+  }
+  /* 品牌逐字升起：让顶部这一行也有"被写上去"的过程 */
+  .brand-ch {
+    display: inline-block;
+    transform: translateY(110%);
+    animation: brand-rise .7s var(--ease-out-expo) both;
+    animation-delay: calc(.75s + var(--bi, 0) * .02s);
+  }
+  @keyframes brand-rise {
+    from { transform: translateY(110%); }
+    to   { transform: translateY(0); }
+  }
+  .hero-meta {
+    text-align: right;
+    animation: hero-hud-in .7s var(--ease-out-expo) .88s both;
   }
 
-  .log-row::before {
+  .hero-foot { display: flex; flex-direction: column; }
+
+  .hero-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(2.5rem, 6.8vw, 5.6rem);
+    line-height: 1.1;
+    letter-spacing: .015em;
+    color: #f6efe4;
+    text-wrap: balance;
+  }
+  .hero-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: .1em;
+    margin-bottom: -.1em;
+  }
+  .hero-ch {
+    display: inline-block;
+    transform: translateY(115%);
+    filter: blur(8px);
+    animation: hero-rise 1.05s var(--ease-out-expo) both;
+    animation-delay: calc(1.08s + var(--d, 0) * .024s);
+  }
+  @keyframes hero-rise {
+    from { transform: translateY(115%); filter: blur(8px); }
+    to   { transform: translateY(0); filter: blur(0); }
+  }
+
+  .hero-bar {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: clamp(22px, 4vh, 36px);
+    padding-top: 18px;
+  }
+  /* 标尺从左侧拉出，替代静态 border-top */
+  .hero-bar::before {
     content: "";
     position: absolute;
     top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(246, 239, 228, .17);
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: hero-rule .85s var(--ease-out-expo) 1.58s both;
+  }
+  .hero-desc {
+    max-width: 34em;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(232, 222, 206, .78);
+    animation: hero-up .7s var(--ease-out-expo) 1.68s both;
+  }
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    animation: hero-up .7s var(--ease-out-expo) 1.8s both;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 42px;
+    padding: 0 22px;
+    border-radius: 999px;
+    background: #f6efe4;
+    color: #12100c;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color .25s, transform .35s var(--ease-out-expo);
+  }
+  .hero-cta:hover {
+    background: #ffffff;
+    transform: translateY(-1px);
+  }
+  .hero-cta-arrow { transition: transform .35s var(--ease-out-expo); }
+  .hero-cta:hover .hero-cta-arrow { transform: translateX(4px); }
+
+  .hero-ghost {
+    color: rgba(246, 239, 228, .78);
+    font-size: 13px;
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .hero-ghost:hover { color: #ffffff; }
+
+  /* ===== 入场：约 2.5 秒，一次性、不遮挡、不锁滚动 =====
+     观众看到的第一帧就是内容本身；每 100–200ms 有一件事发生，全程不空转。
+     时间轴：0 显影(0.7s)＋推镜(1.9s) / .10 光圈张开 / .12 暖光 / .30–.54 四角落位
+             .75 品牌逐字 / .88 元信息 / 1.08 正文逐字波 / 1.58 标尺 / 1.68 说明
+             / 1.80 按钮 / 2.00 第二道暖光（拖到 3.9s 收尾） */
+  .hero-video-wrap {
+    position: absolute;
+    inset: 0;
+    animation:
+      hero-fade-in .7s ease-out both,
+      hero-zoom 1.9s var(--ease-out-expo) both;
+    will-change: transform, opacity;
+  }
+  /* 显影拆成两段：透明度先到位（0.7s），让随后张开的光圈真的看得见；
+     推镜则缓慢收住（1.9s），像镜头在找焦点 */
+  @keyframes hero-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes hero-zoom {
+    from { transform: scale(1.14); }
+    to   { transform: scale(1); }
+  }
+
+  /* 光圈：画面先被上下两块同色板裁成宽画幅，再向两侧张开 */
+  .hero-aperture {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    height: 22%;
+    background: #080b10;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .hero-aperture--top {
+    top: 0;
+    animation: hero-aperture-up .95s cubic-bezier(.16, 1, .3, 1) .1s both;
+  }
+  .hero-aperture--bottom {
     bottom: 0;
-    left: -16px;
-    width: 1px;
-    background: var(--accent);
+    animation: hero-aperture-down .95s cubic-bezier(.16, 1, .3, 1) .1s both;
+  }
+  @keyframes hero-aperture-up {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-102%); }
+  }
+  @keyframes hero-aperture-down {
+    from { transform: translateY(0); }
+    to   { transform: translateY(102%); }
+  }
+
+  /* 暖光横扫：开屏两束，一快一慢 */
+  .hero-streak {
+    position: absolute;
+    top: -12%;
+    bottom: -12%;
+    left: 0;
+    z-index: 1;
+    width: 44%;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 238, 214, .06) 40%, rgba(255, 238, 214, .12) 52%, rgba(255, 238, 214, .05) 64%, transparent 100%);
+    transform: translateX(-140%) skewX(-10deg);
+    animation: hero-streak 1.2s cubic-bezier(.45, 0, .25, 1) .12s both;
+  }
+  @keyframes hero-streak {
+    0%   { transform: translateX(-140%) skewX(-10deg); opacity: 0; }
+    12%  { opacity: 1; }
+    82%  { opacity: 1; }
+    100% { transform: translateX(310%) skewX(-10deg); opacity: 0; }
+  }
+  /* 第二束：更宽更慢，等正文出场后再掠过一次 */
+  .hero-streak--late {
+    width: 62%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 238, 214, .05) 42%, rgba(255, 238, 214, .09) 52%, rgba(255, 238, 214, .04) 62%, transparent 100%);
+    animation: hero-streak 1.9s cubic-bezier(.4, 0, .3, 1) 2s both;
+  }
+
+  /* 四角取景框：依次落位，给画面一个"取景"的边框感 */
+  .hero-corners {
+    position: absolute;
+    inset: 18px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .hero-corners > span {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border: 0 solid rgba(246, 239, 228, .3);
     opacity: 0;
-    transition: opacity .2s;
+    animation: hero-corner .8s var(--ease-out-expo) both;
+  }
+  .hero-corners > span:nth-child(1) {
+    top: 0;
+    left: 0;
+    border-top-width: 1px;
+    border-left-width: 1px;
+    animation-delay: .3s;
+  }
+  .hero-corners > span:nth-child(2) {
+    top: 0;
+    right: 0;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    animation-delay: .38s;
+  }
+  .hero-corners > span:nth-child(3) {
+    bottom: 0;
+    left: 0;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    animation-delay: .46s;
+  }
+  .hero-corners > span:nth-child(4) {
+    bottom: 0;
+    right: 0;
+    border-bottom-width: 1px;
+    border-right-width: 1px;
+    animation-delay: .54s;
+  }
+  @keyframes hero-corner {
+    from { opacity: 0; transform: scale(1.7); }
+    to   { opacity: 1; transform: scale(1); }
   }
 
-  .log-row:hover::before {
-    opacity: 1;
+  @keyframes hero-hud-in {
+    from { opacity: 0; transform: translateY(-9px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes hero-up {
+    from { opacity: 0; transform: translateY(9px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes hero-rule {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
   }
 
-  @media (max-width: 640px) {
-    .log-row::before {
-      left: -12px;
+
+
+
+  @keyframes hero-kb {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+  }
+
+  @media (max-width: 767px) {
+    .hero-video { display: none; }
+    .hero-media {
+      background: url('/media/hero-dawn-end.jpg') center 42% / cover no-repeat;
+      animation: hero-kb 34s ease-in-out infinite alternate;
     }
+    .hero-hud { font-size: 10px; letter-spacing: .08em; }
+    .hero-meta { display: none; }
+    .hero-bar { align-items: flex-start; flex-direction: column; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-video-wrap,
+    .hero-streak,
+    .hero-meta,
+    .hero-desc,
+    .hero-actions,
+    .brand-ch { animation: none !important; }
+    /* 光圈与暖光的基础态是"遮住/在画外"，关掉动画必须直接隐藏，否则会一直盖着 */
+    .hero-aperture,
+    .hero-streak { display: none; }
+    .hero-corners > span { animation: none !important; opacity: 1; transform: none; }
+    .hero-video { display: none; }
+    .hero-media {
+      background: url('/media/hero-dawn-end.jpg') center 42% / cover no-repeat;
+      animation: none;
+      transform: none;
+    }
+    .hero-ch { animation: none; transform: none; filter: none; }
+    .brand-ch { transform: none; }
+    /* 标尺的基础态是 scaleX(0)，必须显式拉满 */
+    .hero-bar::before { animation: none !important; transform: scaleX(1); }
+    .hero-cta { transition: none; }
   }
 </style>
+
+<script>
+  // ===== 首屏：按需挂载视频（桌面端 + 允许动效 + 非省流）、滚动镜头推进、克制的指针视差。
+  // 入场动画完全交给 CSS —— 这里不加类、不写会话缓存，避免二次进入的闪烁。
+  const hero = document.getElementById('hero-dawn');
+  if (hero) {
+    const video = hero.querySelector<HTMLVideoElement>('.hero-video');
+    const source = video?.querySelector<HTMLSourceElement>('source');
+    const foot = hero.querySelector<HTMLElement>('.hero-foot');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const wide = window.matchMedia('(min-width: 768px)').matches;
+    const saveData = (navigator as any).connection?.saveData === true;
+
+    // 视频只在桌面端按需挂载：不在移动端浪费 4.5MB
+    if (video && source && wide && !reduced && !saveData) {
+      const src = source.getAttribute('data-src');
+      if (src) {
+        source.setAttribute('src', src);
+        video.load();
+        // 不带循环与自动播放属性：播放一次即停在「破晓」末帧
+        video.play().catch(() => {});
+
+        // 后台标签 / 省电策略会暂停静音视频：只要没播完，恢复可见即续播，
+        // 保证首屏在场时画面始终是活的（播完后 ended=true，不再打扰）
+        const resume = () => {
+          if (!video.ended) video.play().catch(() => {});
+        };
+        video.addEventListener('pause', resume);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') resume();
+        });
+      }
+    }
+
+    if (!reduced) {
+      // 滚动：镜头推进 + 文案上移淡出
+      let ticking = false;
+      const sync = () => {
+        const h = hero.offsetHeight || 1;
+        const p = Math.min(1, Math.max(0, window.scrollY / h));
+        if (video) {
+          video.style.transform = `translateY(${(p * -2.4).toFixed(2)}%) scale(${(1.04 + p * 0.16).toFixed(4)})`;
+        }
+        if (foot) {
+          foot.style.transform = `translate3d(0, ${(-p * 64).toFixed(1)}px, 0)`;
+          foot.style.opacity = String(Math.max(0, 1 - p * 1.45));
+        }
+        ticking = false;
+      };
+      const requestSync = () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(sync);
+      };
+      window.addEventListener('scroll', requestSync, { passive: true });
+      sync();
+
+      // 指针视差：画面反向平移，颗粒反向更多
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+        const loop = () => {
+          cx += (tx - cx) * 0.075;
+          cy += (ty - cy) * 0.075;
+          hero.style.setProperty('--hx', `${cx.toFixed(2)}px`);
+          hero.style.setProperty('--hy', `${cy.toFixed(2)}px`);
+          raf = (Math.abs(tx - cx) > 0.06 || Math.abs(ty - cy) > 0.06) ? window.requestAnimationFrame(loop) : 0;
+        };
+        hero.addEventListener('pointermove', (event) => {
+          const rect = hero.getBoundingClientRect();
+          tx = ((event.clientX - rect.left) / rect.width - 0.5) * -18;
+          ty = ((event.clientY - rect.top) / rect.height - 0.5) * -14;
+          if (!raf) raf = window.requestAnimationFrame(loop);
+        }, { passive: true });
+        hero.addEventListener('pointerleave', () => {
+          tx = 0;
+          ty = 0;
+          if (!raf) raf = window.requestAnimationFrame(loop);
+        });
+      }
+    }
+  }
+</script>

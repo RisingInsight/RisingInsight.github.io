@@ -1,26 +1,30 @@
 ---
 import { SOCIALS, PROFILE, GITHUB_USERNAME } from '../consts';
 
-const BLOG_START_DATE = '2026-01-01';
-const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+const siteNav = [
+  { label: '笔记', href: '/blog/' },
+  { label: '系列', href: '/series/' },
+  { label: '归档', href: '/archives/' },
+  { label: '留言', href: '/guestbook/' },
+  { label: '关于', href: '/about/' },
+];
+const moreNav = [
+  { label: 'GitHub', href: `https://github.com/${GITHUB_USERNAME}`, external: true },
+  { label: '时光机', href: '/moments/', external: false },
+  { label: 'RSS', href: '/rss.xml', external: true },
+];
 ---
 
-<footer data-pagefind-ignore class="relative border-t border-rule bg-paper-alt/60">
-  <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-    <div class="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
+<footer data-pagefind-ignore class="border-t border-rule">
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
+    <div class="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
       <div>
-        <div class="flex items-center gap-3 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-light">
-          <span class="text-accent">$</span>
-          <span>echo "keep building"</span>
-          <span class="cursor-blink"></span>
-        </div>
-        <a href="/" class="mt-5 inline-flex items-center gap-3 font-serif text-3xl font-semibold tracking-[-0.03em] text-ink transition-colors hover:text-accent">
+        <a href="/" class="inline-flex items-center gap-2 font-serif text-xl font-semibold text-ink transition-colors hover:text-accent">
           {PROFILE.name}
-          <span class="font-mono text-[12px] font-normal tracking-[0.12em] text-accent">/LOG</span>
+          <span class="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
         </a>
-        <p class="mt-4 max-w-md text-sm leading-7 text-muted">{PROFILE.bio}</p>
-        <p class="mt-1 text-[13px] text-muted-light">{PROFILE.role} · {PROFILE.tagline}</p>
-        <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[12px] uppercase tracking-[0.08em] text-muted">
+        <p class="mt-4 max-w-sm text-sm leading-7 text-muted">{PROFILE.bio} · {PROFILE.tagline}</p>
+        <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-muted">
           {SOCIALS.map((s) => (
             <a
               href={s.href}
@@ -31,71 +35,40 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
               {s.name} <span aria-hidden="true">↗</span>
             </a>
           ))}
-          <a href="/rss.xml" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
-            RSS <span aria-hidden="true">↗</span>
-          </a>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:justify-items-end">
-        <div>
-          <div class="mono-label">System</div>
-          <ul class="mt-4 space-y-2 text-[13px] text-muted">
-            <li>{PROFILE.location}</li>
-            <li>{PROFILE.school}</li>
+      <nav aria-label="站内导航">
+        <div class="mono-label">站内</div>
+        <ul class="mt-4 space-y-2.5 text-[13px] text-muted">
+          {siteNav.map((item) => (
+            <li><a href={item.href} class="transition-colors hover:text-accent">{item.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <nav aria-label="更多链接">
+        <div class="mono-label">更多</div>
+        <ul class="mt-4 space-y-2.5 text-[13px] text-muted">
+          {moreNav.map((item) => (
             <li>
-              uptime <span id="footer-run-days" class="font-mono text-ink">--</span>d
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="status-dot"></span>
-              <span class="font-mono text-[12px] text-accent">online</span>
-            </li>
-            <li>
-              <button type="button" data-mascot-restore class="transition-colors hover:text-accent" title="唤回灵宠">灵宠</button>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <div class="mono-label">Index</div>
-          <ul class="mt-4 space-y-2 text-[13px] text-muted">
-            <li><a href="/blog/" class="transition-colors hover:text-accent">笔记</a></li>
-            <li><a href="/series/" class="transition-colors hover:text-accent">系列</a></li>
-            <li><a href="/archives/" class="transition-colors hover:text-accent">归档</a></li>
-            <li><a href="/guestbook/" class="transition-colors hover:text-accent">留言</a></li>
-            <li><a href="/about/" class="transition-colors hover:text-accent">关于</a></li>
-          </ul>
-        </div>
-        <div class="hidden sm:block">
-          <div class="mono-label">Elsewhere</div>
-          <ul class="mt-4 space-y-2 text-[13px] text-muted">
-            <li>
-              <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
-                GitHub ↗
+              <a
+                href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                class="transition-colors hover:text-accent"
+              >
+                {item.label}{item.external && <span aria-hidden="true"> ↗</span>}
               </a>
             </li>
-            <li><a href="/moments/" class="transition-colors hover:text-accent">时光机</a></li>
-            <li><a href="/rss.xml" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">RSS</a></li>
-          </ul>
-        </div>
-      </div>
+          ))}
+        </ul>
+      </nav>
     </div>
 
-    <div class="mt-12 flex flex-col gap-2 border-t border-rule pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-light sm:flex-row sm:items-center sm:justify-between">
-      <span>© {new Date().getFullYear()} RisingInsight · all systems nominal</span>
-      <span>astro@6 · tailwind · github pages · build {buildDate}</span>
+    <div class="mt-12 flex flex-col gap-2 border-t border-rule-soft pt-5 font-mono text-[11px] text-muted-light sm:flex-row sm:items-center sm:justify-between">
+      <span>© {new Date().getFullYear()} {PROFILE.name}</span>
+      <span><span class="text-accent">$</span> echo "keep building"<span class="cursor-blink" aria-hidden="true"></span></span>
     </div>
   </div>
 </footer>
-
-<script define:vars={{ BLOG_START_DATE }}>
-  function updateRunDays() {
-    var el = document.getElementById('footer-run-days');
-    if (!el) return;
-    var parts = BLOG_START_DATE.split('-').map(Number);
-    var start = new Date(parts[0], parts[1] - 1, parts[2]);
-    var now = new Date();
-    var days = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    el.textContent = days;
-  }
-  updateRunDays();
-</script>

@@ -30,3 +30,13 @@ pnpm-debug.log*
 # Hugo backup build artifacts (already archived)
 hugo-backup/public/
 hugo-backup/resources/
+
+# AI / tooling local state (not part of the site)
+.agents/
+.superpowers/
+.wb-preview/
+.workbuddy/
+.workbuddy-ai/
+.tmp-frames/
+docs/
+deliverables/

@@ -113,7 +113,8 @@ export function getCommitActivity(): CommitActivity {
       .toUpperCase();
   }
 
-  const pastDays = days.filter((day) => !day.future);  let longestStreak = 0;
+  const pastDays = days.filter((day) => !day.future);
+  let longestStreak = 0;
   let running = 0;
   for (const day of pastDays) {
     if (day.count > 0) {

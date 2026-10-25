@@ -6,61 +6,50 @@ import { GITHUB_REPO } from '../consts';
 ---
 
 <BaseLayout title="留言板 // RisingInsight" description="登录 GitHub 留下一条记录">
-  <main class="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+  <main id="main" class="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '留言' }]} />
 
-    <header class="border border-rule bg-surface/55 p-5 sm:p-7">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-3">
-        <div class="flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-muted-light">
-          <span class="text-accent">~/</span>
-          guestbook.log
-        </div>
-        <span class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">
-          <span class="status-dot"></span>
-          open channel
+    <header class="border-b border-rule pb-10">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="font-mono text-[12px] text-muted-light">~/guestbook</p>
+        <span class="flex items-center gap-2 text-[12px] text-accent">
+          <span class="status-dot" aria-hidden="true"></span>
+          开放留言
         </span>
       </div>
 
-      <div class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-light">
-        <span>auth · github</span>
-        <span class="text-rule">/</span>
-        <span>mode · public</span>
-        <span class="text-rule">/</span>
-        <span>owner · risinginsight</span>
-      </div>
-
-      <h1 class="mt-4 font-serif text-3xl font-semibold leading-[1.12] tracking-[-0.035em] text-ink sm:text-[2.8rem]">
+      <h1 class="mt-6 font-serif text-[2.1rem] font-semibold leading-[1.3] tracking-[.01em] text-ink sm:text-[2.5rem]">
         留言板
       </h1>
-      <p class="mt-4 max-w-2xl text-[15px] leading-7 text-muted">
+      <p class="mt-4 max-w-2xl text-[15px] leading-8 text-muted">
         登录 GitHub 后留下一条记录：技术问题、项目想法、文章纠错，或者只是打个招呼。
       </p>
 
-      <div class="mt-6 grid gap-2 sm:grid-cols-3">
-        <div class="border border-rule-soft bg-surface-alt px-3 py-2.5">
-          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">01 / auth</div>
+      <div class="mt-7 grid gap-2 sm:grid-cols-3">
+        <div class="rounded-[var(--r-md)] border border-rule bg-surface px-3.5 py-3">
+          <div class="font-mono text-[11px] text-accent">01 / 登录</div>
           <div class="mt-1 text-[13px] text-ink-soft">使用 GitHub 账号登录</div>
         </div>
-        <div class="border border-rule-soft bg-surface-alt px-3 py-2.5">
-          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">02 / write</div>
+        <div class="rounded-[var(--r-md)] border border-rule bg-surface px-3.5 py-3">
+          <div class="font-mono text-[11px] text-accent">02 / 留言</div>
           <div class="mt-1 text-[13px] text-ink-soft">在下方输入留言</div>
         </div>
-        <div class="border border-rule-soft bg-surface-alt px-3 py-2.5">
-          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">03 / sync</div>
+        <div class="rounded-[var(--r-md)] border border-rule bg-surface px-3.5 py-3">
+          <div class="font-mono text-[11px] text-accent">03 / 同步</div>
           <div class="mt-1 text-[13px] text-ink-soft">通过 GitHub 讨论区同步</div>
         </div>
       </div>
     </header>
 
-    <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border border-rule bg-paper-alt/50 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-light">
-      <span>powered by github discussions · owner can moderate in github</span>
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-b border-rule-soft pb-5 text-[12px] text-muted-light">
+      <span>留言通过 GitHub Discussions 同步，站长可在 GitHub 侧管理。</span>
       <a
         href={`https://github.com/${GITHUB_REPO}/discussions`}
         target="_blank"
         rel="noopener noreferrer"
         class="text-muted transition-colors hover:text-accent"
       >
-        open discussions ↗
+        打开 Discussions <span aria-hidden="true">↗</span>
       </a>
     </div>
 

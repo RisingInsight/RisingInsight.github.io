@@ -3,8 +3,6 @@ import type { ImageMetadata } from 'astro';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import MascotIntro from '../components/MascotIntro.astro';
-import MascotPet from '../components/MascotPet.astro';
 import Analytics from '../components/Analytics.astro';
 
 interface Props {
@@ -22,11 +20,10 @@ const { title, description, type = 'website', image } = Astro.props;
     <BaseHead title={title} description={description} type={type} image={image} />
   </head>
   <body>
-    <MascotIntro />
+    <a href="#main" class="skip-link">跳到正文</a>
     <Header />
     <slot />
     <Footer />
-    <MascotPet />
     <Analytics />
     <script>
       const revealTargets = document.querySelectorAll<HTMLElement>('.reveal');

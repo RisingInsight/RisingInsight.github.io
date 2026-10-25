@@ -1,0 +1,223 @@
+---
+/**
+ * 首页「能玩的东西」：扩散去噪自动循环画布。
+ * 复用文章 Demo 的帧序列（/demo/image-reverse.webp，7 列 × 21 帧），
+ * 自动循环 t = 200 → 0；悬停/点按暂停。完整交互版在博客文章里。
+ */
+---
+
+<section class="playground" data-denoise aria-label="扩散去噪演示">
+  <div class="playground-canvas-wrap">
+    <canvas
+      class="playground-canvas"
+      data-canvas
+      width="384"
+      height="384"
+      role="img"
+      aria-label="一张头像图片从纯噪声逐步去噪还原的自动演示，悬停可暂停"
+    ></canvas>
+    <span class="playground-badge" data-badge>t = 200</span>
+    <span class="playground-state" data-state>▶ 自动播放</span>
+  </div>
+
+  <div class="playground-text">
+    <p class="mono-label">playground</p>
+    <h2 class="playground-title">看一张图，从噪声里长出来</h2>
+    <p class="playground-desc">
+      这是扩散模型的日常：先把图打碎成噪声，再学着一步步把它捞回来。
+      左边在自动重播一次去噪轨迹 —— 悬停让它停下。完整版可以拖时间步、切换加噪方向，
+      藏在下面这篇文章里。
+    </p>
+    <a href="/blog/image-diffusion-demo/" class="playground-link">
+      打开完整实验 <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>
+
+<script>
+  function initDenoise(root: HTMLElement) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
+    const ctx = canvas?.getContext('2d');
+    const badge = root.querySelector<HTMLElement>('[data-badge]');
+    const stateEl = root.querySelector<HTMLElement>('[data-state]');
+    if (!canvas || !ctx || !badge || !stateEl) return;
+
+    const FRAME = 192;
+    const COLS = 7;
+    const CAPTURES = 21;
+    const STEPS = 200;
+    const STEP = 10;
+    const SRC = '/demo/image-reverse.webp';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = 384 * dpr;
+    canvas.height = 384 * dpr;
+    ctx.scale(dpr, dpr);
+
+    let sheet: HTMLImageElement | null = null;
+    let t = STEPS;
+    let timer = 0;
+    let paused = false;
+    let holding = 0; // 0 = 走帧；>0 = 停留倒计时(ms)
+
+    function render() {
+      if (!sheet) return;
+      const index = Math.min(CAPTURES - 1, Math.round((STEPS - t) / STEP));
+      const col = index % COLS;
+      const row = Math.floor(index / COLS);
+      ctx.clearRect(0, 0, 384, 384);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sheet, col * FRAME, row * FRAME, FRAME, FRAME, 0, 0, 384, 384);
+      badge.textContent = `t = ${t}`;
+    }
+
+    function tick() {
+      timer = window.setTimeout(tick, 90);
+      if (paused || !sheet) return;
+      if (holding > 0) {
+        holding -= 90;
+        return;
+      }
+      if (t > 0) {
+        t = Math.max(0, t - STEP);
+        render();
+        if (t === 0) holding = 1600; // 清晰图上停 1.6s
+      } else {
+        t = STEPS;
+        render();
+        holding = 500; // 回到噪声，停 0.5s 再来一轮
+      }
+    }
+
+    function setPaused(next: boolean) {
+      paused = next;
+      stateEl.textContent = paused ? '⏸ 已暂停' : '▶ 自动播放';
+      root.classList.toggle('is-paused', paused);
+    }
+
+    root.addEventListener('pointerenter', () => setPaused(true));
+    root.addEventListener('pointerleave', () => setPaused(false));
+    // 触屏没有 hover：点按切换
+    canvas.addEventListener('click', () => setPaused(!paused));
+
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      sheet = image;
+      render();
+      if (reduced) {
+        // 减少动态：直接呈现去噪终点，不循环
+        t = 0;
+        render();
+        setPaused(true);
+        stateEl.textContent = '⏸ 静态展示';
+        return;
+      }
+      tick();
+    };
+    image.onerror = () => {
+      stateEl.textContent = '帧加载失败';
+    };
+    image.src = SRC;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-denoise]').forEach(initDenoise);
+</script>
+
+<style>
+  .playground {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+  }
+
+  .playground-canvas-wrap {
+    position: relative;
+    cursor: pointer;
+  }
+  .playground-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    background: var(--paper);
+  }
+  .playground-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 2px 8px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-xs);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    backdrop-filter: blur(4px);
+  }
+  .playground-state {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 2px 8px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-xs);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    opacity: .85;
+    transition: opacity .2s ease;
+    backdrop-filter: blur(4px);
+  }
+  .playground.is-paused .playground-state {
+    opacity: 1;
+  }
+
+  .playground-title {
+    margin-top: 10px;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .playground-desc {
+    margin-top: 12px;
+    max-width: 30em;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+  .playground-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .playground-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 720px) {
+    .playground {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    .playground-canvas-wrap {
+      max-width: 340px;
+    }
+  }
+</style>
