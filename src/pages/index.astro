@@ -627,56 +627,96 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     transform-origin: left center;
   }
 
-  /* scrub 模式：正片元素先收起，p≥0.94 由 JS 挂 hero-in 过渡升起。
-     14s 兜底揭示：即便 JS 半路失效，巨字也不会永久隐藏。 */
-  :global(html.intro-scrub) .hero-ch {
-    animation: hero-ch-failsafe .7s var(--ease-out-expo) 14s both;
-  }
-  :global(html.intro-scrub) .brand-ch {
-    animation: brand-ch-failsafe .7s var(--ease-out-expo) 14.2s both;
+  /* scrub 模式：落地态（0-6%）巨字直接可见 —— 打开页面永远有内容；
+     6% 起词句蒙太奇接管，正文隐藏；p≥0.94 重新升起（hero-in）。 */
+  :global(html.intro-scrub) .hero-foot {
+    opacity: 1;
   }
   :global(html.intro-scrub) .hero-ch {
+    opacity: 1;
+    transform: translateY(0);
+    filter: none;
     animation: none;
-    opacity: 0;
-    transform: translateY(115%);
-    filter: blur(8px);
-    transition:
-      transform .8s var(--ease-out-expo),
-      filter .8s var(--ease-out-expo),
-      opacity .5s ease;
+    transition: opacity .5s ease, transform .7s var(--ease-out-expo), filter .7s var(--ease-out-expo);
     transition-delay: calc(var(--d, 0) * 22ms);
   }
   :global(html.intro-scrub) .brand-ch {
+    opacity: 1;
+    transform: translateY(0);
     animation: none;
-    opacity: 0;
-    transform: translateY(110%);
-    transition: transform .7s var(--ease-out-expo), opacity .5s ease;
+    transition: opacity .5s ease, transform .7s var(--ease-out-expo);
     transition-delay: calc(var(--bi, 0) * 20ms);
   }
   :global(html.intro-scrub) .hero-meta {
+    opacity: 1;
+    transform: none;
     animation: none;
-    opacity: 0;
-    transform: translateY(-9px);
-    transition: opacity .7s ease .1s, transform .7s var(--ease-out-expo) .1s;
   }
   :global(html.intro-scrub) .hero-bar::before {
+    transform: scaleX(1);
     animation: none;
-    transform: scaleX(0);
-    transition: transform .9s var(--ease-out-expo);
   }
   :global(html.intro-scrub) .hero-desc {
+    opacity: 1;
+    transform: none;
     animation: none;
-    opacity: 0;
-    transform: translateY(9px);
-    transition: opacity .7s ease .15s, transform .7s var(--ease-out-expo) .15s;
   }
   :global(html.intro-scrub) .hero-actions {
+    opacity: 1;
+    transform: none;
     animation: none;
+  }
+  /* 蒙太奇区间（6%-94%）：词句接管，正文退场 */
+  :global(html.intro-scrub.hero-montage) .hero-ch {
+    opacity: 0;
+    transform: translateY(115%);
+    filter: blur(8px);
+  }
+  :global(html.intro-scrub.hero-montage) .brand-ch {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+  :global(html.intro-scrub.hero-montage) .hero-meta {
+    opacity: 0;
+    transform: translateY(-9px);
+  }
+  :global(html.intro-scrub.hero-montage) .hero-bar::before {
+    transform: scaleX(0);
+  }
+  :global(html.intro-scrub.hero-montage) .hero-desc {
     opacity: 0;
     transform: translateY(9px);
-    transition: opacity .7s ease .25s, transform .7s var(--ease-out-expo) .25s;
+  }
+  :global(html.intro-scrub.hero-montage) .hero-actions {
+    opacity: 0;
+    transform: translateY(9px);
   }
   :global(html.intro-scrub.hero-in) .hero-ch {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+  :global(html.intro-scrub.hero-in) .brand-ch {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  :global(html.intro-scrub.hero-in) .hero-meta {
+    opacity: 1;
+    transform: none;
+  }
+  :global(html.intro-scrub.hero-in) .hero-bar::before {
+    transform: scaleX(1);
+  }
+  :global(html.intro-scrub.hero-in) .hero-desc {
+    opacity: 1;
+    transform: none;
+  }
+  :global(html.intro-scrub.hero-in) .hero-actions {
+    opacity: 1;
+    transform: none;
+  }
+
+:global(html.intro-scrub.hero-in) .hero-ch {
     opacity: 1;
     transform: translateY(0);
     filter: blur(0);
@@ -761,6 +801,7 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const wide = window.matchMedia('(min-width: 768px)').matches;
     const saveData = (navigator as any).connection?.saveData === true;
+    const scrubMode = htmlEl.classList.contains('intro-scrub');
     const trackEl = document.getElementById('hero-track');
     const scrubWords = Array.from(hero.querySelectorAll('.scrub-word'));
     const scrubBrand = hero.querySelector('.scrub-brand');
@@ -870,6 +911,11 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
         scrubBrand.style.filter = `blur(${(6 * (1 - b)).toFixed(1)}px)`;
       }
       if (scrubFill) scrubFill.style.transform = `scaleX(${clamp01((p - 0.08) / 0.82).toFixed(4)})`;
+      // 蒙太奇区间开关：6%-94% 词句接管；两端均为落地态（永远有内容）
+      const montage = p >= 0.06 && p < 0.94;
+      if (montage !== hero.classList.contains('hero-montage')) {
+        hero.classList.toggle('hero-montage', montage);
+      }
       if (!heroIn && p >= 0.94) {
         heroIn = true;
         hero.classList.add('hero-in');
