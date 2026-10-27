@@ -573,6 +573,40 @@ body {
   }
 }
 
+/* ===== 行级链接的物理 hover：左侧细条滑入 + 内容右移 ===== */
+.row-link {
+  position: relative;
+  transition: padding-left .35s var(--ease-out-expo);
+}
+.row-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform .35s var(--ease-out-expo);
+}
+.row-link:hover {
+  padding-left: 14px;
+}
+.row-link:hover::before {
+  transform: scaleY(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .row-link,
+  .row-link::before {
+    transition: none;
+  }
+  .row-link:hover {
+    padding-left: 0;
+  }
+}
+
 /* ===== 标签 ===== */
 .tag {
   display: inline-flex;

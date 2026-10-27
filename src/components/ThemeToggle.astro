@@ -3,7 +3,7 @@
 ---
 <button
   data-theme-toggle
-  class="rounded-md p-2 text-muted transition-colors hover:bg-rule-soft hover:text-ink"
+  class="theme-toggle rounded-md p-2 text-muted transition-colors hover:bg-rule-soft hover:text-ink"
   aria-label="切换主题"
   aria-pressed="false"
   title="切换主题"
@@ -17,6 +17,22 @@
     <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
   </svg>
 </button>
+<style>
+  .theme-toggle :global(svg) {
+    transition: transform .6s var(--ease-out-expo);
+  }
+  .theme-toggle:hover :global(svg) {
+    transform: rotate(40deg);
+  }
+  .theme-toggle:active :global(svg) {
+    transform: rotate(180deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle :global(svg) {
+      transition: none;
+    }
+  }
+</style>
 
 <script>
   const syncPressed = () => {

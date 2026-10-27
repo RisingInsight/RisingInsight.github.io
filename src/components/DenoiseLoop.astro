@@ -6,7 +6,7 @@
  */
 ---
 
-<section class="playground" data-denoise aria-label="扩散去噪演示">
+<section class="playground reveal" data-denoise aria-label="扩散去噪演示">
   <div class="playground-canvas-wrap">
     <canvas
       class="playground-canvas"
@@ -25,8 +25,8 @@
     <h2 class="playground-title">看一张图，从噪声里长出来</h2>
     <p class="playground-desc">
       这是扩散模型的日常：先把图打碎成噪声，再学着一步步把它捞回来。
-      左边在自动重播一次去噪轨迹 —— 悬停让它停下。完整版可以拖时间步、切换加噪方向，
-      藏在下面这篇文章里。
+      左边在自动重播一次去噪轨迹 —— 悬停暂停，点击从噪声从头再来。
+      完整版可以拖时间步、切换加噪方向，藏在下面这篇文章里。
     </p>
     <a href="/blog/image-diffusion-demo/" class="playground-link">
       打开完整实验 <span aria-hidden="true">→</span>
@@ -99,8 +99,13 @@
 
     root.addEventListener('pointerenter', () => setPaused(true));
     root.addEventListener('pointerleave', () => setPaused(false));
-    // 触屏没有 hover：点按切换
-    canvas.addEventListener('click', () => setPaused(!paused));
+    // 触屏没有 hover：点按 = 从头重播（先加噪再逐步去噪）
+    canvas.addEventListener('click', () => {
+      t = STEPS;
+      holding = 400;
+      setPaused(false);
+      render();
+    });
 
     const image = new Image();
     image.decoding = 'async';

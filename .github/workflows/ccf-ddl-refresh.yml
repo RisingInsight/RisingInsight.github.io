@@ -1,0 +1,41 @@
+name: CCF DDL 数据刷新
+
+# 每天 04:00 UTC（北京 12:00）自动刷新截稿数据 + OpenAlex 源校准 + 全量审计。
+# GitHub Actions runner 的出口 IP 独立于本机，不受本机 OpenAlex 日额度影响。
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch: {} # 手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 刷新截稿数据（ccfddl）
+        run: npm run fetch:ddl
+
+      - name: OpenAlex 源审计（28 会 × 2024-2026 覆盖）
+        run: npm run audit:oa
+
+      - name: 解析通过的会烤入快照（加速页面端）
+        run: npm run resolve:oa || true
+
+      - name: 提交数据更新
+        run: |
+          git config user.name "ccf-ddl-bot"
+          git config user.email "actions@github.com"
+          git add src/data/ccf-ddl.json audit-report.txt scripts/openalex-overrides.mjs
+          git diff --cached --quiet && echo "无变化" || git commit -m "chore(ddl): refresh deadlines & source calibration $(date -u +%F)"
+          git push

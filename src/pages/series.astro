@@ -58,7 +58,7 @@ const seriesNotes = seriesGroups.reduce((sum, group) => sum + group.posts.length
                 {group.posts.map((post, postIndex) => (
                   <a
                     href={`/blog/${post.id}/`}
-                    class="group grid grid-cols-[36px_minmax(0,1fr)] gap-3 py-5 sm:grid-cols-[46px_minmax(0,1fr)] sm:py-6"
+                    class="row-link group grid grid-cols-[36px_minmax(0,1fr)] gap-3 py-5 sm:grid-cols-[46px_minmax(0,1fr)] sm:py-6"
                   >
                     <span aria-hidden="true" class="font-serif text-2xl leading-none text-accent/70">
                       {String(postIndex + 1).padStart(2, '0')}

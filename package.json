@@ -11,7 +11,11 @@
     "preview": "astro preview",
     "astro": "astro",
     "generate:image-demo": "node scripts/generate-image-diffusion-demo.mjs",
-    "generate:og": "node scripts/generate-og.mjs"
+    "generate:og": "node scripts/generate-og.mjs",
+    "fetch:ddl": "node scripts/fetch-ccfddl.mjs",
+    "resolve:oa": "node scripts/resolve-openalex.mjs",
+    "calibrate:oa": "node scripts/calibrate-openalex.mjs",
+    "audit:oa": "node scripts/audit-openalex.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.3",
@@ -27,9 +31,11 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "sharp": "^0.34.3",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.2.2",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "pagefind": "^1.5.0"
+    "pagefind": "^1.5.0",
+    "playwright-core": "^1.64.1"
   }
 }

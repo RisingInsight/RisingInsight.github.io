@@ -67,17 +67,22 @@
 - `theme-color` meta 双声明（亮/暗），运行时同步全部实例。
 
 ## Signature Moves（站点的辨识度所在，勿删）
-1. **片头字幕（Bienville 式，每会话一次）**：墨幕上 `BUILD. / BREAK. / DOCUMENT.`
-   逐词砸入（scale+blur 收定）+ 底部朱橙进度线；2.3s 幕布上提交棒正片，
-   中文巨字延迟到 2.42s 接棒升起。跳过：点击 / 滚轮 / 触摸 / Esc·Enter·Space·↓。
-   纯 CSS 时间轴（JS 挂了也会自清）；会话标记 `sessionStorage['hero-title-seen']`；
-   reduced-motion 完全跳过。
+1. **片头字幕（每会话一次，任何输入可跳过）**：工程循环六拍阶梯——
+   `BUILD IT. → RUN IT. → BREAK IT. → FIX IT. → DOCUMENT IT.`（0.25s 起每 0.78s
+   单词居中轮替：砸入 scale+blur / 擦出），`RISINGINSIGHT` 定场拍（4.2s，衬线
+   字距收拢），4.95s 幕布上提，正片 h1 字符波 5.12s 起接棒。
+   跳过：点击 / 滚轮 / 触摸 / Esc·Enter·Space·↓。纯 CSS 时间轴（JS 失效也会
+   自动播完清场）；会话标记 `sessionStorage['hero-title-seen']`；reduced-motion 完全跳过。
+   改节奏只动三处：词间隔 `.78s`、幕布 `4.95s`、h1 接棒 `5.12s`。
 2. **影院式首屏**：全屏破晓实拍（夜空→银河→晨光，雪山镜湖延时）+ 奶白衬线巨字 +
    胶片颗粒（SVG feTurbulence，overlay）+ 滚动视差（画面下沉、内容淡出、底部溶入
-   纸面——无闪光切换）。不锁滚动（片头 2.4s 内除外）。素材 `public/media/hero-dawn.mp4`
+   纸面——无闪光切换）。素材 `public/media/hero-dawn.mp4`
    （Pexels #857251，免费免署名；**弧线已反转为 蓝夜→银河→破晓暖光，播放一次停在
    末帧**，有 pause 守卫 + visibilitychange 续播）+ poster（蓝夜首帧）+
-   `hero-dawn-end.jpg`（破晓帧，移动端/reduced-motion 静态兜底）。
+   `hero-dawn-end.jpg`（破晓帧，移动端/reduced-motion 静态兜底 + 34s Ken Burns）。
+   **环境音**：`hero-waves.mp3`（ffmpeg 合成海浪，免版权 288KB，24s 循环），
+   ♪ SOUND ON/OFF 开关持久化（`localStorage['hero-sound']`），手势解锁补播，
+   IntersectionObserver 随首屏出画自动暂停；↻ REPLAY 回顶重播整段片头。
 3. **灵鸮 = 品牌标记**（CatMascot `static` 模式）：header logo、favicon.svg、404 页
    栖在终端上。静态、克制、每页最多一次。**禁止**再做漂浮挂件 / 跟随鼠标 / 像素替代品。
 4. **Playground 去噪循环**（DenoiseLoop.astro）：首页第二屏，自动重播 t=200→0，
@@ -88,6 +93,41 @@
    改起始值只动 consts.ts。统计卡是唯一允许的"站点仪表"。
 6. 文章页 `~/posts/…` 路径签名（唯一保留的终端元素之一）。
 7. 页脚 `$ echo "keep building"▌` 签名行；404 页终端 + 搜索弹窗 grep 语汇。
+
+## Interaction Layer（交互层，2026 追加）
+- **滚动 reveal**：内容区板块/行挂 `.reveal`（BaseLayout 的 IntersectionObserver
+  统一驱动，`.js` 门控 + reduced-motion 直出）。新板块记得挂，否则是"静态冒出来"。
+- **行级 hover**：列表行挂 `.row-link`（global.css）——左侧朱橙细条 scaleY 滑入 +
+  行内 padding-left 14px 右移。适用于首页/笔记/系列/归档的所有行。
+- **Playground 点击重播**：点画布 = 回到 t=200 重新去噪；悬停暂停不变。
+- **主题切换图标**：hover 旋转 40°、按下 180°（ThemeToggle `.theme-toggle`）。
+- 禁止：跟随鼠标的光雾/光标替换、常驻循环动画、进入视口前的预动画。
+
+## CCF DDL 子系统（/ddl/，2026 追加）
+- **数据双源**：截稿日 = ccfddl/ccf-deadlines 社区仓库（MIT，`npm run fetch:ddl` 抓取
+  AI+MX 领域、CCF-A/B，烤入 `src/data/ccf-ddl.json`；抓取失败保留旧快照）；
+  中稿论文 = OpenAlex API（免 key、CORS 开放）**运行时实时拉取**——论文集出版后
+  自动出现，零人工维护。
+- **页面结构**：截稿日列表（等级徽章、倒计时 D-N、多轮提示、筛选 tab + 仅未截止）
+  + 历年中稿论文面板（点年份 → 按被引排序、标题/作者搜索、加载更多、DBLP 兜底链接）。
+- **源解析级联**（页面端）：① 快照里构建期解析的 openalexId（可选加速）→
+  ② 缩写标题 `filter=display_name.search:` 搜系列源（works_count≥300 +
+  Workshops/Demos 排除 + 缩写词首匹配：EMNLP 精确 90 分、CVPR 尾部子序列 85 分，
+  同分取 works_count 大的主源）→ ③ "会议名 年份" 搜当年卷源 →
+  ④ 都失败走 DBLP 逐年链接。节流 250ms + 429 指数退避 + 断点自动续传。
+- **全量抓取**：OpenAlex `page=N` 分页（`cursor=` 分页需 API key），每页 200 篇
+  循环拉到取完，边拉边渲染——CVPR 2025 = 661 篇（含 workshops 源时），
+  主会源 ≈ 2876 篇；EMNLP 2025 = 1810 篇全量验证通过。
+- **OpenAlex 现实约束**：免费档每 IP 共享日额度，429 频繁——构建期批量解析
+  不可靠（已改为可选加速项）；运行时按访客 IP 解析天然分散额度。
+  `cursor` 分页、`search=` 全文参数行为均飘忽，只用 `filter=display_name.search:`。
+  `npm run calibrate:oa` 可重跑校准（产出 scripts/openalex-overrides.mjs）。
+- **教训**：① Astro scoped `<style>` 曾被静默丢弃（HTML 无 cid 后缀 = 没编译进去，
+  用 `is:inline` 绕过）；② OpenAlex 免费档限流狠，构建期批量解析不可靠，
+  运行时按访客 IP 解析 + 缓存才是正解；③ 程序化 scrollTo 不触发 wheel 事件，
+  自动推进的接管判定不能依赖键盘（E2E 会误触发），wheel/touchstart 才可靠。
+- **首页侧栏**「截稿日」小卡：构建期取最近 3 个未截止的会（D-N 朱橙高亮 CCF-A），
+  链到 /ddl/。
 
 ## Content Rules（内容即设计）
 - 首屏永远给真实内容，不摆站点仪表；**禁止** uptime 天数这类自曝数字。

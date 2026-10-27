@@ -1,0 +1,711 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ddl from '../data/ccf-ddl.json';
+
+const fetchedDate = ddl.fetchedAt ? ddl.fetchedAt.slice(0, 10).replace(/-/g, '.') : '';
+
+// 截稿时间解析：'YYYY-MM-DD HH:MM:SS' + 'UTC-12' / 'AoE' → Date
+function ddlDate(str, tz) {
+  if (!str) return null;
+  let offset = '-12:00'; // 默认 AoE
+  const m = (tz || '').match(/UTC([+-]\d{1,2})/);
+  if (m) {
+    const h = parseInt(m[1], 10);
+    offset = `${h >= 0 ? '+' : '-'}${String(Math.abs(h)).padStart(2, '0')}:00`;
+  }
+  const d = new Date(str.replace(' ', 'T') + offset);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+const rows = ddl.entries
+  .map((e) => {
+    const first = e.timelines.map((t) => t.deadline).sort()[0];
+    const firstDate = ddlDate(first, e.timezone);
+    return { ...e, first, firstDate };
+  })
+  .filter((e) => e.firstDate)
+  .sort((a, b) => a.firstDate - b.firstDate);
+
+// 历年门户：有 dblp key 的会议，近 6 年
+const thisYear = new Date().getFullYear();
+const portal = [];
+const seenIds = new Set();
+for (const e of rows) {
+  if (!e.dblp || seenIds.has(e.dblp)) continue;
+  seenIds.add(e.dblp);
+  const years = [];
+  for (let y = thisYear + 1; y >= thisYear - 5; y--) years.push(y);
+  portal.push({
+    id: e.id,
+    title: e.title,
+    desc: e.description,
+    rank: e.rank,
+    dblp: e.dblp,
+    oa: e.openalexId || null,
+    years,
+  });
+}
+portal.sort((a, b) => (a.rank === b.rank ? a.title.localeCompare(b.title) : a.rank === 'A' ? -1 : 1));
+
+const rankBadge = (rank) =>
+  rank === 'A'
+    ? 'bg-accent text-[var(--accent-contrast)]'
+    : 'border border-rule text-muted';
+---
+
+<BaseLayout title="CCF DDL · 顶会门户 // RisingInsight" description="CCF-A/B 会议截稿日追踪与历年顶会论文门户">
+  <main id="main" class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+    <header class="border-b border-rule pb-10">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="font-mono text-[12px] text-muted-light">~/ddl</p>
+        <a
+          href={ddl.source}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[12px] text-muted-light transition-colors hover:text-accent"
+        >
+          数据源 ccfddl <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <h1 class="mt-4 font-serif text-[2.1rem] font-semibold leading-[1.3] tracking-[.01em] text-ink sm:text-[2.5rem]">
+        CCF 截稿日 · 顶会门户
+      </h1>
+      <p class="mt-4 max-w-2xl text-[14px] leading-7 text-muted">
+        追踪 CCF-A/B 会议的最近一届截稿时间，并按年份检索历年论文。
+        数据来自 ccfddl 社区仓库（构建于 {fetchedDate}），<span class="text-muted-light">截稿时间以官网为准</span>。
+      </p>
+      <p class="mt-4 font-mono text-[12px] text-muted-light">
+        {ddl.count} conferences · A {rows.filter(r => r.rank === 'A').length} · B {rows.filter(r => r.rank === 'B').length}
+      </p>
+    </header>
+
+    <!-- DDL 列表 -->
+    <section aria-labelledby="ddl-list-heading">
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-8 pb-4">
+        <h2 id="ddl-list-heading" class="font-serif text-xl font-semibold text-ink">
+          截稿日
+        </h2>
+        <div class="ddl-tabs" role="group" aria-label="按等级筛选">
+          <button type="button" data-rank="all" class="ddl-tab is-active" aria-pressed="true">全部</button>
+          <button type="button" data-rank="A" class="ddl-tab" aria-pressed="false">CCF-A</button>
+          <button type="button" data-rank="B" class="ddl-tab" aria-pressed="false">CCF-B</button>
+          <label class="ddl-only-upcoming">
+            <input type="checkbox" id="ddl-upcoming" checked />
+            <span>仅未截止</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="ddl-rows" class="divide-y divide-rule-soft">
+        {rows.map((e) => {
+          const first = e.timelines[0];
+          const isPast = e.firstDate ? e.firstDate.getTime() < Date.now() : false;
+          const days = e.firstDate
+            ? Math.ceil((e.firstDate.getTime() - Date.now()) / 86400000)
+            : null;
+          return (
+            <article
+              class="ddl-row group py-5"
+              data-rank={e.rank}
+              data-deadline={first.deadline}
+              data-tz={e.timezone}
+              data-past={String(isPast)}
+            >
+              <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+                <div class="flex min-w-0 items-center gap-3">
+                  <span class={`ddl-badge ${rankBadge(e.rank)}`}>{e.rank}</span>
+                  <h3 class="font-mono text-[1.05rem] font-bold text-ink">
+                    {e.title}
+                    <span class="ml-1 font-sans text-[13px] font-normal text-muted-light">{e.year}</span>
+                  </h3>
+                </div>
+                <time class="font-mono text-[12px] text-muted-light" datetime={first.deadline}>
+                  {first.deadline} {e.timezone}
+                </time>
+              </div>
+              <p class="mt-1.5 text-[13.5px] leading-6 text-muted">{e.description}</p>
+              <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11.5px] text-muted-light">
+                <span class="inline-flex items-center gap-1.5">
+                  <span
+                    class="ddl-countdown font-serif text-[15px] font-semibold tabular-nums text-accent"
+                    data-deadline={first.deadline}
+                    data-tz={e.timezone}
+                  >
+                    {days !== null ? `D${days <= 0 ? '+' + Math.abs(days) : '-' + days}` : '—'}
+                  </span>
+                  <span class="ddl-status-label">{isPast ? '已截止' : '距截稿'}</span>
+                </span>
+                {e.timelines.length > 1 && (
+                  <span>
+                    {e.timelines.length} 轮 · 首轮 {e.timelines[0].abstract || e.timelines[0].deadline}
+                  </span>
+                )}
+                <span>{e.place}</span>
+                {e.link && (
+                  <a href={e.link} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
+                    官网 <span aria-hidden="true">↗</span>
+                  </a>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <p id="ddl-empty" class="hidden py-14 text-center text-sm text-muted">
+        没有匹配的会议 —— 放宽筛选试试。
+      </p>
+    </section>
+
+    <!-- 历年论文门户（模仿 CV_Paper_Portal：按会 → 按年） -->
+    <section class="mt-16 border-t border-rule pt-10" aria-labelledby="portal-heading">
+      <div class="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 id="portal-heading" class="font-serif text-xl font-semibold text-ink">
+          历年中稿论文
+        </h2>
+        <span class="font-mono text-[11px] text-muted-light">openalex · dblp</span>
+      </div>
+      <p class="mt-2 max-w-2xl text-[13.5px] leading-6 text-muted">
+        点年份加载该届中稿论文 —— 按被引排序、可搜索。数据实时取自 OpenAlex，
+        论文集出版后会自动出现，无需人工维护；加载不到时走 DBLP 逐年入口。
+      </p>
+
+      <div class="mt-6 divide-y divide-rule-soft">
+        {portal.map((p) => (
+          <div class="py-4" data-conf={p.id}>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span class={`ddl-badge ${rankBadge(p.rank)}`}>{p.rank}</span>
+              <h3 class="font-mono text-[14px] font-bold text-ink">{p.title}</h3>
+              <a
+                href={`https://dblp.org/db/conf/${p.dblp}/index.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="ml-auto font-mono text-[11px] text-muted-light transition-colors hover:text-accent"
+              >
+                全年索引 <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              {p.years.map((y) => (
+                <button
+                  type="button"
+                  class="tag papers-year"
+                  data-title={p.title}
+                  data-desc={p.desc}
+                  data-oa={p.oa || ''}
+                  data-dblp={p.dblp}
+                  data-year={y}
+                  aria-expanded="false"
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+            <div class="papers-panel hidden">
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  type="search"
+                  class="papers-search"
+                  placeholder="搜索标题 / 作者…"
+                  aria-label="在结果中搜索"
+                />
+                <span class="papers-status font-mono text-[11px] text-muted-light"></span>
+              </div>
+              <ol class="papers-list mt-2"></ol>
+              <div class="mt-2 flex flex-wrap items-center gap-3">
+                <button type="button" class="papers-more hidden">加载更多</button>
+                <a
+                  class="papers-dblp font-mono text-[11px] text-muted-light transition-colors hover:text-accent"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  在 DBLP 打开该届 <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style is:inline>
+  /* 页面私有样式：is:inline 绕过 Astro scoped 处理（此前该页 style 被静默丢弃） */
+  .ddl-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: var(--r-xs);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1.6;
+  }
+  .ddl-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ddl-tab {
+    padding: 4px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .ddl-tab:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
+  }
+  .ddl-tab.is-active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .ddl-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .ddl-only-upcoming {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .ddl-only-upcoming input {
+    accent-color: var(--accent);
+  }
+  .ddl-row[data-past='true'] {
+    opacity: .45;
+  }
+  .ddl-row[data-past='true'] .ddl-countdown {
+    color: var(--muted-light);
+  }
+
+  .papers-year {
+    cursor: pointer;
+  }
+  .papers-year.is-active {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .papers-panel {
+    padding: 10px 0 4px;
+  }
+  .papers-search {
+    flex: 1 1 220px;
+    max-width: 320px;
+    padding: 6px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .papers-search:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .papers-list {
+    margin: 0;
+    padding: 0 0 0 1.4em;
+    list-style: none;
+    counter-reset: paper;
+  }
+  .papers-list li {
+    counter-increment: paper;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .papers-list li::marker {
+    content: counter(paper) '. ';
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .papers-list a {
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .papers-list a:hover {
+    color: var(--accent);
+  }
+  .papers-list .paper-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .papers-list .paper-title-row a {
+    flex: 1;
+    min-width: 0;
+  }
+  .papers-list .paper-cites {
+    flex-shrink: 0;
+    padding: 0 7px;
+    border: 1px solid var(--rule-soft);
+    border-radius: 999px;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .papers-list .paper-authors {
+    display: block;
+    margin-top: 1px;
+    color: var(--muted-light);
+    font-size: 12px;
+  }
+  .papers-more {
+    padding: 4px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s;
+  }
+  .papers-more:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
+  }
+</style>
+
+<script>
+  // ---- 筛选：等级 tab + 仅未截止 ----
+  const rows = Array.from(document.querySelectorAll('.ddl-row'));
+  const tabs = Array.from(document.querySelectorAll('.ddl-tab'));
+  const upcoming = document.getElementById('ddl-upcoming');
+  const empty = document.getElementById('ddl-empty');
+  let rank = 'all';
+
+  function applyFilter() {
+    let visible = 0;
+    rows.forEach((row) => {
+      const matchRank = rank === 'all' || row.dataset.rank === rank;
+      const matchUpcoming = !upcoming?.checked || row.dataset.past !== 'true';
+      const show = matchRank && matchUpcoming;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (empty) empty.classList.toggle('hidden', visible > 0);
+  }
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      rank = tab.dataset.rank || 'all';
+      tabs.forEach((t) => {
+        t.classList.toggle('is-active', t === tab);
+        t.setAttribute('aria-pressed', String(t === tab));
+      });
+      applyFilter();
+    });
+  });
+  upcoming?.addEventListener('change', applyFilter);
+  applyFilter();
+
+  // ---- 倒计时：客户端按本地时间重算（构建时的 days 会随时间漂移）----
+  function refreshCountdown() {
+    rows.forEach((row) => {
+      const el = row.querySelector('.ddl-countdown');
+      if (!el || !row.dataset.deadline) return;
+      const tz = row.dataset.tz || 'UTC-12';
+      let offset = '-12:00';
+      const m = tz.match(/UTC([+-]\d{1,2})/);
+      if (m) {
+        const h = parseInt(m[1], 10);
+        offset = `${h >= 0 ? '+' : '-'}${String(Math.abs(h)).padStart(2, '0')}:00`;
+      }
+      const d = new Date(row.dataset.deadline.replace(' ', 'T') + offset);
+      if (isNaN(d.getTime())) return;
+      const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
+      const past = d.getTime() < Date.now();
+      // 构建期的 data-past 会随时间过期，客户端重算并同步筛选
+      if (row.dataset.past !== String(past)) {
+        row.dataset.past = String(past);
+        const label = row.querySelector('.ddl-status-label');
+        if (label) label.textContent = past ? '已截止' : '距截稿';
+        applyFilter();
+      }
+      el.textContent = past ? '—' : days <= 0 ? 'D±0' : `D-${days}`;
+    });
+  }
+  refreshCountdown();
+  window.setInterval(refreshCountdown, 30 * 60 * 1000);
+
+  // ===== 历年论文面板：点年份 → OpenAlex 级联加载（系列源 → 按年搜卷源 → DBLP 兜底）=====
+  const OA = 'https://api.openalex.org';
+  const OA_POLITE = '1668676243@qq.com';
+  const paperCache = new Map(); // key: `${title}:${year}` → state
+
+  async function oaFetch(url) {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(String(res.status));
+    return res.json();
+  }
+
+  // ---- 运行时源解析（与构建期同款匹配器）：访客 IP 自己解析，天然避开构建机限流 ----
+  const FILLER = { the: 1, a: 1, an: 1, of: 1, on: 1, in: 1, and: 1, for: 1, annual: 1,
+    international: 1, conference: 1, conferences: 1, symposium: 1, advances: 1,
+    proceedings: 1, joint: 1, acm: 1, ieee: 1, cvf: 1, sig: 1 };
+  // workshops/demos 是主会衍生场：全量需求下不作为主源（CVPR Workshops ≠ CVPR）
+  const EXCLUDE_RE = /workshops|demos/i;
+  function coreWords(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+      .split(' ').filter(function (w) { return w && !FILLER[w]; });
+  }
+  function normName(s) {
+    return coreWords(s).join(' ');
+  }
+  // 缩写 → 全称词首拼接：CVPR = Computer Vision Pattern Recognition 的词首
+  function acronymOf(fullName) {
+    return coreWords(fullName).map(function (w) { return w[0]; }).join('');
+  }
+  function scoreSource(confTitle, src) {
+    const a = normName(confTitle);
+    const b = normName(src.display_name);
+    if (!a || !b) return 0;
+    if (a === b) return 100;
+    if (b.indexOf(a) !== -1 || a.indexOf(b) !== -1) return 70;
+    // 缩写匹配两种形态：精确词首拼接（EMNLP）或尾部子序列（CVPR ⊂ …Society CVPR）
+    if (a.length >= 3) {
+      const ac = acronymOf(src.display_name);
+      if (ac === a) return 90;
+      if (a.length >= 4 && ac.endsWith(a)) return 85;
+    }
+    const wa = a.split(' ');
+    const wb = b.split(' ');
+    let hit = 0;
+    wa.forEach(function (w) { if (wb.indexOf(w) !== -1) hit++; });
+    return wa.length ? (hit / wa.length) * 55 : 0;
+  }
+  const seriesCache = new Map(); // confTitle → sourceId | null
+  let lastOaCall = 0;
+  async function oaThrottled(url) {
+    // 浏览器同 IP 连发会被 OpenAlex 限流：全局节流 250ms + 指数退避（最多 3 次）
+    const wait = Math.max(0, 250 - (Date.now() - lastOaCall));
+    if (wait) await new Promise((r) => setTimeout(r, wait));
+    for (let attempt = 0; attempt < 3; attempt++) {
+      lastOaCall = Date.now();
+      try {
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (res.status === 429 || res.status === 403) {
+          if (attempt < 2) { await new Promise((r) => setTimeout(r, 1100 * (attempt + 1))); continue; }
+          throw new Error('rate');
+        }
+        if (!res.ok) throw new Error(String(res.status));
+        return await res.json();
+      } catch (err) {
+        if (attempt >= 2) throw err;
+      }
+    }
+  }
+  async function findSeriesSource(title, desc) {
+    if (seriesCache.has(title)) return seriesCache.get(title);
+    // 缩写标题最稳；display_name.search 是确定性过滤器（search= 行为飘忽）
+    const q = title;
+    try {
+      const data = await oaThrottled(OA + '/sources?filter=display_name.search:' + encodeURIComponent(q) + '&per-page=15&mailto=' + OA_POLITE);
+      const best = (data.results || [])
+        .filter(function (s) {
+          if ((s.works_count || 0) < 300) return false;
+          if (EXCLUDE_RE.test(String(s.display_name || ''))) return false;
+          return true;
+        })
+        .map(function (s) { return { s: s, score: scoreSource(title, s) }; })
+        .sort(function (x, y) { return y.score - x.score || (y.s.works_count || 0) - (x.s.works_count || 0); })[0];
+      const id = best && best.score >= 45 ? String(best.s.id).split('/').pop() : null;
+      seriesCache.set(title, id);
+      return id;
+    } catch (e) {
+      return null; // 网络问题不缓存，下次再试
+    }
+  }
+  // 卷源探测：像 NeurIPS 这类「每届一个 source」的会议，名字常带年份
+  async function findYearSource(title, desc, year) {
+    const queries = [title + ' ' + year, (desc || '') + ' ' + year];
+    for (const q of queries) {
+      if (!q.trim()) continue;
+      try {
+        const data = await oaThrottled(OA + '/sources?filter=display_name.search:' + encodeURIComponent(q) + '&per-page=15&mailto=' + OA_POLITE);
+        const lowerTitle = title.toLowerCase();
+        const pick = (data.results || []).find(function (s) {
+          const name = (s.display_name || '').toLowerCase();
+          return name.indexOf(String(year)) !== -1 &&
+            (name.indexOf(lowerTitle) !== -1 || (desc && name.indexOf(desc.toLowerCase()) !== -1));
+        });
+        if (pick) return String(pick.id).split('/').pop();
+      } catch (e) { /* 下一个查询 */ }
+    }
+    return null;
+  }
+
+  function renderPapers(panel, state, loading) {
+    var status = panel.querySelector('.papers-status');
+    var list = panel.querySelector('.papers-list');
+    var more = panel.querySelector('.papers-more');
+    var search = panel.querySelector('.papers-search');
+    var q = ((search && search.value) || '').trim().toLowerCase();
+
+    var shown = state.papers.filter(function (p) {
+      return !q || p.title.toLowerCase().indexOf(q) !== -1 || p.authors.join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+    // 全量模式下不截断（DOM 上限 3000 条足够覆盖一届会议；超出时提示用搜索）
+    var CAP = 3000;
+    var slice = shown.slice(0, CAP);
+
+    list.innerHTML = slice.map(function (p) {
+      var authors = p.authors.slice(0, 3).join(', ') + (p.more || p.authors.length > 3 ? ' et al.' : '');
+      var inner = '<span class="paper-title-row"><a href="' + p.link + '" target="_blank" rel="noopener noreferrer">' + p.title + '</a>' +
+        '<span class="paper-cites">被引 ' + p.cites + '</span></span>' +
+        (authors ? '<span class="paper-authors">' + authors + '</span>' : '');
+      return '<li>' + inner + '</li>';
+    }).join('');
+
+    var loadingTag = loading || (!state.exhausted && state.papers.length > 0);
+    status.textContent = q
+      ? shown.length + ' / ' + state.papers.length + ' 篇匹配'
+      : (state.total && loadingTag
+          ? '已加载 ' + state.papers.length + ' / ' + state.total + ' 篇…'
+          : state.papers.length + ' 篇 · 按被引排序 · 全量');
+
+    more.classList.add('hidden');
+    if (shown.length > CAP) {
+      status.textContent += '（结果过多，请用搜索缩小范围）';
+    }
+  }
+
+  // 单页拉取（page 分页：无需 API key；cursor 分页被 OpenAlex 锁 key 了）
+  async function fetchPage(state) {
+    var url = OA + '/works?filter=primary_location.source.id:' + state.sourceId +
+      ',publication_year:' + state.year +
+      '&sort=cited_by_count:desc&per-page=200&page=' + state.page +
+      '&select=title,authorships,doi,cited_by_count,open_access,id&mailto=' + OA_POLITE;
+    var data = await oaThrottled(url);
+    var batch = (data.results || []).map(function (w) {
+      var oaId = w.id ? String(w.id).split('/').pop() : '';
+      var link = (w.open_access && w.open_access.oa_url) || w.doi || (oaId ? 'https://openalex.org/' + oaId : '#');
+      return {
+        title: w.title || '(untitled)',
+        authors: (w.authorships || []).slice(0, 6).map(function (a) { return a.author && a.author.display_name; }).filter(Boolean),
+        more: (w.authorships || []).length > 6,
+        cites: w.cited_by_count || 0,
+        link: link,
+      };
+    });
+    state.papers.push.apply(state.papers, batch);
+    if (data.meta && data.meta.count) state.total = Math.max(state.total, data.meta.count);
+    // 唯一的停止条件：批次为空（page 越界）；否则翻到下一页
+    if (batch.length === 0) {
+      state.exhausted = true;
+    } else {
+      state.page += 1;
+    }
+  }
+
+  // 全量拉取：循环游标直到取完（CVPR 一届约 2000+ 篇 ≈ 11 页），边拉边渲染
+  async function drainAll(panel, state) {
+    var status = panel.querySelector('.papers-status');
+    var guard = 0;
+    var pauses = 0;
+    while (!state.exhausted && guard < 80) {
+      guard++;
+      try {
+        await fetchPage(state);
+      } catch (e) {
+        // 限流/抖动：等 1.5s 续传（最多 3 次）；仍失败则展示已到手的部分
+        pauses++;
+        if (pauses <= 3 && state.papers.length > 0) {
+          status.textContent = '限流中，稍候继续…';
+          await new Promise((r) => setTimeout(r, 1500));
+          continue;
+        }
+        break;
+      }
+      if (state.total) {
+        status.textContent = '加载中 ' + state.papers.length + ' / ' + state.total + ' 篇…';
+      } else {
+        status.textContent = '已加载 ' + state.papers.length + ' 篇…';
+      }
+      renderPapers(panel, state, true);
+    }
+    state.exhausted = true;
+    renderPapers(panel, state);
+  }
+
+  async function loadPapers(btn) {
+    var conf = btn.closest('[data-conf]');
+    var panel = conf && conf.querySelector('.papers-panel');
+    if (!panel) return;
+    var title = btn.dataset.title;
+    var year = Number(btn.dataset.year);
+    var dblp = btn.dataset.dblp;
+    var status = panel.querySelector('.papers-status');
+    var list = panel.querySelector('.papers-list');
+    var dblpLink = panel.querySelector('.papers-dblp');
+    dblpLink.href = 'https://dblp.org/db/conf/' + dblp + '/' + dblp + year + '.html';
+
+    var key = title + ':' + year;
+    if (paperCache.has(key)) { renderPapers(panel, paperCache.get(key)); return; }
+
+    panel.classList.remove('hidden');
+    status.textContent = '加载中…';
+    list.innerHTML = '';
+
+    var state = { papers: [], page: 1, sourceId: null, exhausted: true, total: 0, year: year, panel: panel };
+    try {
+      var desc = btn.dataset.desc || '';
+      var sourceId = btn.dataset.oa || null;                       // ① 构建期 ID（可选加速）
+      if (!sourceId) sourceId = await findSeriesSource(title, desc); // ② 系列源（访客端解析）
+      if (!sourceId) sourceId = await findYearSource(title, desc, year); // ③ 当年卷源
+      if (!sourceId) throw new Error('no-source');
+      state.sourceId = sourceId; state.exhausted = false; state.page = 1;
+      paperCache.set(key, state);
+      await drainAll(panel, state);
+    } catch (e) {
+      // 完全没拿到数据才提示兜底；部分数据已渲染在面板上
+      if (state.papers.length === 0) {
+        status.textContent = '该届暂不可加载，走 DBLP：';
+        paperCache.delete(key);
+      }
+    }
+  }
+
+  document.querySelectorAll('.papers-year').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var group = btn.closest('[data-conf]');
+      group.querySelectorAll('.papers-year').forEach(function (b) {
+        b.classList.toggle('is-active', b === btn);
+        b.setAttribute('aria-expanded', String(b === btn));
+      });
+      loadPapers(btn);
+    });
+  });
+
+  document.querySelectorAll('.papers-panel').forEach(function (panel) {
+    var searchEl = panel.querySelector('.papers-search');
+    if (searchEl) searchEl.addEventListener('input', function () {
+      var btn = panel.closest('[data-conf]').querySelector('.papers-year.is-active');
+      if (!btn) return;
+      var state = paperCache.get(btn.dataset.title + ':' + btn.dataset.year);
+      // 加载中也可搜索：基于已到手的论文即时过滤，全量到位后自动补全
+      if (state) renderPapers(panel, state);
+    });
+    var moreEl = panel.querySelector('.papers-more');
+    if (moreEl) moreEl.addEventListener('click', function () {
+      var btn = panel.closest('[data-conf]').querySelector('.papers-year.is-active');
+      if (!btn) return;
+      var state = paperCache.get(btn.dataset.title + ':' + btn.dataset.year);
+      if (state && !state.exhausted) fetchPage(panel, state, Number(btn.dataset.year));
+    });
+  });
+</script>

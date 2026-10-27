@@ -1,6 +1,5 @@
 ---
 import { NAV_ITEMS, GITHUB_USERNAME } from '../consts';
-import CatMascot from './CatMascot.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import SearchModal from './SearchModal.astro';
 
@@ -21,10 +20,14 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
   class="sticky top-0 z-40 border-b border-rule/70 bg-paper/85 backdrop-blur-md"
 >
   <nav class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8" aria-label="主导航">
-    <a href="/" class="group flex shrink-0 items-center gap-2" aria-label="返回首页">
-      <span class="header-owl" aria-hidden="true">
-        <CatMascot crop static />
-      </span>
+    <a href="/" class="group flex shrink-0 items-center gap-2.5" aria-label="返回首页">
+      <img
+        src="/avatar.jpg"
+        alt=""
+        width="64"
+        height="64"
+        class="h-8 w-8 rounded-full border border-rule object-cover"
+      />
       <span class="font-serif text-[17px] font-semibold tracking-[.01em] text-ink transition-colors group-hover:text-accent">
         RisingInsight
       </span>
@@ -192,18 +195,6 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
 <style>
   header {
     transition: background-color .3s ease, box-shadow .3s ease;
-  }
-
-  /* 品牌标记：灵鸮头部特写，静态、克制 */
-  .header-owl {
-    display: block;
-    width: 30px;
-    height: 36px;
-    overflow: hidden;
-  }
-  .header-owl :global(svg) {
-    width: 100%;
-    height: 100%;
   }
 
   /* 滚动后：底部出现柔和的落影 */

@@ -72,7 +72,7 @@ const allCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
             href={`/blog/${post.id}/`}
             data-tags={postTags}
             data-categories={postCategories}
-            class="post-item group grid gap-4 py-7 sm:grid-cols-[96px_minmax(0,1fr)_auto] sm:items-baseline"
+            class="post-item row-link group grid gap-4 py-7 sm:grid-cols-[96px_minmax(0,1fr)_auto] sm:items-baseline"
           >
             <div class="font-mono text-[12px] text-muted-light">
               {formatDate(post.data.pubDate)}

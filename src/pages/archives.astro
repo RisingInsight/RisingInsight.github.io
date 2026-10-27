@@ -46,7 +46,7 @@ const months = Object.keys(postsByMonth);
             {postsByMonth[month].map((post) => (
               <a
                 href={`/blog/${post.id}/`}
-                class="group grid gap-3 py-5 sm:grid-cols-[90px_1fr_auto] sm:items-baseline"
+                class="row-link group grid gap-3 py-5 sm:grid-cols-[90px_1fr_auto] sm:items-baseline"
               >
                 <div class="font-mono text-[12px] text-muted-light">
                   {formatDate(post.data.pubDate)}

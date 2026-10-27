@@ -1,0 +1,624 @@
+{
+  "fetchedAt": "2026-10-27T09:36:49.103Z",
+  "source": "https://github.com/ccfddl/ccf-deadlines",
+  "count": 28,
+  "entries": [
+    {
+      "id": "icml",
+      "title": "ICML",
+      "description": "International Conference on Machine Learning",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "icml",
+      "year": 2026,
+      "confId": "icml26",
+      "link": "https://icml.cc/Conferences/2026",
+      "timezone": "UTC+0",
+      "date": "July 6-11, 2026",
+      "place": "Seoul, Korea",
+      "timelines": [
+        {
+          "comment": "Paper Submissions Open on OpenReview Jan 08 2026 12:00AM UTC-0",
+          "abstract": "2026-01-24 11:59:59",
+          "deadline": "2026-01-29 11:59:59"
+        }
+      ]
+    },
+    {
+      "id": "cogsci",
+      "title": "CogSci",
+      "description": "Annual Meeting of the Cognitive Science Society",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "cogsci",
+      "year": 2026,
+      "confId": "cogsci26",
+      "link": "https://cognitivesciencesociety.org/cogsci-2026/",
+      "timezone": "AoE",
+      "date": "July 23-25, 2026",
+      "place": "Rio de Janeiro, Brazil (Hybrid)",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "2026-02-02 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "uai",
+      "title": "UAI",
+      "description": "Conference on Uncertainty in Artificial Intelligence",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "uai",
+      "year": 2026,
+      "confId": "uai26",
+      "link": "https://www.auai.org/uai2026/",
+      "timezone": "AoE",
+      "date": "August 18-20, 2026",
+      "place": "Amsterdam, Netherlands (Hybrid)",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "2026-02-25 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "eccv",
+      "title": "ECCV",
+      "description": "European Conference on Computer Vision",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "eccv",
+      "year": 2026,
+      "confId": "eccv26",
+      "link": "https://eccv.ecva.net/",
+      "timezone": "UTC-8",
+      "date": "September 10-12, 2026",
+      "place": "Malmö, Sweden",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-02-26 14:00:00",
+          "deadline": "2026-03-05 14:00:00"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "iccbr",
+      "title": "ICCBR",
+      "description": "International Conference on Case-Based Reasoning",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "iccbr",
+      "year": 2026,
+      "confId": "iccbr2026",
+      "link": "https://2026.iccbr.org/",
+      "timezone": "AoE",
+      "date": "August 13-16, 2026",
+      "place": "Bremen, Germany",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-03-20 23:59:59",
+          "deadline": "2026-03-27 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "ppsn",
+      "title": "PPSN",
+      "description": "International Conference on Parallel Problem Solving From Nature",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "ppsn",
+      "year": 2026,
+      "confId": "ppsn26",
+      "link": "https://ppsn2026.disi.unitn.it/",
+      "timezone": "AoE",
+      "date": "August 31-September 2, 2026",
+      "place": "University of Trento, Trento, Italy",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "2026-03-28 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "emsoft",
+      "title": "EMSOFT",
+      "description": "International Conference on Embedded Software",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "emsoft",
+      "year": 2026,
+      "confId": "emsoft26",
+      "link": "https://esweek.org/emsoft/",
+      "timezone": "AoE",
+      "date": "October 5-7, 2026",
+      "place": "Barcelona, Spain",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-03-23 23:59:59",
+          "deadline": "2026-03-30 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "nips",
+      "title": "NeurIPS",
+      "description": "Conference on Neural Information Processing Systems",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "nips",
+      "year": 2026,
+      "confId": "nips26",
+      "link": "https://neurips.cc/Conferences/2026",
+      "timezone": "UTC+0",
+      "date": "December 8-10 (Sydney), December 9-11 (Atlanta and Paris), 2026",
+      "place": "Sydney, Australia; Atlanta, USA; Paris, France",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-05-05 11:59:00",
+          "deadline": "2026-05-07 11:59:00"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "emnlp",
+      "title": "EMNLP",
+      "description": "The annual Conference on Empirical Methods in Natural Language Processing",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "emnlp",
+      "year": 2026,
+      "confId": "emnlp26",
+      "link": "https://2026.emnlp.org/",
+      "timezone": "UTC-12",
+      "date": "October 25-27, 2026",
+      "place": "Budapest, Hungary (Hybrid)",
+      "timelines": [
+        {
+          "comment": "ARR Submission",
+          "abstract": null,
+          "deadline": "2026-05-25 23:59:59"
+        },
+        {
+          "comment": "Commitment deadline for papers with ARR reviews and meta-reviews",
+          "abstract": null,
+          "deadline": "2026-08-02 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "rtss",
+      "title": "RTSS",
+      "description": "The IEEE Real-Time Systems Symposium",
+      "sub": "MX",
+      "rank": "A",
+      "dblp": "rtss",
+      "year": 2026,
+      "confId": "rtss26",
+      "link": "http://2026.rtss.org/",
+      "timezone": "AoE",
+      "date": "December 9-11, 2026",
+      "place": "Yokohama, Japan",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-05-21 23:59:59",
+          "deadline": "2026-05-26 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "wine",
+      "title": "WINE",
+      "description": "Conference on Web and Internet Economics",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "wine",
+      "year": 2026,
+      "confId": "wine2026",
+      "link": "https://wine2026conf.github.io/",
+      "timezone": "AoE",
+      "date": "December 1-4, 2026",
+      "place": "Hong Kong, China",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "2026-07-02 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "bibm",
+      "title": "BIBM",
+      "description": "IEEE International Conference on Bioinformatics and Biomedicine",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "bibm",
+      "year": 2026,
+      "confId": "bibm26",
+      "link": "https://ieeebibm.org/BIBM2026/",
+      "timezone": "UTC-12",
+      "date": "Dec 1-4, 2026",
+      "place": "Dallas, USA",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "2026-07-05 23:59:59"
+        }
+      ],
+      "openalexId": "https://openalex.org/S4363607730"
+    },
+    {
+      "id": "icra",
+      "title": "ICRA",
+      "description": "IEEE International Conference on Robotics and Automation",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "icra",
+      "year": 2027,
+      "confId": "icra27",
+      "link": "https://2027.ieee-icra.org/",
+      "timezone": "UTC-8",
+      "date": "May 24-28, 2027",
+      "place": "Seoul, Republic of Korea",
+      "timelines": [
+        {
+          "comment": "Extended submission deadline",
+          "abstract": null,
+          "deadline": "2026-09-16 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "iclr",
+      "title": "ICLR",
+      "description": "International Conference on Learning Representations",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "iclr",
+      "year": 2027,
+      "confId": "iclr27",
+      "link": "https://iclr.cc/Conferences/2027",
+      "timezone": "AoE",
+      "date": "April 26-30, 2027",
+      "place": "San Francisco, CA, USA",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-09-18 23:59:59",
+          "deadline": "2026-09-25 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "coling",
+      "title": "COLING",
+      "description": "International Conference on Computational Linguistics",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "coling",
+      "year": 2027,
+      "confId": "coling27",
+      "link": "https://2027.coling-iccl.org/",
+      "timezone": "UTC-12",
+      "date": "May 9-14, 2027",
+      "place": "Macau SAR, China",
+      "timelines": [
+        {
+          "comment": "ARR Submission",
+          "abstract": null,
+          "deadline": "2026-10-12 23:59:59"
+        },
+        {
+          "comment": "COLING commitment after ARR meta-reviews; reviewed papers only",
+          "abstract": null,
+          "deadline": "2026-12-23 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "naacl",
+      "title": "NAACL",
+      "description": "The Annual Conference of the North American Chapter of the Association for Computational Linguistics",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "naacl",
+      "year": 2027,
+      "confId": "naacl27",
+      "link": "https://2027.naacl.org/",
+      "timezone": "UTC-12",
+      "date": "June 1-5, 2027",
+      "place": "San Francisco, California, USA",
+      "timelines": [
+        {
+          "comment": "ARR Submission",
+          "abstract": null,
+          "deadline": "2026-10-12 23:59:59"
+        },
+        {
+          "comment": "NAACL commitment after ARR meta-reviews; reviewed papers only",
+          "abstract": null,
+          "deadline": "2026-12-23 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "www",
+      "title": "WWW",
+      "description": "International World Wide Web Conferences",
+      "sub": "MX",
+      "rank": "A",
+      "dblp": "www",
+      "year": 2027,
+      "confId": "www27",
+      "link": "https://www2027.thewebconf.org/",
+      "timezone": "AoE",
+      "date": "May 10 - 14, 2027",
+      "place": "Dublin, Ireland",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-10-18 23:59:59",
+          "deadline": "2026-10-25 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "recomb",
+      "title": "RECOMB",
+      "description": "International Conference on Research inComputational Molecular Biology",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "recomb",
+      "year": 2027,
+      "confId": "recomb27",
+      "link": "https://recomb.org/recomb2027/",
+      "timezone": "AoE",
+      "date": "May 17-20, 2027",
+      "place": "Toronto, Canada",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-10-28 23:59:59",
+          "deadline": "2026-11-04 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "cvpr",
+      "title": "CVPR",
+      "description": "IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "cvpr",
+      "year": 2027,
+      "confId": "cvpr27",
+      "link": "https://cvpr.thecvf.com/Conferences/2027",
+      "timezone": "UTC-12",
+      "date": "June 20-25, 2027",
+      "place": "Seattle, WA, United States",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-11-10 23:59:59",
+          "deadline": "2026-11-16 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "icaps",
+      "title": "ICAPS",
+      "description": "International Conference on Automated Planning and Scheduling",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "icaps",
+      "year": 2027,
+      "confId": "icaps27",
+      "link": "https://icaps27.icaps-conference.org/",
+      "timezone": "UTC-12",
+      "date": "June 27 - July 2, 2027",
+      "place": "Columbia, SC, USA",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-12-07 23:59:59",
+          "deadline": "2026-12-14 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "acl",
+      "title": "ACL",
+      "description": "Annual Meeting of the Association for Computational Linguistics",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "acl",
+      "year": 2027,
+      "confId": "acl27",
+      "link": "https://2027.aclweb.org/",
+      "timezone": "UTC-12",
+      "date": "August 17-22, 2027",
+      "place": "Kyoto, Japan",
+      "timelines": [
+        {
+          "comment": "ARR Submission",
+          "abstract": null,
+          "deadline": "2027-01-04 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "ijcai",
+      "title": "IJCAI",
+      "description": "International Joint Conference on Artificial Intelligence",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "ijcai",
+      "year": 2027,
+      "confId": "ijcai27",
+      "link": "https://2027.ijcai.org/",
+      "timezone": "AoE",
+      "date": "August 7-13, 2027",
+      "place": "Kyoto, Japan",
+      "timelines": [
+        {
+          "comment": "Separate satellite event: August 15-17, 2027, Hengqin, China",
+          "abstract": "2027-01-04 23:59:00",
+          "deadline": "2027-01-11 23:59:00"
+        }
+      ]
+    },
+    {
+      "id": "ismb",
+      "title": "ISMB",
+      "description": "International Conference on Intelligent Systems for Molecular Biology",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "ismb",
+      "year": 2027,
+      "confId": "ismb27",
+      "link": "https://www.iscb.org/ismbeccb2027/",
+      "timezone": "AoE",
+      "date": "July 18-22, 2027",
+      "place": "Copenhagen, Denmark",
+      "timelines": [
+        {
+          "comment": "Proceedings; conditional acceptance: March 2, 2027; revised papers due: March 18, 2027, 23:59 AoE; no extensions to submission or revision deadlines",
+          "abstract": null,
+          "deadline": "2027-01-14 23:59:00"
+        }
+      ]
+    },
+    {
+      "id": "ecai",
+      "title": "ECAI",
+      "description": "European Conference on Artificial Intelligence",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "ecai",
+      "year": 2027,
+      "confId": "ecai27",
+      "link": "https://ecai2027.org/",
+      "timezone": "AoE",
+      "date": "October 2-7, 2027",
+      "place": "Athens, Greece",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "2027-04-14 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "kr",
+      "title": "KR",
+      "description": "International Conference on Principles of Knowledge Representation and Reasoning",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "kr",
+      "year": 2027,
+      "confId": "krd27",
+      "link": "https://kr.org/KR2027/",
+      "timezone": "AoE",
+      "date": "September 21-24, 2027",
+      "place": "Buenos Aires, Argentina",
+      "timelines": [
+        {
+          "comment": "Main track; author response period: June 15-18, 2027",
+          "abstract": "2027-04-23 23:59:59",
+          "deadline": "2027-04-28 23:59:59"
+        }
+      ]
+    },
+    {
+      "id": "colt",
+      "title": "COLT",
+      "description": "Annual Conference on Learning Theory",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "colt",
+      "year": 2027,
+      "confId": "colt27",
+      "link": "https://learningtheory.org/colt2027/",
+      "timezone": "AoE",
+      "date": "June 28 - July 2, 2027",
+      "place": "Tokyo, Japan",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "TBD"
+        }
+      ]
+    },
+    {
+      "id": "iccv",
+      "title": "ICCV",
+      "description": "IEEE International Conference on Computer Vision",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "iccv",
+      "year": 2027,
+      "confId": "iccv27",
+      "link": "https://iccv.thecvf.com/Conferences/2027",
+      "timezone": "AoE",
+      "date": "October 2-8, 2027",
+      "place": "Hong Kong, China",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "TBD"
+        }
+      ]
+    },
+    {
+      "id": "miccai",
+      "title": "MICCAI",
+      "description": "International Conference on Medical Image Computing and Computer Assisted Intervention",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "miccai",
+      "year": 2028,
+      "confId": "miccai28",
+      "link": "https://conferences.miccai.org/2028/en/",
+      "timezone": "UTC-8",
+      "date": "Oct 16-20, 2028",
+      "place": "São Paulo, Brazil",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "TBD",
+          "deadline": "TBD"
+        }
+      ]
+    }
+  ]
+}

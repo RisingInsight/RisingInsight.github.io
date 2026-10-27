@@ -19,7 +19,34 @@ import {
   getWordCount,
 } from '../utils/blog';
 import { getCommitActivity } from '../utils/git';
+import ddlData from '../data/ccf-ddl.json';
 
+// 侧栏「最近截稿」：构建期取最近 3 个未截止的 CCF 会（倒计时为近似值，详情看 /ddl/）
+function parseDdlAtBuild(str, tz) {
+  if (!str) return null;
+  let offset = '-12:00';
+  const m = String(tz || '').match(/UTC([+-]\d{1,2})/);
+  if (m) {
+    const h = parseInt(m[1], 10);
+    offset = (h >= 0 ? '+' : '-') + String(Math.abs(h)).padStart(2, '0') + ':00';
+  }
+  const d = new Date(String(str).replace(' ', 'T') + offset);
+  return isNaN(d.getTime()) ? null : d;
+}
+const upcomingDdls = ddlData.entries
+  .map((e) => ({
+    title: e.title,
+    year: e.year,
+    rank: e.rank,
+    d: parseDdlAtBuild(e.timelines.map((t) => t.deadline).sort()[0], e.timezone),
+  }))
+  .filter((e) => e.d && e.d.getTime() > Date.now())
+  .sort((a, b) => a.d - b.d)
+  .slice(0, 3)
+  .map((e) => ({
+    ...e,
+    days: Math.ceil((e.d.getTime() - Date.now()) / 86400000),
+  }));
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
 const postsByDate = [...allPosts].sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
@@ -49,12 +76,28 @@ const heroLines = HERO_LINES.map((line) => ({
   chars: Array.from(line).map((ch) => ({ ch, d: heroCharCursor++ })),
 }));
 const HERO_TEXT = HERO_LINES.join('');
+// 片头字幕：工程循环五拍阶梯 + 品牌定场拍（不与中文 h1 重复）
+const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT IT.'];
 ---
 
 <BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
   <main id="main">
+
     <!-- 首屏：底部锚定的编辑式构图 —— 顶部 HUD、贴底巨字、1px 分隔线下的说明与 CTA。
          视频播放一次即停在末帧（源素材已倒放成「破晓」），滚动时镜头缓缓推进、文案上移淡出。 -->
+    <script is:inline>
+      // 首帧绘制前决定本会话是否有「滚动擦洗片头」：
+      // 命中则轨道拉长、hero 钉住，滚动距离即片头进度（可往返擦洗）。
+      (function () {
+        try {
+          var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (!reduced && !sessionStorage.getItem('hero-intro-seen')) {
+            document.documentElement.classList.add('intro-scrub');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <div class="hero-track" id="hero-track">
     <section id="hero-dawn" class="hero">
       <div class="hero-media" aria-hidden="true">
         <div class="hero-video-wrap">
@@ -121,7 +164,23 @@ const HERO_TEXT = HERO_LINES.join('');
           </div>
         </div>
       </div>
+
+      <!-- 滚动擦洗的字幕层：词轮替 + 品牌定场 + 进度线，均由滚动位置驱动 -->
+      <div class="hero-scrub-words" aria-hidden="true">
+        {TITLE_BEATS.map((w, i) => (
+          <span class="scrub-word" style={`--wi:${i}`}>{w}</span>
+        ))}
+        <span class="scrub-word scrub-brand">RISINGINSIGHT</span>
+      </div>
+      <span class="hero-scrub-progress" aria-hidden="true"><i class="hero-scrub-fill"></i></span>
+
+      <div class="hero-ctrl-cluster">
+        <audio id="hero-waves" src="/media/hero-waves.mp3" loop preload="none"></audio>
+        <button type="button" class="hero-ctrl" data-sound aria-pressed="false">♪ SOUND OFF</button>
+        <button type="button" class="hero-ctrl" data-replay>↻ REPLAY</button>
+      </div>
     </section>
+    </div>
 
     <!-- 内容区：首屏底部已溶入纸面，无需再画分界线 -->
     <section>
@@ -142,7 +201,7 @@ const HERO_TEXT = HERO_LINES.join('');
 
               <div>
                 {latestPosts.map((post) => (
-                  <a href={`/blog/${post.id}/`} class="group block border-b border-rule-soft py-7 last:border-b-0">
+                  <a href={`/blog/${post.id}/`} class="row-link reveal group block border-b border-rule-soft py-7 last:border-b-0" style={`--reveal-d:${(0.05 + 0).toFixed(2)}s`}>
                     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
                       <h3 class="font-serif text-[1.3rem] font-semibold leading-snug text-ink transition-colors group-hover:text-accent sm:text-[1.42rem]">
                         {post.data.featured && (
@@ -170,7 +229,7 @@ const HERO_TEXT = HERO_LINES.join('');
 
             <a
               href="/guestbook/"
-              class="group flex items-center justify-between gap-6 rounded-[var(--r-lg)] border border-rule bg-surface px-5 py-4 transition-colors hover:border-muted-light"
+              class="reveal group flex items-center justify-between gap-6 rounded-[var(--r-lg)] border border-rule bg-surface px-5 py-4 transition-colors hover:border-muted-light"
             >
               <div>
                 <div class="text-[15px] font-medium text-ink transition-colors group-hover:text-accent">
@@ -188,7 +247,7 @@ const HERO_TEXT = HERO_LINES.join('');
 
           <aside class="space-y-12">
             <section>
-              <div class="sec-head">
+              <div class="sec-head reveal">
                 <h2 class="font-serif text-base font-semibold text-ink">关于我</h2>
                 <a href="/about/" class="text-[12px] text-muted transition-colors hover:text-accent">
                   更多 <span aria-hidden="true">→</span>
@@ -214,7 +273,7 @@ const HERO_TEXT = HERO_LINES.join('');
 
             {seriesGroups.length > 0 && (
               <section>
-                <div class="mono-label">系列</div>
+                <div class="mono-label reveal">系列</div>
                 <ul class="mt-4 space-y-2.5">
                   {seriesGroups.map((group) => (
                     <li>
@@ -228,8 +287,37 @@ const HERO_TEXT = HERO_LINES.join('');
               </section>
             )}
 
+            {upcomingDdls.length > 0 && (
+              <section>
+                <div class="mono-label reveal">截稿日</div>
+                <ul class="mt-4 space-y-3">
+                  {upcomingDdls.map((u) => (
+                    <li>
+                      <a href="/ddl/" class="group flex items-baseline justify-between gap-3">
+                        <span class="font-mono text-[13px] font-semibold text-ink transition-colors group-hover:text-accent">
+                          {u.title}
+                          <span class="ml-1 font-sans text-[11px] font-normal text-muted-light">{u.year}</span>
+                        </span>
+                        <span
+                          class:list={[
+                            'shrink-0 font-mono text-[11px] font-bold',
+                            u.rank === 'A' ? 'text-accent' : 'text-muted-light',
+                          ]}
+                        >
+                          D-{u.days}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                <a href="/ddl/" class="mt-3 inline-block text-[12px] text-muted transition-colors hover:text-accent">
+                  全部截稿日 <span aria-hidden="true">→</span>
+                </a>
+              </section>
+            )}
+
             <section>
-              <div class="mono-label">标签</div>
+              <div class="mono-label reveal">标签</div>
               <div class="flex flex-wrap gap-1.5 pt-4">
                 {tags.map(([tag, count]) => (
                   <a href={`/blog/?tag=${encodeURIComponent(tag)}`} class="tag">
@@ -240,7 +328,7 @@ const HERO_TEXT = HERO_LINES.join('');
             </section>
 
             <section>
-              <div class="mono-label">找到我</div>
+              <div class="mono-label reveal">找到我</div>
               <div class="mt-4 flex flex-col gap-2 text-[13px]">
                 {SOCIALS.map((social) => (
                   <a
@@ -475,152 +563,151 @@ const HERO_TEXT = HERO_LINES.join('');
   }
   .hero-ghost:hover { color: #ffffff; }
 
-  /* ===== 入场：约 2.5 秒，一次性、不遮挡、不锁滚动 =====
-     观众看到的第一帧就是内容本身；每 100–200ms 有一件事发生，全程不空转。
-     时间轴：0 显影(0.7s)＋推镜(1.9s) / .10 光圈张开 / .12 暖光 / .30–.54 四角落位
-             .75 品牌逐字 / .88 元信息 / 1.08 正文逐字波 / 1.58 标尺 / 1.68 说明
-             / 1.80 按钮 / 2.00 第二道暖光（拖到 3.9s 收尾） */
-  .hero-video-wrap {
+
+  /* ===== 滚动擦洗模式（html.intro-scrub，每会话首次）=====
+     轨道拉长 → hero 钉住 → 滚动距离即片头进度，可往返倒带；
+     词轮替/品牌/进度线由 JS 按滚动位置驱动。 */
+  :global(html.intro-scrub) .hero-track {
+    height: calc(100svh + 165svh);
+    background: #080b10;
+  }
+  :global(html.intro-scrub) .hero {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 100svh;
+  }
+
+  .hero-scrub-words,
+  .hero-scrub-progress {
+    display: none;
+  }
+  :global(html.intro-scrub) .hero-scrub-words {
+    display: grid;
+    place-items: center;
     position: absolute;
     inset: 0;
-    animation:
-      hero-fade-in .7s ease-out both,
-      hero-zoom 1.9s var(--ease-out-expo) both;
-    will-change: transform, opacity;
-  }
-  /* 显影拆成两段：透明度先到位（0.7s），让随后张开的光圈真的看得见；
-     推镜则缓慢收住（1.9s），像镜头在找焦点 */
-  @keyframes hero-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes hero-zoom {
-    from { transform: scale(1.14); }
-    to   { transform: scale(1); }
-  }
-
-  /* 光圈：画面先被上下两块同色板裁成宽画幅，再向两侧张开 */
-  .hero-aperture {
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: 4;
-    height: 22%;
-    background: #080b10;
-    pointer-events: none;
-    will-change: transform;
-  }
-  .hero-aperture--top {
-    top: 0;
-    animation: hero-aperture-up .95s cubic-bezier(.16, 1, .3, 1) .1s both;
-  }
-  .hero-aperture--bottom {
-    bottom: 0;
-    animation: hero-aperture-down .95s cubic-bezier(.16, 1, .3, 1) .1s both;
-  }
-  @keyframes hero-aperture-up {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-102%); }
-  }
-  @keyframes hero-aperture-down {
-    from { transform: translateY(0); }
-    to   { transform: translateY(102%); }
-  }
-
-  /* 暖光横扫：开屏两束，一快一慢 */
-  .hero-streak {
-    position: absolute;
-    top: -12%;
-    bottom: -12%;
-    left: 0;
-    z-index: 1;
-    width: 44%;
-    pointer-events: none;
-    mix-blend-mode: screen;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 238, 214, .06) 40%, rgba(255, 238, 214, .12) 52%, rgba(255, 238, 214, .05) 64%, transparent 100%);
-    transform: translateX(-140%) skewX(-10deg);
-    animation: hero-streak 1.2s cubic-bezier(.45, 0, .25, 1) .12s both;
-  }
-  @keyframes hero-streak {
-    0%   { transform: translateX(-140%) skewX(-10deg); opacity: 0; }
-    12%  { opacity: 1; }
-    82%  { opacity: 1; }
-    100% { transform: translateX(310%) skewX(-10deg); opacity: 0; }
-  }
-  /* 第二束：更宽更慢，等正文出场后再掠过一次 */
-  .hero-streak--late {
-    width: 62%;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 238, 214, .05) 42%, rgba(255, 238, 214, .09) 52%, rgba(255, 238, 214, .04) 62%, transparent 100%);
-    animation: hero-streak 1.9s cubic-bezier(.4, 0, .3, 1) 2s both;
-  }
-
-  /* 四角取景框：依次落位，给画面一个"取景"的边框感 */
-  .hero-corners {
-    position: absolute;
-    inset: 18px;
-    z-index: 2;
+    z-index: 3;
     pointer-events: none;
   }
-  .hero-corners > span {
+  :global(html.intro-scrub) .hero-scrub-progress {
+    display: block;
     position: absolute;
-    width: 15px;
-    height: 15px;
-    border: 0 solid rgba(246, 239, 228, .3);
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: 200px;
+    height: 2px;
+    background: rgba(246, 239, 228, .14);
+    overflow: hidden;
+  }
+  .scrub-word {
+    grid-area: 1 / 1;
     opacity: 0;
-    animation: hero-corner .8s var(--ease-out-expo) both;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(1.9rem, 6.2vw, 4.4rem);
+    letter-spacing: .05em;
+    text-align: center;
+    will-change: opacity, transform, filter;
   }
-  .hero-corners > span:nth-child(1) {
-    top: 0;
-    left: 0;
-    border-top-width: 1px;
-    border-left-width: 1px;
-    animation-delay: .3s;
+  .scrub-brand {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+    letter-spacing: .16em;
   }
-  .hero-corners > span:nth-child(2) {
-    top: 0;
-    right: 0;
-    border-top-width: 1px;
-    border-right-width: 1px;
-    animation-delay: .38s;
-  }
-  .hero-corners > span:nth-child(3) {
-    bottom: 0;
-    left: 0;
-    border-bottom-width: 1px;
-    border-left-width: 1px;
-    animation-delay: .46s;
-  }
-  .hero-corners > span:nth-child(4) {
-    bottom: 0;
-    right: 0;
-    border-bottom-width: 1px;
-    border-right-width: 1px;
-    animation-delay: .54s;
-  }
-  @keyframes hero-corner {
-    from { opacity: 0; transform: scale(1.7); }
-    to   { opacity: 1; transform: scale(1); }
+  .hero-scrub-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
   }
 
-  @keyframes hero-hud-in {
-    from { opacity: 0; transform: translateY(-9px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* scrub 模式：正片元素先收起，p≥0.94 由 JS 挂 hero-in 过渡升起。
+     14s 兜底揭示：即便 JS 半路失效，巨字也不会永久隐藏。 */
+  :global(html.intro-scrub) .hero-ch {
+    animation: hero-ch-failsafe .7s var(--ease-out-expo) 14s both;
   }
-  @keyframes hero-up {
-    from { opacity: 0; transform: translateY(9px); }
-    to   { opacity: 1; transform: translateY(0); }
+  :global(html.intro-scrub) .brand-ch {
+    animation: brand-ch-failsafe .7s var(--ease-out-expo) 14.2s both;
   }
-  @keyframes hero-rule {
-    from { transform: scaleX(0); }
-    to   { transform: scaleX(1); }
+  :global(html.intro-scrub) .hero-ch {
+    animation: none;
+    opacity: 0;
+    transform: translateY(115%);
+    filter: blur(8px);
+    transition:
+      transform .8s var(--ease-out-expo),
+      filter .8s var(--ease-out-expo),
+      opacity .5s ease;
+    transition-delay: calc(var(--d, 0) * 22ms);
+  }
+  :global(html.intro-scrub) .brand-ch {
+    animation: none;
+    opacity: 0;
+    transform: translateY(110%);
+    transition: transform .7s var(--ease-out-expo), opacity .5s ease;
+    transition-delay: calc(var(--bi, 0) * 20ms);
+  }
+  :global(html.intro-scrub) .hero-meta {
+    animation: none;
+    opacity: 0;
+    transform: translateY(-9px);
+    transition: opacity .7s ease .1s, transform .7s var(--ease-out-expo) .1s;
+  }
+  :global(html.intro-scrub) .hero-bar::before {
+    animation: none;
+    transform: scaleX(0);
+    transition: transform .9s var(--ease-out-expo);
+  }
+  :global(html.intro-scrub) .hero-desc {
+    animation: none;
+    opacity: 0;
+    transform: translateY(9px);
+    transition: opacity .7s ease .15s, transform .7s var(--ease-out-expo) .15s;
+  }
+  :global(html.intro-scrub) .hero-actions {
+    animation: none;
+    opacity: 0;
+    transform: translateY(9px);
+    transition: opacity .7s ease .25s, transform .7s var(--ease-out-expo) .25s;
+  }
+  :global(html.intro-scrub.hero-in) .hero-ch {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+  :global(html.intro-scrub.hero-in) .brand-ch {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  :global(html.intro-scrub.hero-in) .hero-meta {
+    opacity: 1;
+    transform: none;
+  }
+  :global(html.intro-scrub.hero-in) .hero-bar::before {
+    transform: scaleX(1);
+  }
+  :global(html.intro-scrub.hero-in) .hero-desc {
+    opacity: 1;
+    transform: none;
+  }
+  :global(html.intro-scrub.hero-in) .hero-actions {
+    opacity: 1;
+    transform: none;
   }
 
-
-
-
-  @keyframes hero-kb {
-    from { transform: scale(1); }
-    to { transform: scale(1.1); }
+  @keyframes hero-ch-failsafe {
+    from { opacity: 0; transform: translateY(115%); filter: blur(8px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+  @keyframes brand-ch-failsafe {
+    from { opacity: 0; transform: translateY(110%); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @media (max-width: 767px) {
@@ -632,6 +719,7 @@ const HERO_TEXT = HERO_LINES.join('');
     .hero-hud { font-size: 10px; letter-spacing: .08em; }
     .hero-meta { display: none; }
     .hero-bar { align-items: flex-start; flex-direction: column; }
+    .hero-ctrl-cluster { left: 14px; bottom: 14px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -653,6 +741,8 @@ const HERO_TEXT = HERO_LINES.join('');
     }
     .hero-ch { animation: none; transform: none; filter: none; }
     .brand-ch { transform: none; }
+    .title-seq { display: none !important; }
+    [data-replay] { display: none; }
     /* 标尺的基础态是 scaleX(0)，必须显式拉满 */
     .hero-bar::before { animation: none !important; transform: scaleX(1); }
     .hero-cta { transition: none; }
@@ -660,83 +750,192 @@ const HERO_TEXT = HERO_LINES.join('');
 </style>
 
 <script>
-  // ===== 首屏：按需挂载视频（桌面端 + 允许动效 + 非省流）、滚动镜头推进、克制的指针视差。
-  // 入场动画完全交给 CSS —— 这里不加类、不写会话缓存，避免二次进入的闪烁。
+  // ===== 首屏：视频挂载 + 滚动擦洗片头 + 声音/重播 =====
+  // 擦洗模式（html.intro-scrub，每会话首次）：滚动距离 = 片头进度，可往返倒带；
+  // 未接管时 8.5s 慢速自动推进，任何真实输入立即移交擦洗权。事件驱动，不依赖 rAF。
   const hero = document.getElementById('hero-dawn');
   if (hero) {
     const video = hero.querySelector<HTMLVideoElement>('.hero-video');
     const source = video?.querySelector<HTMLSourceElement>('source');
-    const foot = hero.querySelector<HTMLElement>('.hero-foot');
+    const htmlEl = document.documentElement;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const wide = window.matchMedia('(min-width: 768px)').matches;
     const saveData = (navigator as any).connection?.saveData === true;
+    const trackEl = document.getElementById('hero-track');
+    const scrubWords = Array.from(hero.querySelectorAll('.scrub-word'));
+    const scrubBrand = hero.querySelector('.scrub-brand');
+    const scrubFill = hero.querySelector('.hero-scrub-fill');
+    const waves = document.getElementById('hero-waves');
+    const soundBtn = hero.querySelector('[data-sound]');
+    const replayBtn = hero.querySelector('[data-replay]');
 
-    // 视频只在桌面端按需挂载：不在移动端浪费 4.5MB
+    const clamp01 = (v) => Math.min(1, Math.max(0, v));
+    const smooth = (v) => v * v * (3 - 2 * v);
+
+    // ---- 视频挂载（桌面端 + 允许动效 + 非省流）----
     if (video && source && wide && !reduced && !saveData) {
       const src = source.getAttribute('data-src');
       if (src) {
         source.setAttribute('src', src);
         video.load();
-        // 不带循环与自动播放属性：播放一次即停在「破晓」末帧
-        video.play().catch(() => {});
-
-        // 后台标签 / 省电策略会暂停静音视频：只要没播完，恢复可见即续播，
-        // 保证首屏在场时画面始终是活的（播完后 ended=true，不再打扰）
-        const resume = () => {
-          if (!video.ended) video.play().catch(() => {});
-        };
-        video.addEventListener('pause', resume);
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') resume();
-        });
+        if (!scrubMode) {
+          // 非擦洗（回访）：播放一次停在「破晓」末帧，后台标签暂停时自动续播
+          video.play().catch(() => {});
+          const resume = () => {
+            if (!video.ended) video.play().catch(() => {});
+          };
+          video.addEventListener('pause', resume);
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') resume();
+          });
+        }
+        // 擦洗模式：不自动播放，由 drive() 按滚动位置 seek
       }
     }
 
-    if (!reduced) {
-      // 滚动：镜头推进 + 文案上移淡出
-      let ticking = false;
-      const sync = () => {
-        const h = hero.offsetHeight || 1;
-        const p = Math.min(1, Math.max(0, window.scrollY / h));
-        if (video) {
-          video.style.transform = `translateY(${(p * -2.4).toFixed(2)}%) scale(${(1.04 + p * 0.16).toFixed(4)})`;
-        }
-        if (foot) {
-          foot.style.transform = `translate3d(0, ${(-p * 64).toFixed(1)}px, 0)`;
-          foot.style.opacity = String(Math.max(0, 1 - p * 1.45));
-        }
-        ticking = false;
-      };
-      const requestSync = () => {
-        if (ticking) return;
-        ticking = true;
-        window.requestAnimationFrame(sync);
-      };
-      window.addEventListener('scroll', requestSync, { passive: true });
-      sync();
-
-      // 指针视差：画面反向平移，颗粒反向更多
-      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-        let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
-        const loop = () => {
-          cx += (tx - cx) * 0.075;
-          cy += (ty - cy) * 0.075;
-          hero.style.setProperty('--hx', `${cx.toFixed(2)}px`);
-          hero.style.setProperty('--hy', `${cy.toFixed(2)}px`);
-          raf = (Math.abs(tx - cx) > 0.06 || Math.abs(ty - cy) > 0.06) ? window.requestAnimationFrame(loop) : 0;
-        };
-        hero.addEventListener('pointermove', (event) => {
-          const rect = hero.getBoundingClientRect();
-          tx = ((event.clientX - rect.left) / rect.width - 0.5) * -18;
-          ty = ((event.clientY - rect.top) / rect.height - 0.5) * -14;
-          if (!raf) raf = window.requestAnimationFrame(loop);
-        }, { passive: true });
-        hero.addEventListener('pointerleave', () => {
-          tx = 0;
-          ty = 0;
-          if (!raf) raf = window.requestAnimationFrame(loop);
+    // ---- 声音：偏好持久化 + 手势解锁 + 随首屏出画暂停 ----
+    let soundOn = false;
+    try { soundOn = localStorage.getItem('hero-sound') === 'on'; } catch (e) {}
+    function applySound() {
+      if (soundBtn) {
+        soundBtn.textContent = soundOn ? '♪ SOUND ON' : '♪ SOUND OFF';
+        soundBtn.setAttribute('aria-pressed', String(soundOn));
+      }
+      if (!waves) return;
+      if (soundOn) waves.play().catch(() => {});
+      else waves.pause();
+    }
+    applySound();
+    soundBtn?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      soundOn = !soundOn;
+      try { localStorage.setItem('hero-sound', soundOn ? 'on' : 'off'); } catch (e) {}
+      applySound();
+    });
+    const unlockSound = () => {
+      document.removeEventListener('pointerdown', unlockSound);
+      document.removeEventListener('keydown', unlockSound);
+      if (soundOn) waves?.play().catch(() => {});
+    };
+    document.addEventListener('pointerdown', unlockSound);
+    document.addEventListener('keydown', unlockSound);
+    if ('IntersectionObserver' in window && waves) {
+      new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (soundOn) waves.play().catch(() => {});
+          } else {
+            waves.pause();
+          }
         });
+      }, { threshold: 0.15 }).observe(hero);
+    }
+
+    // ---- 滚动擦洗（惰性初始化；REPLAY 也可对回访用户启用）----
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const scrubWordsEls = scrubWords;
+    let scrubRunning = false;
+    let userTook = false;
+    let autoP = 0;
+    let lastP = -1;
+    let seenMarked = false;
+    let heroIn = false;
+    let autoLast = 0;
+    let autoTimer = 0;
+
+    function apply(p) {
+      scrubWordsEls.forEach((w, i) => {
+        const a = 0.08 + i * 0.1;
+        const local = clamp01((p - a) / 0.12);
+        let o = 0;
+        let sc = 1.16;
+        let bl = 9;
+        if (local >= 1) {
+          o = 0; sc = 0.97; bl = 6;
+        } else if (local > 0.7) {
+          const k = (local - 0.7) / 0.3;
+          o = 1 - k; sc = 1 - 0.03 * k; bl = 6 * k;
+        } else if (local > 0) {
+          const k = local / 0.7;
+          o = k; sc = 1.16 - 0.16 * k; bl = 9 * (1 - k);
+        }
+        w.style.opacity = o.toFixed(3);
+        w.style.transform = `scale(${sc.toFixed(3)})`;
+        w.style.filter = `blur(${bl.toFixed(1)}px)`;
+      });
+      const b = clamp01((p - 0.74) / 0.16);
+      if (scrubBrand) {
+        scrubBrand.style.opacity = b.toFixed(3);
+        scrubBrand.style.letterSpacing = `${(0.42 - 0.26 * b).toFixed(3)}em`;
+        scrubBrand.style.filter = `blur(${(6 * (1 - b)).toFixed(1)}px)`;
+      }
+      if (scrubFill) scrubFill.style.transform = `scaleX(${clamp01((p - 0.08) / 0.82).toFixed(4)})`;
+      if (!heroIn && p >= 0.94) {
+        heroIn = true;
+        hero.classList.add('hero-in');
+      }
+      if (!seenMarked && p >= 0.95) {
+        seenMarked = true;
+        try { sessionStorage.setItem('hero-intro-seen', '1'); } catch (e) {}
+      }
+      // 影片跟随滚动擦洗：滚到哪，画面就在哪一帧
+      if (video && video.readyState >= 2 && video.duration > 0) {
+        const target = smooth(clamp01(p)) * (video.duration - 0.05);
+        if (Math.abs(video.currentTime - target) > 0.03) video.currentTime = target;
       }
     }
+
+    function drive() {
+      const s = Math.max(1, trackEl.offsetHeight - hero.offsetHeight);
+      const p = clamp01(window.scrollY / s);
+      if (Math.abs(p - lastP) > 0.0004) {
+        apply(p);
+        lastP = p;
+      }
+    }
+
+    function initScrub() {
+      if (scrubRunning) return;
+      scrubRunning = true;
+      htmlEl.classList.add('intro-scrub');
+      lastP = -1;
+      seenMarked = false;
+      heroIn = false;
+      userTook = false;
+      autoP = 0;
+      hero.classList.remove('hero-in');
+      window.addEventListener('scroll', drive, { passive: true });
+      window.addEventListener('resize', drive, { passive: true });
+      window.addEventListener('wheel', markUser, { passive: true });
+      window.addEventListener('touchstart', markUser, { passive: true });
+      // keydown 可能由自动化注入：非 webdriver 上下文才计入接管
+      if (!navigator.webdriver) window.addEventListener('keydown', markUser);
+      autoLast = 0;
+      autoTimer = window.setInterval(() => {
+        if (userTook || autoP >= 1) return;
+        const now = performance.now();
+        if (!autoLast) { autoLast = now; return; }
+        const dt = Math.min(100, now - autoLast);
+        autoLast = now;
+        autoP = Math.min(1, autoP + dt / 8500);
+        const s = Math.max(1, trackEl.offsetHeight - hero.offsetHeight);
+        window.scrollTo(0, smooth(autoP) * s);
+        drive();
+      }, 16);
+      drive();
+    }
+
+    const markUser = () => { userTook = true; };
+
+    // 每会话首次进入：自动挂载擦洗片头
+    if (scrubMode) initScrub();
+
+    // ---- REPLAY：回顶重播（回访用户也会临时启用擦洗轨道）----
+    replayBtn?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (reduced) return;
+      window.scrollTo(0, 0);
+      initScrub();
+    });
   }
 </script>
