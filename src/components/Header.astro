@@ -33,7 +33,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
       </span>
     </a>
 
-    <div class="hidden items-center gap-7 sm:flex">
+    <div class="hidden items-center gap-6 md:flex">
       {NAV_ITEMS.map((item) => {
         const isActive = isNavActive(pathname, item.href);
         return (
@@ -41,7 +41,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
             href={item.href}
             aria-current={isActive ? 'page' : undefined}
             class:list={[
-              'nav-link relative py-1.5 text-[14px] transition-colors',
+              'nav-link relative shrink-0 whitespace-nowrap py-1.5 text-[14px] transition-colors',
               isActive ? 'is-active font-medium text-ink' : 'text-muted hover:text-ink',
             ]}
           >
@@ -81,7 +81,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
       <ThemeToggle />
     </div>
 
-    <div class="flex items-center gap-0.5 sm:hidden">
+    <div class="flex items-center gap-0.5 md:hidden">
       <button
         data-search-trigger
         class="flex h-10 w-10 items-center justify-center text-muted transition-colors hover:text-ink"
@@ -112,7 +112,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
     </div>
   </nav>
 
-  <div id="mobile-menu" class="hidden border-t border-rule bg-paper/95 backdrop-blur-md sm:hidden">
+  <div id="mobile-menu" class="hidden border-t border-rule bg-paper/95 backdrop-blur-md md:hidden">
     <div class="px-4 py-2">
       {NAV_ITEMS.map((item) => {
         const isActive = isNavActive(pathname, item.href);

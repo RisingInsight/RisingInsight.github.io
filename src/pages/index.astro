@@ -116,15 +116,6 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
         <span class="hero-grain"></span>
       </div>
 
-      <!-- 入场：一道极淡的暖光横扫；光圈从上下收拢处张开；四角取景框落位 -->
-      <span class="hero-aperture hero-aperture--top" aria-hidden="true"></span>
-      <span class="hero-aperture hero-aperture--bottom" aria-hidden="true"></span>
-      <span class="hero-streak" aria-hidden="true"></span>
-      <span class="hero-streak hero-streak--late" aria-hidden="true"></span>
-      <span class="hero-corners" aria-hidden="true">
-        <span></span><span></span><span></span><span></span>
-      </span>
-
       <div class="hero-inner hero-hud">
         <span class="hero-brand" aria-label={PROFILE.name}>
           {Array.from(PROFILE.name).map((ch, i) => (
@@ -200,8 +191,8 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
               </div>
 
               <div>
-                {latestPosts.map((post) => (
-                  <a href={`/blog/${post.id}/`} class="row-link reveal group block border-b border-rule-soft py-7 last:border-b-0" style={`--reveal-d:${(0.05 + 0).toFixed(2)}s`}>
+                {latestPosts.map((post, i) => (
+                  <a href={`/blog/${post.id}/`} class="row-link reveal group block border-b border-rule-soft py-7 last:border-b-0" style={`--reveal-d:${(i * 0.05).toFixed(2)}s`}>
                     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
                       <h3 class="font-serif text-[1.3rem] font-semibold leading-snug text-ink transition-colors group-hover:text-accent sm:text-[1.42rem]">
                         {post.data.featured && (
@@ -402,6 +393,11 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     transform: translate3d(var(--hx, 0px), var(--hy, 0px), 0);
     will-change: transform;
   }
+  /* 视频容器铺满媒介层：否则短宽视口下 16:9 视频底部会露出暗带 */
+  .hero-video-wrap {
+    position: absolute;
+    inset: 0;
+  }
   .hero-video {
     display: block;
     width: 100%;
@@ -495,6 +491,22 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     from { transform: translateY(115%); filter: blur(8px); }
     to   { transform: translateY(0); filter: blur(0); }
   }
+  @keyframes hero-hud-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes hero-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes hero-rule {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  @keyframes hero-kb {
+    from { transform: scale(1.03) translateY(0); }
+    to   { transform: scale(1.08) translateY(-1.2%); }
+  }
 
   .hero-bar {
     position: relative;
@@ -563,6 +575,39 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
   }
   .hero-ghost:hover { color: #ffffff; }
 
+  /* 声音 / 重播控件：右上角悬浮，避开标题与底部纸面渐变 */
+  .hero-ctrl-cluster {
+    position: absolute;
+    top: 84px;
+    right: 1rem;
+    z-index: 3;
+    display: flex;
+    gap: 8px;
+  }
+  @media (min-width: 640px) { .hero-ctrl-cluster { right: 1.5rem; } }
+  @media (min-width: 1024px) { .hero-ctrl-cluster { right: 2rem; } }
+  .hero-ctrl {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 11px;
+    border: 1px solid rgba(246, 239, 228, .22);
+    border-radius: 999px;
+    background: rgba(8, 11, 16, .46);
+    color: rgba(246, 239, 228, .78);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    white-space: nowrap;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .hero-ctrl:hover {
+    color: #ffffff;
+    border-color: rgba(246, 239, 228, .5);
+    background: rgba(8, 11, 16, .68);
+  }
 
   /* ===== 滚动擦洗模式（html.intro-scrub，每会话首次）=====
      轨道拉长 → hero 钉住 → 滚动距离即片头进度，可往返倒带；
@@ -589,6 +634,7 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     inset: 0;
     z-index: 3;
     pointer-events: none;
+    transition: opacity .4s ease;
   }
   :global(html.intro-scrub) .hero-scrub-progress {
     display: block;
@@ -601,6 +647,7 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     height: 2px;
     background: rgba(246, 239, 228, .14);
     overflow: hidden;
+    transition: opacity .4s ease;
   }
   .scrub-word {
     grid-area: 1 / 1;
@@ -626,9 +673,14 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     transform: scaleX(0);
     transform-origin: left center;
   }
+  /* 收尾：词句层与进度线淡出，不能再压回标题上 */
+  :global(html.intro-scrub.hero-in) .hero-scrub-words,
+  :global(html.intro-scrub.hero-in) .hero-scrub-progress {
+    opacity: 0;
+  }
 
-  /* scrub 模式：落地态（0-6%）巨字直接可见 —— 打开页面永远有内容；
-     6% 起词句蒙太奇接管，正文隐藏；p≥0.94 重新升起（hero-in）。 */
+  /* scrub 模式：落地态（0-10%）巨字直接可见 —— 打开页面永远有内容；
+     10% 起词句蒙太奇接管，正文隐藏；p≥0.94 重新升起（hero-in）。 */
   :global(html.intro-scrub) .hero-foot {
     opacity: 1;
   }
@@ -651,22 +703,26 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     opacity: 1;
     transform: none;
     animation: none;
+    transition: opacity .4s ease, transform .5s var(--ease-out-expo);
   }
   :global(html.intro-scrub) .hero-bar::before {
     transform: scaleX(1);
     animation: none;
+    transition: transform .6s var(--ease-out-expo);
   }
   :global(html.intro-scrub) .hero-desc {
     opacity: 1;
     transform: none;
     animation: none;
+    transition: opacity .4s ease, transform .5s var(--ease-out-expo);
   }
   :global(html.intro-scrub) .hero-actions {
     opacity: 1;
     transform: none;
     animation: none;
+    transition: opacity .4s ease, transform .5s var(--ease-out-expo);
   }
-  /* 蒙太奇区间（6%-94%）：词句接管，正文退场 */
+  /* 蒙太奇区间（10%-94%）：词句接管，正文退场 */
   :global(html.intro-scrub.hero-montage) .hero-ch {
     opacity: 0;
     transform: translateY(115%);
@@ -716,40 +772,6 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     transform: none;
   }
 
-:global(html.intro-scrub.hero-in) .hero-ch {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-  :global(html.intro-scrub.hero-in) .brand-ch {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  :global(html.intro-scrub.hero-in) .hero-meta {
-    opacity: 1;
-    transform: none;
-  }
-  :global(html.intro-scrub.hero-in) .hero-bar::before {
-    transform: scaleX(1);
-  }
-  :global(html.intro-scrub.hero-in) .hero-desc {
-    opacity: 1;
-    transform: none;
-  }
-  :global(html.intro-scrub.hero-in) .hero-actions {
-    opacity: 1;
-    transform: none;
-  }
-
-  @keyframes hero-ch-failsafe {
-    from { opacity: 0; transform: translateY(115%); filter: blur(8px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
-  }
-  @keyframes brand-ch-failsafe {
-    from { opacity: 0; transform: translateY(110%); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
   @media (max-width: 767px) {
     .hero-video { display: none; }
     .hero-media {
@@ -759,20 +781,14 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     .hero-hud { font-size: 10px; letter-spacing: .08em; }
     .hero-meta { display: none; }
     .hero-bar { align-items: flex-start; flex-direction: column; }
-    .hero-ctrl-cluster { left: 14px; bottom: 14px; }
+    .hero-ctrl-cluster { top: 70px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero-video-wrap,
-    .hero-streak,
     .hero-meta,
     .hero-desc,
     .hero-actions,
     .brand-ch { animation: none !important; }
-    /* 光圈与暖光的基础态是"遮住/在画外"，关掉动画必须直接隐藏，否则会一直盖着 */
-    .hero-aperture,
-    .hero-streak { display: none; }
-    .hero-corners > span { animation: none !important; opacity: 1; transform: none; }
     .hero-video { display: none; }
     .hero-media {
       background: url('/media/hero-dawn-end.jpg') center 42% / cover no-repeat;
@@ -781,7 +797,6 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     }
     .hero-ch { animation: none; transform: none; filter: none; }
     .brand-ch { transform: none; }
-    .title-seq { display: none !important; }
     [data-replay] { display: none; }
     /* 标尺的基础态是 scaleX(0)，必须显式拉满 */
     .hero-bar::before { animation: none !important; transform: scaleX(1); }
@@ -873,20 +888,15 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     }
 
     // ---- 滚动擦洗（惰性初始化；REPLAY 也可对回访用户启用）----
-    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
     const scrubWordsEls = scrubWords;
     let scrubRunning = false;
-    let userTook = false;
-    let autoP = 0;
     let lastP = -1;
     let seenMarked = false;
     let heroIn = false;
-    let autoLast = 0;
-    let autoTimer = 0;
 
     function apply(p) {
       scrubWordsEls.forEach((w, i) => {
-        const a = 0.08 + i * 0.1;
+        const a = 0.11 + i * 0.1;
         const local = clamp01((p - a) / 0.12);
         let o = 0;
         let sc = 1.16;
@@ -904,21 +914,26 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
         w.style.transform = `scale(${sc.toFixed(3)})`;
         w.style.filter = `blur(${bl.toFixed(1)}px)`;
       });
-      const b = clamp01((p - 0.74) / 0.16);
+      const b = clamp01((p - 0.66) / 0.16);
       if (scrubBrand) {
         scrubBrand.style.opacity = b.toFixed(3);
         scrubBrand.style.letterSpacing = `${(0.42 - 0.26 * b).toFixed(3)}em`;
         scrubBrand.style.filter = `blur(${(6 * (1 - b)).toFixed(1)}px)`;
       }
       if (scrubFill) scrubFill.style.transform = `scaleX(${clamp01((p - 0.08) / 0.82).toFixed(4)})`;
-      // 蒙太奇区间开关：6%-94% 词句接管；两端均为落地态（永远有内容）
-      const montage = p >= 0.06 && p < 0.94;
-      if (montage !== hero.classList.contains('hero-montage')) {
-        hero.classList.toggle('hero-montage', montage);
+      // 蒙太奇区间开关：10%-94% 词句接管；两端均为落地态（永远有内容）
+      // 状态类挂在 <html> 上，与 CSS 的 html.intro-scrub.hero-montage 选择器一致
+      const montage = p >= 0.10 && p < 0.94;
+      if (montage !== htmlEl.classList.contains('hero-montage')) {
+        htmlEl.classList.toggle('hero-montage', montage);
       }
-      if (!heroIn && p >= 0.94) {
+      if (p >= 0.94 && !heroIn) {
         heroIn = true;
-        hero.classList.add('hero-in');
+        htmlEl.classList.add('hero-in');
+      } else if (p < 0.94 && heroIn) {
+        // 往回滚动时撤掉收尾态，蒙太奇才能重新播放
+        heroIn = false;
+        htmlEl.classList.remove('hero-in');
       }
       if (!seenMarked && p >= 0.95) {
         seenMarked = true;
@@ -940,48 +955,58 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
       }
     }
 
-    function initScrub() {
-      if (scrubRunning) return;
-      scrubRunning = true;
-      htmlEl.classList.add('intro-scrub');
+    function resetScrubState() {
+      htmlEl.classList.remove('hero-montage', 'hero-in');
       lastP = -1;
       seenMarked = false;
       heroIn = false;
-      userTook = false;
-      autoP = 0;
-      hero.classList.remove('hero-in');
-      window.addEventListener('scroll', drive, { passive: true });
-      window.addEventListener('resize', drive, { passive: true });
-      window.addEventListener('wheel', markUser, { passive: true });
-      window.addEventListener('touchstart', markUser, { passive: true });
-      // keydown 可能由自动化注入：非 webdriver 上下文才计入接管
-      if (!navigator.webdriver) window.addEventListener('keydown', markUser);
-      autoLast = 0;
-      autoTimer = window.setInterval(() => {
-        if (userTook || autoP >= 1) return;
-        const now = performance.now();
-        if (!autoLast) { autoLast = now; return; }
-        const dt = Math.min(100, now - autoLast);
-        autoLast = now;
-        autoP = Math.min(1, autoP + dt / 8500);
-        const s = Math.max(1, trackEl.offsetHeight - hero.offsetHeight);
-        window.scrollTo(0, smooth(autoP) * s);
-        drive();
-      }, 16);
       drive();
     }
 
-    const markUser = () => { userTook = true; };
+    function initScrub() {
+      if (!scrubRunning) {
+        scrubRunning = true;
+        htmlEl.classList.add('intro-scrub');
+        window.addEventListener('scroll', drive, { passive: true });
+        window.addEventListener('resize', drive, { passive: true });
+      }
+      resetScrubState();
+    }
 
-    // 每会话首次进入：自动挂载擦洗片头
+    // 每会话首次进入：挂载滚动擦洗片头（不自动滚动，进度完全由用户滚动驱动）
     if (scrubMode) initScrub();
 
-    // ---- REPLAY：回顶重播（回访用户也会临时启用擦洗轨道）----
+    // ---- REPLAY：回顶并自动播放一遍片头（只在用户点击后发生）----
+    let replayFrame = 0;
+    const stopReplay = () => {
+      if (replayFrame) cancelAnimationFrame(replayFrame);
+      replayFrame = 0;
+    };
+    ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach((type) => {
+      window.addEventListener(type, stopReplay, { passive: true });
+    });
+
     replayBtn?.addEventListener('click', (event) => {
       event.stopPropagation();
       if (reduced) return;
-      window.scrollTo(0, 0);
+      stopReplay();
+      window.scrollTo({ top: 0, behavior: 'auto' });
       initScrub();
+      const end = Math.max(1, trackEl.offsetHeight - hero.offsetHeight);
+      const start = performance.now();
+      const duration = 2400;
+      const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        window.scrollTo(0, ease(t) * end);
+        drive();
+        if (t < 1) {
+          replayFrame = requestAnimationFrame(step);
+        } else {
+          replayFrame = 0;
+        }
+      };
+      replayFrame = requestAnimationFrame(step);
     });
   }
 </script>

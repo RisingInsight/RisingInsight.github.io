@@ -166,8 +166,9 @@ const rankBadge = (rank) =>
         <span class="font-mono text-[11px] text-muted-light">openalex · dblp</span>
       </div>
       <p class="mt-2 max-w-2xl text-[13.5px] leading-6 text-muted">
-        点年份加载该届中稿论文 —— 按被引排序、可搜索。数据实时取自 OpenAlex，
-        论文集出版后会自动出现，无需人工维护；加载不到时走 DBLP 逐年入口。
+        点年份加载该届中稿论文 —— 按被引排序，可搜标题、作者与摘要，摘要可就地展开，
+        收藏的论文会记在本地。数据实时取自 OpenAlex，论文集出版后会自动出现；
+        加载不到时走 DBLP 逐年入口。
       </p>
 
       <div class="mt-6 divide-y divide-rule-soft">
@@ -202,18 +203,22 @@ const rankBadge = (rank) =>
               ))}
             </div>
             <div class="papers-panel hidden">
-              <div class="mt-3 flex flex-wrap items-center gap-2">
+              <div class="papers-toolbar mt-3">
                 <input
                   type="search"
                   class="papers-search"
-                  placeholder="搜索标题 / 作者…"
+                  placeholder="搜索标题 / 作者 / 摘要…"
                   aria-label="在结果中搜索"
                 />
+                <div class="papers-filters" role="group" aria-label="论文筛选">
+                  <button type="button" class="papers-filter" data-paper-filter="fulltext" aria-pressed="false">有全文</button>
+                  <button type="button" class="papers-filter" data-paper-filter="saved" aria-pressed="false">收藏</button>
+                </div>
                 <span class="papers-status font-mono text-[11px] text-muted-light"></span>
               </div>
               <ol class="papers-list mt-2"></ol>
-              <div class="mt-2 flex flex-wrap items-center gap-3">
-                <button type="button" class="papers-more hidden">加载更多</button>
+              <div class="mt-3 flex flex-wrap items-center gap-3">
+                <button type="button" class="papers-more hidden">显示更多</button>
                 <a
                   class="papers-dblp font-mono text-[11px] text-muted-light transition-colors hover:text-accent"
                   target="_blank"
@@ -300,9 +305,15 @@ const rankBadge = (rank) =>
   .papers-panel {
     padding: 10px 0 4px;
   }
+  .papers-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+  }
   .papers-search {
-    flex: 1 1 220px;
-    max-width: 320px;
+    flex: 1 1 260px;
+    max-width: 380px;
     padding: 6px 12px;
     border: 1px solid var(--rule);
     border-radius: 999px;
@@ -314,42 +325,57 @@ const rankBadge = (rank) =>
     outline: 2px solid var(--accent);
     outline-offset: 1px;
   }
-  .papers-list {
-    margin: 0;
-    padding: 0 0 0 1.4em;
-    list-style: none;
-    counter-reset: paper;
+  .papers-filters {
+    display: flex;
+    gap: 6px;
   }
-  .papers-list li {
-    counter-increment: paper;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--rule-soft);
-    font-size: 13.5px;
-    line-height: 1.6;
+  .papers-filter {
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
   }
-  .papers-list li::marker {
-    content: counter(paper) '. ';
-    color: var(--muted-light);
-    font-family: var(--font-mono);
-    font-size: 11px;
+  .papers-filter:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
   }
-  .papers-list a {
-    color: var(--ink-soft);
-    text-decoration: none;
-  }
-  .papers-list a:hover {
+  .papers-filter[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
     color: var(--accent);
   }
-  .papers-list .paper-title-row {
+  .papers-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .papers-list .paper-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .papers-list .paper-head {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 10px;
   }
-  .papers-list .paper-title-row a {
+  .paper-title {
     flex: 1;
     min-width: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.55;
+    text-decoration: none;
+    transition: color .2s;
   }
-  .papers-list .paper-cites {
+  .paper-title:hover {
+    color: var(--accent);
+  }
+  .paper-cites {
     flex-shrink: 0;
     padding: 0 7px;
     border: 1px solid var(--rule-soft);
@@ -359,11 +385,75 @@ const rankBadge = (rank) =>
     font-size: 10.5px;
     white-space: nowrap;
   }
-  .papers-list .paper-authors {
-    display: block;
-    margin-top: 1px;
+  .paper-authors {
+    max-width: 76ch;
+    margin-top: 3px;
     color: var(--muted-light);
     font-size: 12px;
+    line-height: 1.5;
+  }
+  .paper-abstract {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    max-width: 76ch;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 12.8px;
+    line-height: 1.7;
+  }
+  .paper-abstract.is-expanded {
+    display: block;
+    overflow: visible;
+  }
+  .paper-abstract.is-empty {
+    color: var(--muted-light);
+    font-style: italic;
+  }
+  .paper-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 7px;
+  }
+  .paper-toggle,
+  .paper-save,
+  .paper-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .2s;
+  }
+  .paper-toggle:hover,
+  .paper-save:hover,
+  .paper-link:hover {
+    color: var(--accent);
+  }
+  .paper-save[aria-pressed='true'] {
+    color: var(--accent);
+  }
+  .paper-link {
+    color: var(--muted);
+  }
+  @media (max-width: 640px) {
+    .papers-search { flex-basis: 100%; max-width: none; }
+    .paper-title { font-size: 13.5px; }
+    .paper-abstract { font-size: 12.5px; }
+  }
+  @media (pointer: coarse) {
+    .paper-toggle,
+    .paper-save,
+    .paper-link {
+      padding: 5px 0;
+    }
   }
   .papers-more {
     padding: 4px 14px;
@@ -549,39 +639,125 @@ const rankBadge = (rank) =>
     return null;
   }
 
+  // ---- 摘要重建 / 转义 / 收藏（localStorage）----
+  function abstractText(inv) {
+    if (!inv) return '';
+    var max = 0;
+    Object.keys(inv).forEach(function (word) {
+      (inv[word] || []).forEach(function (pos) {
+        if (pos + 1 > max) max = pos + 1;
+      });
+    });
+    if (!max) return '';
+    var words = new Array(max);
+    Object.keys(inv).forEach(function (word) {
+      (inv[word] || []).forEach(function (pos) { words[pos] = word; });
+    });
+    return words.filter(Boolean).join(' ');
+  }
+
+  function escHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      if (ch === '&') return '&amp;';
+      if (ch === '<') return '&lt;';
+      if (ch === '>') return '&gt;';
+      if (ch === '"') return '&quot;';
+      return '&#39;';
+    });
+  }
+
+  var SAVED_KEY = 'ddl-saved-papers';
+  function loadSaved() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) { return []; }
+  }
+  function toggleSaved(id) {
+    var list = loadSaved();
+    var i = list.indexOf(id);
+    if (i === -1) list.push(id); else list.splice(i, 1);
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch (e) {}
+    return i === -1;
+  }
+
+  var PAPERS_PER_BATCH = 150;
+
+  function activeState(panel) {
+    var conf = panel.closest('[data-conf]');
+    var btn = conf && conf.querySelector('.papers-year.is-active');
+    if (!btn) return null;
+    return paperCache.get(btn.dataset.title + ':' + btn.dataset.year) || null;
+  }
+
+  function renderCard(p, savedIds) {
+    var authors = p.authors.slice(0, 3).join(', ') + (p.more || p.authors.length > 3 ? ' et al.' : '');
+    var saved = savedIds.indexOf(p.id) !== -1;
+    var abstract = p.abstract
+      ? '<p class="paper-abstract">' + escHtml(p.abstract) + '</p>'
+      : '<p class="paper-abstract is-empty">摘要暂缺，打开原文查看</p>';
+    var toggle = p.abstract
+      ? '<button type="button" class="paper-toggle" aria-expanded="false">展开摘要</button>'
+      : '';
+    var links = '';
+    if (p.pdf) links += '<a class="paper-link" href="' + escHtml(p.pdf) + '" target="_blank" rel="noopener noreferrer">PDF ↗</a>';
+    if (p.oaUrl && p.oaUrl !== p.pdf) links += '<a class="paper-link" href="' + escHtml(p.oaUrl) + '" target="_blank" rel="noopener noreferrer">原文 ↗</a>';
+    if (p.doi) links += '<a class="paper-link" href="' + escHtml(p.doi) + '" target="_blank" rel="noopener noreferrer">DOI ↗</a>';
+    if (!p.pdf && !p.oaUrl && !p.doi && p.oa) links += '<a class="paper-link" href="https://openalex.org/' + escHtml(p.oa) + '" target="_blank" rel="noopener noreferrer">OpenAlex ↗</a>';
+    var save = '<button type="button" class="paper-save" aria-pressed="' + (saved ? 'true' : 'false') + '" data-id="' + escHtml(p.id) + '">' + (saved ? '已收藏' : '收藏') + '</button>';
+    return '<li class="paper-item" data-id="' + escHtml(p.id) + '">' +
+      '<div class="paper-head">' +
+      '<a class="paper-title" href="' + escHtml(p.link) + '" target="_blank" rel="noopener noreferrer">' + escHtml(p.title) + '</a>' +
+      '<span class="paper-cites">被引 ' + p.cites + '</span>' +
+      '</div>' +
+      (authors ? '<div class="paper-authors">' + escHtml(authors) + '</div>' : '') +
+      abstract +
+      '<div class="paper-actions">' + toggle + links + save + '</div>' +
+      '</li>';
+  }
+
   function renderPapers(panel, state, loading) {
     var status = panel.querySelector('.papers-status');
     var list = panel.querySelector('.papers-list');
     var more = panel.querySelector('.papers-more');
     var search = panel.querySelector('.papers-search');
     var q = ((search && search.value) || '').trim().toLowerCase();
+    var fulltextBtn = panel.querySelector('[data-paper-filter="fulltext"]');
+    var savedBtn = panel.querySelector('[data-paper-filter="saved"]');
+    var fulltextOnly = !!fulltextBtn && fulltextBtn.getAttribute('aria-pressed') === 'true';
+    var savedOnly = !!savedBtn && savedBtn.getAttribute('aria-pressed') === 'true';
+    var filtered = fulltextOnly || savedOnly;
+    var savedIds = loadSaved();
 
     var shown = state.papers.filter(function (p) {
-      return !q || p.title.toLowerCase().indexOf(q) !== -1 || p.authors.join(' ').toLowerCase().indexOf(q) !== -1;
+      if (fulltextOnly && !p.fulltext) return false;
+      if (savedOnly && savedIds.indexOf(p.id) === -1) return false;
+      if (!q) return true;
+      return p.title.toLowerCase().indexOf(q) !== -1 ||
+        p.authors.join(' ').toLowerCase().indexOf(q) !== -1 ||
+        (p.abstract && p.abstract.toLowerCase().indexOf(q) !== -1);
     });
-    // 全量模式下不截断（DOM 上限 3000 条足够覆盖一届会议；超出时提示用搜索）
-    var CAP = 3000;
-    var slice = shown.slice(0, CAP);
 
-    list.innerHTML = slice.map(function (p) {
-      var authors = p.authors.slice(0, 3).join(', ') + (p.more || p.authors.length > 3 ? ' et al.' : '');
-      var inner = '<span class="paper-title-row"><a href="' + p.link + '" target="_blank" rel="noopener noreferrer">' + p.title + '</a>' +
-        '<span class="paper-cites">被引 ' + p.cites + '</span></span>' +
-        (authors ? '<span class="paper-authors">' + authors + '</span>' : '');
-      return '<li>' + inner + '</li>';
-    }).join('');
+    // 分批渲染：每批 150 条，避免一届 2000+ 篇一次性塞进 DOM
+    var cap = state.visible || PAPERS_PER_BATCH;
+    var slice = shown.slice(0, cap);
+    list.innerHTML = slice.map(function (p) { return renderCard(p, savedIds); }).join('');
 
     var loadingTag = loading || (!state.exhausted && state.papers.length > 0);
-    status.textContent = q
-      ? shown.length + ' / ' + state.papers.length + ' 篇匹配'
-      : (state.total && loadingTag
-          ? '已加载 ' + state.papers.length + ' / ' + state.total + ' 篇…'
-          : state.papers.length + ' 篇 · 按被引排序 · 全量');
-
-    more.classList.add('hidden');
-    if (shown.length > CAP) {
-      status.textContent += '（结果过多，请用搜索缩小范围）';
+    if (shown.length === 0) {
+      status.textContent = state.papers.length === 0 && loadingTag ? '加载中…' : '没有匹配的论文';
+    } else if (q) {
+      status.textContent = shown.length + ' / ' + state.papers.length + ' 篇匹配';
+    } else if (filtered) {
+      status.textContent = shown.length + ' 篇匹配' + (loadingTag ? '（加载中…）' : '');
+    } else if (state.total && loadingTag) {
+      status.textContent = '已加载 ' + state.papers.length + ' / ' + state.total + ' 篇…';
+    } else {
+      status.textContent = shown.length + ' 篇 · 按被引排序';
     }
+
+    more.classList.toggle('hidden', shown.length <= cap);
+    more.textContent = '显示更多（还有 ' + Math.max(0, shown.length - cap) + ' 篇）';
   }
 
   // 单页拉取（page 分页：无需 API key；cursor 分页被 OpenAlex 锁 key 了）
@@ -589,17 +765,28 @@ const rankBadge = (rank) =>
     var url = OA + '/works?filter=primary_location.source.id:' + state.sourceId +
       ',publication_year:' + state.year +
       '&sort=cited_by_count:desc&per-page=200&page=' + state.page +
-      '&select=title,authorships,doi,cited_by_count,open_access,id&mailto=' + OA_POLITE;
+      '&select=title,authorships,doi,cited_by_count,open_access,id,abstract_inverted_index,best_oa_location&mailto=' + OA_POLITE;
     var data = await oaThrottled(url);
     var batch = (data.results || []).map(function (w) {
       var oaId = w.id ? String(w.id).split('/').pop() : '';
-      var link = (w.open_access && w.open_access.oa_url) || w.doi || (oaId ? 'https://openalex.org/' + oaId : '#');
+      var pdf = (w.best_oa_location && w.best_oa_location.pdf_url) || '';
+      var oaUrl = (w.open_access && w.open_access.oa_url) || '';
+      var doi = w.doi || '';
+      var link = pdf || oaUrl || doi || (oaId ? 'https://openalex.org/' + oaId : '#');
+      var abstract = abstractText(w.abstract_inverted_index);
       return {
+        id: oaId,
+        oa: oaId,
         title: w.title || '(untitled)',
         authors: (w.authorships || []).slice(0, 6).map(function (a) { return a.author && a.author.display_name; }).filter(Boolean),
         more: (w.authorships || []).length > 6,
         cites: w.cited_by_count || 0,
         link: link,
+        pdf: pdf,
+        oaUrl: oaUrl,
+        doi: doi,
+        fulltext: !!(pdf || oaUrl),
+        abstract: abstract,
       };
     });
     state.papers.push.apply(state.papers, batch);
@@ -661,7 +848,7 @@ const rankBadge = (rank) =>
     status.textContent = '加载中…';
     list.innerHTML = '';
 
-    var state = { papers: [], page: 1, sourceId: null, exhausted: true, total: 0, year: year, panel: panel };
+    var state = { papers: [], page: 1, sourceId: null, exhausted: true, total: 0, year: year, panel: panel, visible: PAPERS_PER_BATCH };
     try {
       var desc = btn.dataset.desc || '';
       var sourceId = btn.dataset.oa || null;                       // ① 构建期 ID（可选加速）
@@ -694,18 +881,62 @@ const rankBadge = (rank) =>
   document.querySelectorAll('.papers-panel').forEach(function (panel) {
     var searchEl = panel.querySelector('.papers-search');
     if (searchEl) searchEl.addEventListener('input', function () {
-      var btn = panel.closest('[data-conf]').querySelector('.papers-year.is-active');
-      if (!btn) return;
-      var state = paperCache.get(btn.dataset.title + ':' + btn.dataset.year);
+      var state = activeState(panel);
       // 加载中也可搜索：基于已到手的论文即时过滤，全量到位后自动补全
-      if (state) renderPapers(panel, state);
+      if (state) {
+        state.visible = PAPERS_PER_BATCH;
+        renderPapers(panel, state);
+      }
     });
     var moreEl = panel.querySelector('.papers-more');
     if (moreEl) moreEl.addEventListener('click', function () {
-      var btn = panel.closest('[data-conf]').querySelector('.papers-year.is-active');
-      if (!btn) return;
-      var state = paperCache.get(btn.dataset.title + ':' + btn.dataset.year);
-      if (state && !state.exhausted) fetchPage(panel, state, Number(btn.dataset.year));
+      var state = activeState(panel);
+      if (!state) return;
+      state.visible = (state.visible || PAPERS_PER_BATCH) + PAPERS_PER_BATCH;
+      renderPapers(panel, state);
+    });
+    panel.querySelectorAll('.papers-filter').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var pressed = btn.getAttribute('aria-pressed') === 'true';
+        btn.setAttribute('aria-pressed', String(!pressed));
+        var state = activeState(panel);
+        if (state) {
+          state.visible = PAPERS_PER_BATCH;
+          renderPapers(panel, state);
+        }
+      });
+    });
+  });
+
+  // 论文卡片交互：展开摘要 / 收藏（事件委托，重渲染后依然有效）
+  document.querySelectorAll('.papers-list').forEach(function (list) {
+    list.addEventListener('click', function (event) {
+      var el = event.target && event.target.closest ? event.target : null;
+      if (!el) return;
+      var toggle = el.closest('.paper-toggle');
+      if (toggle) {
+        var item = toggle.closest('.paper-item');
+        var abs = item && item.querySelector('.paper-abstract');
+        if (!abs) return;
+        var expanded = toggle.getAttribute('aria-expanded') === 'true';
+        abs.classList.toggle('is-expanded', !expanded);
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        toggle.textContent = expanded ? '展开摘要' : '收起摘要';
+        return;
+      }
+      var save = el.closest('.paper-save');
+      if (!save) return;
+      var id = save.getAttribute('data-id') || '';
+      if (!id) return;
+      var saved = toggleSaved(id);
+      save.setAttribute('aria-pressed', String(saved));
+      save.textContent = saved ? '已收藏' : '收藏';
+      var panel = list.closest('.papers-panel');
+      var savedFilter = panel && panel.querySelector('[data-paper-filter="saved"]');
+      if (savedFilter && savedFilter.getAttribute('aria-pressed') === 'true') {
+        var state = activeState(panel);
+        if (state) renderPapers(panel, state);
+      }
     });
   });
 </script>
