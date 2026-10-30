@@ -33,7 +33,7 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
       </span>
     </a>
 
-    <div class="hidden items-center gap-6 md:flex">
+    <div class="hidden items-center gap-5 md:flex">
       {NAV_ITEMS.map((item) => {
         const isActive = isNavActive(pathname, item.href);
         return (

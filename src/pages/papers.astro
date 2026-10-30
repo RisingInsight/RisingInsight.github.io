@@ -1,0 +1,1279 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import { VENUES, AREA_ORDER, AREA_LABELS, buildVenueYears, dblpUrl } from '../data/venues';
+
+const currentYear = new Date().getFullYear();
+const conferences = VENUES.filter((venue) => venue.type === 'conference');
+const journals = VENUES.filter((venue) => venue.type === 'journal');
+const groups = AREA_ORDER.map((area) => ({
+  area,
+  label: AREA_LABELS[area],
+  venues: VENUES.filter((venue) => venue.area === area),
+})).filter((group) => group.venues.length > 0);
+const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venue, currentYear)]));
+---
+
+<BaseLayout title="顶会顶刊论文 // RisingInsight" description="按领域、会议/期刊与年份浏览顶会顶刊论文，摘要、作者、被引与 PDF/DOI 一站式检索">
+  <main id="main" class="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+    <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '论文' }]} />
+
+    <header class="border-b border-rule pb-9">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="font-mono text-[12px] text-muted-light">~/papers</p>
+        <a href="/ddl/" class="text-[12px] text-muted transition-colors hover:text-accent">
+          CCF 截稿日 <span aria-hidden="true">→</span>
+        </a>
+      </div>
+      <h1 class="mt-4 font-serif text-[2.1rem] font-semibold leading-[1.3] tracking-[.01em] text-ink sm:text-[2.5rem]">
+        顶会顶刊论文
+      </h1>
+      <p class="mt-4 max-w-2xl text-[14px] leading-7 text-muted">
+        按领域、会议/期刊与年份浏览中稿论文。标题、作者、被引与摘要实时拉取，
+        摘要可就地展开，论文可收藏并在本机保留；方便先扫摘要，再决定读哪一篇。
+      </p>
+      <div class="mt-5 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-muted-light">
+        <span>{conferences.length} conferences</span>
+        <span>{journals.length} journals</span>
+        <span>OpenAlex + Semantic Scholar</span>
+        <span class="text-muted-light/80">摘要以官网为准</span>
+      </div>
+    </header>
+
+    <div class="mt-7 flex flex-wrap items-center gap-3">
+      <div class="kind-tabs" role="group" aria-label="论文类型">
+        <button type="button" class="kind-btn is-active" data-kind="conference" aria-pressed="true">
+          顶会 <span>{conferences.length}</span>
+        </button>
+        <button type="button" class="kind-btn" data-kind="journal" aria-pressed="false">
+          顶刊 <span>{journals.length}</span>
+        </button>
+      </div>
+      <input id="venue-search" type="search" class="venue-search" placeholder="搜索会议 / 期刊…" aria-label="搜索会议或期刊" />
+      <button id="saved-open" type="button" class="saved-open" aria-expanded="false">
+        我的收藏 <span id="saved-count">0</span>
+      </button>
+    </div>
+
+    <div id="area-filter" class="area-filter mt-3" role="group" aria-label="按领域筛选">
+      <button type="button" class="area-btn is-active" data-area="all" aria-pressed="true">全部</button>
+      {AREA_ORDER.map((area) => (
+        <button type="button" class="area-btn" data-area={area} aria-pressed="false">{AREA_LABELS[area]}</button>
+      ))}
+    </div>
+
+    <div class="global-search-row mt-3">
+      <input id="global-search" type="search" class="venue-search" placeholder="跨会议搜索：在本次已加载的论文中搜索…" aria-label="跨会议搜索论文" />
+      <span id="global-search-hint" class="global-hint">先打开任意会议/期刊年份，加载后即可跨会议搜索。</span>
+    </div>
+
+    <section id="global-panel" class="saved-panel" hidden aria-label="跨会议搜索结果">
+      <div class="sec-head">
+        <h2 class="font-serif text-lg font-semibold text-ink">跨会议搜索</h2>
+        <button id="global-close" type="button" class="papers-close">收起</button>
+      </div>
+      <ol id="global-list" class="papers-list mt-2"></ol>
+      <p id="global-empty" class="py-8 text-center text-[13px] text-muted">没有匹配的论文。</p>
+    </section>
+
+    <section id="saved-panel" class="saved-panel" hidden aria-label="我的收藏">
+      <div class="sec-head">
+        <h2 class="font-serif text-lg font-semibold text-ink">我的收藏</h2>
+        <button id="saved-close" type="button" class="papers-close">收起</button>
+      </div>
+      <input id="saved-search" type="search" class="papers-search mt-3" placeholder="在收藏中搜索标题 / 作者 / 摘要…" aria-label="搜索收藏的论文" />
+      <ol id="saved-list" class="papers-list mt-2"></ol>
+      <p id="saved-empty" class="py-10 text-center text-[13px] text-muted">
+        还没有收藏论文。点论文卡片上的“收藏”，就会保存在这台设备的浏览器里。
+      </p>
+    </section>
+
+    <p id="venue-empty" class="hidden py-16 text-center text-sm text-muted">没有匹配的会议或期刊。</p>
+
+    <div id="venue-groups" class="mt-9">
+      {groups.map((group) => (
+        <section class="venue-group" data-area={group.area}>
+          <div class="sec-head">
+            <h2 class="font-serif text-xl font-semibold text-ink">{group.label}</h2>
+            <span class="venue-group-count font-mono text-[11px] text-muted-light">{group.venues.length} 个</span>
+          </div>
+          <div class="venue-list">
+            {group.venues.map((venue) => {
+              const years = venueYears.get(venue.id) || [];
+              const rankClass = venue.rank === 'A' ? 'is-a' : venue.rank === 'B' ? 'is-b' : 'is-other';
+              return (
+                <article
+                  id={venue.id}
+                  class="venue-block"
+                  data-id={venue.id}
+                  data-type={venue.type}
+                  data-area={venue.area}
+                  data-search={`${venue.short} ${venue.full} ${venue.id}`.toLowerCase()}
+                >
+                  <div class="venue-head">
+                    <div class="venue-id">
+                      <h3 class="venue-title">
+                        <span class="venue-short">{venue.short}</span>
+                        <span class={`venue-rank ${rankClass}`}>{venue.rank}</span>
+                        <span class="venue-type">{venue.type === 'journal' ? '期刊' : '会议'}</span>
+                      </h3>
+                      <p class="venue-full">{venue.full}</p>
+                      <p class="venue-meta">
+                        <span>{venue.provider === 'openalex' ? 'OpenAlex' : 'Semantic Scholar'}</span>
+                        {venue.rank !== '—' && <span> · CCF-{venue.rank}</span>}
+                        <span> · </span>
+                        <a href={dblpUrl(venue)} target="_blank" rel="noopener noreferrer">DBLP ↗</a>
+                      </p>
+                    </div>
+                    <div class="venue-years">
+                      {years.map((year) => (
+                        <button
+                          type="button"
+                          class="year-btn"
+                          data-year={year}
+                          aria-expanded="false"
+                          aria-controls={`papers-${venue.id}`}
+                        >{year}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div id={`papers-${venue.id}`} class="papers-panel hidden">
+                    <div class="papers-toolbar">
+                      <input type="search" class="papers-search" placeholder="搜索标题 / 作者 / 摘要…" aria-label={`搜索 ${venue.short} 论文`} />
+                      <div class="papers-filters" role="group" aria-label="论文筛选">
+                        <button type="button" class="papers-filter" data-paper-filter="fulltext" aria-pressed="false">有全文</button>
+                        <button type="button" class="papers-filter" data-paper-filter="saved" aria-pressed="false">收藏</button>
+                      </div>
+                      <span class="papers-status"></span>
+                      <button type="button" class="papers-retry hidden">重试</button>
+                      <button type="button" class="papers-close">收起</button>
+                    </div>
+                    <ol class="papers-list"></ol>
+                    <div class="papers-foot">
+                      <button type="button" class="papers-more hidden">显示更多</button>
+                      <a class="papers-dblp" target="_blank" rel="noopener noreferrer">在 DBLP 查看该年 ↗</a>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  </main>
+
+  <dialog id="paper-dialog" class="paper-dialog" aria-label="论文详情">
+    <div class="paper-dialog-head">
+      <span class="mono-label">paper detail</span>
+      <button id="paper-dialog-close" type="button" class="papers-close">关闭</button>
+    </div>
+    <div id="paper-dialog-body" class="paper-dialog-body"></div>
+  </dialog>
+</BaseLayout>
+
+<style is:inline>
+  .kind-tabs {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+  .kind-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: color .2s, background .2s;
+  }
+  .kind-btn.is-active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .kind-btn span {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    opacity: .7;
+  }
+  .venue-search {
+    flex: 1 1 220px;
+    max-width: 320px;
+    padding: 7px 13px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .venue-search:focus-visible,
+  .saved-open:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .saved-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s;
+  }
+  .saved-open:hover,
+  .saved-open[aria-expanded='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .saved-open span {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+  .area-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .global-search-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+  }
+  .global-search-row .venue-search {
+    flex: 1 1 320px;
+    max-width: 520px;
+  }
+  .global-hint {
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .03em;
+  }
+  .area-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .area-btn:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
+  }
+  .area-btn.is-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .saved-panel {
+    margin-top: 22px;
+    padding: 16px 0 8px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .venue-group + .venue-group {
+    margin-top: 34px;
+  }
+  .venue-block {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .venue-block:last-child {
+    border-bottom: 0;
+  }
+  .venue-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+  }
+  .venue-id {
+    min-width: 0;
+    flex: 1;
+  }
+  .venue-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+  }
+  .venue-short {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .01em;
+  }
+  .venue-rank {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 6px;
+    border-radius: var(--r-xs);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.7;
+  }
+  .venue-rank.is-a {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+  .venue-rank.is-b {
+    border: 1px solid var(--rule);
+    color: var(--muted);
+  }
+  .venue-rank.is-other {
+    border: 1px solid var(--rule-soft);
+    color: var(--muted-light);
+  }
+  .venue-type {
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+  }
+  .venue-full {
+    margin: 4px 0 0;
+    max-width: 60ch;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .venue-meta {
+    margin: 4px 0 0;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .03em;
+  }
+  .venue-meta a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .venue-meta a:hover {
+    color: var(--accent);
+  }
+  .venue-years {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+    max-width: 55%;
+  }
+  .year-btn {
+    padding: 4px 9px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .year-btn:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
+  }
+  .year-btn.is-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .papers-panel {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-alt);
+  }
+  .papers-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+  }
+  .papers-search {
+    flex: 1 1 250px;
+    max-width: 380px;
+    padding: 6px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .papers-search:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .papers-filters {
+    display: flex;
+    gap: 6px;
+  }
+  .papers-filter {
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .papers-filter:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
+  }
+  .papers-filter[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .papers-status {
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+  .papers-retry,
+  .papers-close {
+    padding: 3px 9px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted-light);
+    font-size: 11px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s;
+  }
+  .papers-retry:hover,
+  .papers-close:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .papers-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .paper-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .paper-item:last-child {
+    border-bottom: 0;
+  }
+  .paper-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .paper-title {
+    flex: 1;
+    min-width: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.55;
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .paper-title:hover {
+    color: var(--accent);
+  }
+  .paper-cites {
+    flex-shrink: 0;
+    padding: 0 7px;
+    border: 1px solid var(--rule-soft);
+    border-radius: 999px;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .paper-authors {
+    max-width: 76ch;
+    margin-top: 3px;
+    color: var(--muted-light);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .paper-abstract {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    max-width: 76ch;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 12.8px;
+    line-height: 1.7;
+  }
+  .paper-abstract.is-expanded {
+    display: block;
+    overflow: visible;
+  }
+  .paper-abstract.is-empty {
+    color: var(--muted-light);
+    font-style: italic;
+  }
+  .paper-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 7px;
+  }
+  .paper-toggle,
+  .paper-save,
+  .paper-bib,
+  .paper-detail,
+  .paper-link,
+  .paper-venue {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .2s;
+  }
+  .paper-toggle:hover,
+  .paper-save:hover,
+  .paper-bib:hover,
+  .paper-detail:hover,
+  .paper-link:hover {
+    color: var(--accent);
+  }
+  .paper-save[aria-pressed='true'] {
+    color: var(--accent);
+  }
+  .paper-link {
+    color: var(--muted);
+  }
+  .paper-venue {
+    margin-left: auto;
+    color: var(--muted-light);
+    cursor: default;
+  }
+  .papers-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .papers-more {
+    padding: 4px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .papers-more:hover {
+    color: var(--ink);
+    border-color: var(--muted-light);
+  }
+  .papers-dblp {
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .papers-dblp:hover {
+    color: var(--accent);
+  }
+
+  /* ===== 论文详情 ===== */
+  .paper-dialog {
+    width: min(760px, 92vw);
+    max-height: 86vh;
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--elev-3);
+    overflow: hidden;
+  }
+  .paper-dialog::backdrop {
+    background: rgba(12, 10, 8, .55);
+    backdrop-filter: blur(4px);
+  }
+  .paper-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-alt);
+  }
+  .paper-dialog-body {
+    max-height: calc(86vh - 52px);
+    padding: 18px 20px 22px;
+    overflow-y: auto;
+  }
+  .detail-venue {
+    color: var(--muted-light);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .04em;
+  }
+  .detail-title {
+    margin: 8px 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .detail-authors {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .detail-abstract {
+    max-width: 68ch;
+    margin-top: 14px;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  .detail-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .detail-links a {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-decoration: none;
+  }
+  .detail-links a:hover {
+    text-decoration: underline;
+  }
+  .detail-bib {
+    margin: 16px 0 0;
+    padding: 12px;
+    border-radius: var(--r-sm);
+    background: var(--code-bg);
+    color: var(--code-ink);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+  .detail-copy {
+    margin-top: 10px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 760px) {
+    .venue-head {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .paper-dialog {
+      width: 94vw;
+      max-height: 90vh;
+    }
+    .paper-dialog-body {
+      max-height: calc(90vh - 52px);
+      padding: 16px;
+    }
+    .detail-title {
+      font-size: 1.2rem;
+    }
+    .venue-years {
+      justify-content: flex-start;
+      max-width: none;
+    }
+    .venue-search {
+      flex-basis: 100%;
+      max-width: none;
+    }
+    .papers-panel {
+      padding: 10px;
+    }
+    .papers-search {
+      flex-basis: 100%;
+      max-width: none;
+    }
+    .paper-title {
+      font-size: 13.5px;
+    }
+    .paper-abstract {
+      font-size: 12.5px;
+    }
+  }
+  @media (pointer: coarse) {
+    .paper-toggle,
+    .paper-save,
+    .paper-bib,
+    .paper-detail,
+    .paper-link {
+      padding: 5px 0;
+    }
+  }
+</style>
+
+<script>
+  import { findVenue, dblpUrl } from '../data/venues';
+  import { loadVenuePapers, toBibtex } from '../lib/papers';
+
+  const SAVED_KEY = 'papers:saved:v1';
+  const PER_BATCH = 150;
+  const paperIndex = new Map();
+
+  const blocks = Array.from(document.querySelectorAll('.venue-block'));
+  const groupsEl = Array.from(document.querySelectorAll('.venue-group'));
+  const kindBtns = Array.from(document.querySelectorAll('.kind-btn'));
+  const areaBtns = Array.from(document.querySelectorAll('.area-btn'));
+  const venueSearch = document.getElementById('venue-search');
+  const venueEmpty = document.getElementById('venue-empty');
+  const savedOpen = document.getElementById('saved-open');
+  const savedClose = document.getElementById('saved-close');
+  const savedPanel = document.getElementById('saved-panel');
+  const savedList = document.getElementById('saved-list');
+  const savedEmpty = document.getElementById('saved-empty');
+  const savedSearch = document.getElementById('saved-search');
+  const savedCount = document.getElementById('saved-count');
+  const globalSearch = document.getElementById('global-search');
+  const globalPanel = document.getElementById('global-panel');
+  const globalList = document.getElementById('global-list');
+  const globalEmpty = document.getElementById('global-empty');
+  const globalHint = document.getElementById('global-search-hint');
+  const globalClose = document.getElementById('global-close');
+  const detailDialog = document.getElementById('paper-dialog');
+  const detailBody = document.getElementById('paper-dialog-body');
+  const detailClose = document.getElementById('paper-dialog-close');
+
+  let kind = 'conference';
+  let area = 'all';
+  let active = null;
+
+  function loadSaved() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(SAVED_KEY) || '{}');
+      return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  let saved = loadSaved();
+
+  function persistSaved() {
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)); } catch (e) {}
+  }
+  function syncSavedCount() {
+    if (savedCount) savedCount.textContent = String(Object.keys(saved).length);
+  }
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (ch) => {
+      if (ch === '&') return '&amp;';
+      if (ch === '<') return '&lt;';
+      if (ch === '>') return '&gt;';
+      if (ch === '"') return '&quot;';
+      return '&#39;';
+    });
+  }
+
+  function cardHtml(paper, mode) {
+    const authorLine = paper.authors.slice(0, 3).join(', ') + (paper.more || paper.authors.length > 3 ? ' et al.' : '');
+    const abstract = paper.abstract
+      ? `<p class="paper-abstract">${esc(paper.abstract)}</p>`
+      : '<p class="paper-abstract is-empty">摘要暂缺，打开原文查看</p>';
+    const toggle = paper.abstract
+      ? '<button type="button" class="paper-toggle" aria-expanded="false">展开摘要</button>'
+      : '';
+    let links = '';
+    if (paper.pdf) links += `<a class="paper-link" href="${esc(paper.pdf)}" target="_blank" rel="noopener noreferrer">PDF ↗</a>`;
+    if (paper.oaUrl && paper.oaUrl !== paper.pdf) links += `<a class="paper-link" href="${esc(paper.oaUrl)}" target="_blank" rel="noopener noreferrer">原文 ↗</a>`;
+    if (paper.doi) links += `<a class="paper-link" href="${esc(paper.doi)}" target="_blank" rel="noopener noreferrer">DOI ↗</a>`;
+    if (!paper.pdf && !paper.oaUrl && !paper.doi) links += `<a class="paper-link" href="${esc(paper.link)}" target="_blank" rel="noopener noreferrer">原文 ↗</a>`;
+    const bib = `<button type="button" class="paper-bib" data-id="${esc(paper.id)}">BibTeX</button>`;
+    const detail = `<button type="button" class="paper-detail" data-id="${esc(paper.id)}">详情</button>`;
+    const saveLabel = mode === 'saved' ? '移除' : (saved[paper.id] ? '已收藏' : '收藏');
+    const save = `<button type="button" class="paper-save" data-id="${esc(paper.id)}" aria-pressed="${saved[paper.id] ? 'true' : 'false'}">${saveLabel}</button>`;
+    const venue = mode === 'panel' ? '' : `<span class="paper-venue">${esc(paper.venueShort)} ${paper.year}</span>`;
+    return `<li class="paper-item" data-id="${esc(paper.id)}">
+      <div class="paper-head">
+        <a class="paper-title" href="${esc(paper.link)}" target="_blank" rel="noopener noreferrer">${esc(paper.title)}</a>
+        <span class="paper-cites">被引 ${paper.cites}</span>
+      </div>
+      ${authorLine ? `<div class="paper-authors">${esc(authorLine)}</div>` : ''}
+      ${abstract}
+      <div class="paper-actions">${toggle}${links}${detail}${bib}${save}${venue}</div>
+    </li>`;
+  }
+
+  function openDetail(paper) {
+    if (!detailDialog || !detailBody) return;
+    const authorLine = paper.authors.join(', ') + (paper.more ? ' et al.' : '');
+    let links = '';
+    if (paper.pdf) links += `<a href="${esc(paper.pdf)}" target="_blank" rel="noopener noreferrer">PDF ↗</a>`;
+    if (paper.oaUrl) links += `<a href="${esc(paper.oaUrl)}" target="_blank" rel="noopener noreferrer">原文 ↗</a>`;
+    if (paper.doi) links += `<a href="${esc(paper.doi)}" target="_blank" rel="noopener noreferrer">DOI ↗</a>`;
+    if (paper.link && paper.link !== paper.pdf && paper.link !== paper.doi && paper.link !== paper.oaUrl) {
+      links += `<a href="${esc(paper.link)}" target="_blank" rel="noopener noreferrer">论文页 ↗</a>`;
+    }
+    const bib = toBibtex(paper);
+    detailBody.innerHTML = `
+      <div class="detail-venue">${esc(paper.venueShort)} ${paper.year} · ${esc(paper.venueFull)} · ${paper.source === 'openalex' ? 'OpenAlex' : 'Semantic Scholar'}</div>
+      <h2 class="detail-title">${esc(paper.title)}</h2>
+      <p class="detail-authors">${authorLine ? esc(authorLine) : '作者信息暂缺'}</p>
+      <p class="detail-abstract">${paper.abstract ? esc(paper.abstract) : '摘要暂缺，打开原文查看。'}</p>
+      <div class="detail-links">${links}</div>
+      <pre class="detail-bib">${esc(bib)}</pre>
+      <button type="button" class="paper-bib detail-copy">复制 BibTeX</button>
+    `;
+    if (!detailDialog.open) detailDialog.showModal();
+    detailClose?.focus();
+  }
+
+  function updateGlobalHint() {
+    if (!globalHint) return;
+    const count = new Set([...paperIndex.keys(), ...Object.keys(saved)]).size;
+    globalHint.textContent = count
+      ? `可搜索 ${count} 篇已加载/收藏论文`
+      : '先打开任意会议/期刊年份，加载后即可跨会议搜索。';
+  }
+
+  function renderGlobal() {
+    if (!globalSearch || !globalPanel) return;
+    const q = globalSearch.value.trim().toLowerCase();
+    if (!q) {
+      globalPanel.hidden = true;
+      return;
+    }
+    const all = new Map([...paperIndex, ...Object.entries(saved)]);
+    const shown = Array.from(all.values())
+      .filter((paper) =>
+        paper.title.toLowerCase().includes(q) ||
+        paper.authors.join(' ').toLowerCase().includes(q) ||
+        (paper.abstract || '').toLowerCase().includes(q) ||
+        paper.venueShort.toLowerCase().includes(q))
+      .sort((a, b) => (b.cites || 0) - (a.cites || 0))
+      .slice(0, 150);
+    globalList.innerHTML = shown.map((paper) => cardHtml(paper, 'global')).join('');
+    if (globalEmpty) globalEmpty.hidden = shown.length > 0;
+    globalPanel.hidden = false;
+  }
+
+  function panelState(panel) {
+    return panel && panel.__paperState ? panel.__paperState : null;
+  }
+
+  function setStatus(panel, text) {
+    const status = panel.querySelector('.papers-status');
+    if (status) status.textContent = text;
+  }
+
+  function renderPanel(panel, state) {
+    const list = panel.querySelector('.papers-list');
+    const search = panel.querySelector('.papers-search');
+    const more = panel.querySelector('.papers-more');
+    const retry = panel.querySelector('.papers-retry');
+    const dblp = panel.querySelector('.papers-dblp');
+    const q = ((search && search.value) || '').trim().toLowerCase();
+    const fulltextBtn = panel.querySelector('[data-paper-filter="fulltext"]');
+    const savedBtn = panel.querySelector('[data-paper-filter="saved"]');
+    const fulltextOnly = !!fulltextBtn && fulltextBtn.getAttribute('aria-pressed') === 'true';
+    const savedOnly = !!savedBtn && savedBtn.getAttribute('aria-pressed') === 'true';
+
+    let shown = state.papers.filter((paper) => {
+      if (fulltextOnly && !paper.fulltext) return false;
+      if (savedOnly && !saved[paper.id]) return false;
+      if (!q) return true;
+      return paper.title.toLowerCase().includes(q) ||
+        paper.authors.join(' ').toLowerCase().includes(q) ||
+        paper.abstract.toLowerCase().includes(q);
+    });
+
+    const cap = state.visible || PER_BATCH;
+    list.innerHTML = shown.slice(0, cap).map((paper) => cardHtml(paper, 'panel')).join('');
+    if (retry) retry.classList.add('hidden');
+
+    if (state.error) {
+      setStatus(panel, `加载失败：${state.error}`);
+      if (retry) retry.classList.remove('hidden');
+    } else if (state.loading) {
+      setStatus(panel, `加载中 ${state.loaded || 0} / ${state.total || '…'} 篇 · ${state.providerLabel}`);
+    } else if (shown.length === 0) {
+      setStatus(panel, '该届暂未收录，可直接去 DBLP 或官网查看。');
+    } else if (q) {
+      setStatus(panel, `${shown.length} / ${state.papers.length} 篇匹配`);
+    } else if (fulltextOnly || savedOnly) {
+      setStatus(panel, `${shown.length} 篇匹配`);
+    } else {
+      setStatus(panel, `${shown.length} 篇 · 按被引排序 · ${state.providerLabel}`);
+    }
+
+    more.classList.toggle('hidden', shown.length <= cap);
+    more.textContent = `显示更多（还有 ${Math.max(0, shown.length - cap)} 篇）`;
+
+    if (dblp) {
+      const venue = findVenue(state.venueId);
+      dblp.href = venue ? dblpUrl(venue, state.year) : '#';
+      dblp.textContent = state.papers.length === 0 && !state.loading && !state.error
+        ? '该年 DBLP 页面 ↗'
+        : '在 DBLP 查看该年 ↗';
+    }
+  }
+
+  function deactivateYears() {
+    blocks.forEach((block) => {
+      block.querySelectorAll('.year-btn').forEach((btn) => {
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
+  function closeActive() {
+    if (!active) return;
+    active.panel.classList.add('hidden');
+    deactivateYears();
+    active = null;
+  }
+
+  function openYear(block, btn) {
+    const venueId = block.dataset.id;
+    const year = Number(btn.dataset.year);
+    const panel = block.querySelector('.papers-panel');
+    const venue = findVenue(venueId);
+    if (!venue || !panel) return;
+
+    if (active && active.block === block && active.year === year && !panel.classList.contains('hidden')) {
+      closeActive();
+      return;
+    }
+
+    closeActive();
+    btn.classList.add('is-active');
+    btn.setAttribute('aria-expanded', 'true');
+    panel.classList.remove('hidden');
+
+    const state = {
+      venueId,
+      year,
+      panel,
+      block,
+      papers: [],
+      visible: PER_BATCH,
+      loading: true,
+      loaded: 0,
+      total: 0,
+      error: '',
+      providerLabel: venue.provider === 'openalex' ? 'OpenAlex' : 'Semantic Scholar',
+    };
+    panel.__paperState = state;
+    active = state;
+
+    const search = panel.querySelector('.papers-search');
+    if (search) search.value = '';
+    panel.querySelectorAll('[data-paper-filter]').forEach((filter) => filter.setAttribute('aria-pressed', 'false'));
+
+    renderPanel(panel, state);
+    if (window.innerWidth < 960) {
+      panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    loadVenuePapers(venue, year, (loaded, total, provider) => {
+      state.loaded = loaded;
+      state.total = total;
+      state.providerLabel = provider === 'openalex' ? 'OpenAlex' : 'Semantic Scholar';
+      if (active === state) setStatus(panel, `加载中 ${loaded} / ${total || '…'} 篇 · ${state.providerLabel}`);
+    }).then((papers) => {
+      state.papers = papers;
+      state.loading = false;
+      state.error = '';
+      papers.forEach((paper) => paperIndex.set(paper.id, paper));
+      updateGlobalHint();
+      if (active === state) renderPanel(panel, state);
+    }).catch((error) => {
+      state.loading = false;
+      state.error = String(error && error.message ? error.message : error);
+      if (active === state) renderPanel(panel, state);
+    });
+  }
+
+  blocks.forEach((block) => {
+    block.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!target || !target.closest) return;
+      const yearBtn = target.closest('.year-btn');
+      if (yearBtn) {
+        openYear(block, yearBtn);
+        return;
+      }
+      const retry = target.closest('.papers-retry');
+      if (retry && active) {
+        const state = active;
+        state.error = '';
+        state.loading = true;
+        state.papers = [];
+        renderPanel(state.panel, state);
+        const venue = findVenue(state.venueId);
+        if (venue) {
+          loadVenuePapers(venue, state.year, (loaded, total, provider) => {
+            state.loaded = loaded;
+            state.total = total;
+            state.providerLabel = provider === 'openalex' ? 'OpenAlex' : 'Semantic Scholar';
+            if (active === state) setStatus(state.panel, `加载中 ${loaded} / ${total || '…'} 篇 · ${state.providerLabel}`);
+          }).then((papers) => {
+            state.papers = papers;
+            state.loading = false;
+            papers.forEach((paper) => paperIndex.set(paper.id, paper));
+            updateGlobalHint();
+            if (active === state) renderPanel(state.panel, state);
+          }).catch((error) => {
+            state.loading = false;
+            state.error = String(error && error.message ? error.message : error);
+            if (active === state) renderPanel(state.panel, state);
+          });
+        }
+        return;
+      }
+      const close = target.closest('.papers-close');
+      if (close && active) {
+        closeActive();
+        return;
+      }
+      const more = target.closest('.papers-more');
+      if (more && active) {
+        active.visible = (active.visible || PER_BATCH) + PER_BATCH;
+        renderPanel(active.panel, active);
+      }
+    });
+  });
+
+  blocks.forEach((block) => {
+    const panel = block.querySelector('.papers-panel');
+    if (!panel) return;
+    panel.addEventListener('input', (event) => {
+      if (!event.target.classList.contains('papers-search')) return;
+      const state = panelState(panel);
+      if (!state) return;
+      state.visible = PER_BATCH;
+      renderPanel(panel, state);
+    });
+    panel.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!target || !target.closest) return;
+      const filter = target.closest('[data-paper-filter]');
+      if (filter) {
+        const pressed = filter.getAttribute('aria-pressed') === 'true';
+        filter.setAttribute('aria-pressed', String(!pressed));
+        const state = panelState(panel);
+        if (state) {
+          state.visible = PER_BATCH;
+          renderPanel(panel, state);
+        }
+      }
+    });
+  });
+
+  function toggleSave(id) {
+    const paper = paperIndex.get(id) || saved[id];
+    if (!paper) return;
+    if (saved[id]) {
+      delete saved[id];
+    } else {
+      saved[id] = paper;
+    }
+    persistSaved();
+    syncSavedCount();
+    updateGlobalHint();
+    if (active) renderPanel(active.panel, active);
+    if (!savedPanel.hidden) renderSaved();
+    if (!globalPanel.hidden) renderGlobal();
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {}
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    textarea.remove();
+    return ok;
+  }
+
+  document.querySelectorAll('.papers-list').forEach((list) => {
+    list.addEventListener('click', async (event) => {
+      const target = event.target;
+      if (!target || !target.closest) return;
+      const toggle = target.closest('.paper-toggle');
+      if (toggle) {
+        const item = toggle.closest('.paper-item');
+        const abstract = item && item.querySelector('.paper-abstract');
+        if (!abstract) return;
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        abstract.classList.toggle('is-expanded', !expanded);
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        toggle.textContent = expanded ? '展开摘要' : '收起摘要';
+        return;
+      }
+      const save = target.closest('.paper-save');
+      if (save) {
+        toggleSave(save.getAttribute('data-id') || '');
+        return;
+      }
+      const detail = target.closest('.paper-detail');
+      if (detail) {
+        const id = detail.getAttribute('data-id') || '';
+        const paper = paperIndex.get(id) || saved[id];
+        if (paper) openDetail(paper);
+        return;
+      }
+      const bib = target.closest('.paper-bib');
+      if (bib) {
+        const id = bib.getAttribute('data-id') || '';
+        const paper = paperIndex.get(id) || saved[id];
+        if (!paper) return;
+        const ok = await copyText(toBibtex(paper));
+        bib.textContent = ok ? '已复制' : '复制失败';
+        setTimeout(() => { bib.textContent = 'BibTeX'; }, 1600);
+      }
+    });
+  });
+
+  function renderSaved() {
+    const list = Object.values(saved).sort((a, b) => (b.cites || 0) - (a.cites || 0));
+    const q = ((savedSearch && savedSearch.value) || '').trim().toLowerCase();
+    const shown = q
+      ? list.filter((paper) =>
+          paper.title.toLowerCase().includes(q) ||
+          paper.authors.join(' ').toLowerCase().includes(q) ||
+          (paper.abstract || '').toLowerCase().includes(q) ||
+          paper.venueShort.toLowerCase().includes(q))
+      : list;
+    savedList.innerHTML = shown.slice(0, 300).map((paper) => cardHtml(paper, 'saved')).join('');
+    savedEmpty.hidden = shown.length > 0;
+  }
+
+  if (savedOpen) {
+    savedOpen.addEventListener('click', () => {
+      const opening = savedPanel.hidden;
+      savedPanel.hidden = !opening;
+      savedOpen.setAttribute('aria-expanded', String(opening));
+      if (opening) {
+        renderSaved();
+        savedPanel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }
+  savedClose?.addEventListener('click', () => {
+    savedPanel.hidden = true;
+    savedOpen?.setAttribute('aria-expanded', 'false');
+  });
+  savedSearch?.addEventListener('input', renderSaved);
+  globalSearch?.addEventListener('input', renderGlobal);
+  globalClose?.addEventListener('click', () => {
+    if (globalSearch) globalSearch.value = '';
+    if (globalPanel) globalPanel.hidden = true;
+  });
+
+  detailClose?.addEventListener('click', () => detailDialog?.close());
+  detailDialog?.addEventListener('click', (event) => {
+    if (event.target === detailDialog) detailDialog.close();
+  });
+  detailBody?.addEventListener('click', async (event) => {
+    const target = event.target;
+    if (!target || !target.closest) return;
+    const copy = target.closest('.detail-copy');
+    if (!copy) return;
+    const pre = detailBody.querySelector('.detail-bib');
+    const ok = await copyText(pre ? pre.textContent || '' : '');
+    copy.textContent = ok ? '已复制' : '复制失败';
+    setTimeout(() => { copy.textContent = '复制 BibTeX'; }, 1600);
+  });
+
+  function applyVenueFilter() {
+    const q = ((venueSearch && venueSearch.value) || '').trim().toLowerCase();
+    let visible = 0;
+    blocks.forEach((block) => {
+      const matchKind = block.dataset.type === kind;
+      const matchArea = area === 'all' || block.dataset.area === area;
+      const matchQuery = !q || block.dataset.search.includes(q);
+      const show = matchKind && matchArea && matchQuery;
+      block.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    groupsEl.forEach((group) => {
+      const count = Array.from(group.querySelectorAll('.venue-block')).filter((block) => block.style.display !== 'none').length;
+      group.style.display = count > 0 ? '' : 'none';
+      const badge = group.querySelector('.venue-group-count');
+      if (badge) badge.textContent = `${count} 个`;
+    });
+    venueEmpty?.classList.toggle('hidden', visible > 0);
+    if (active && active.block.style.display === 'none') closeActive();
+  }
+
+  kindBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      kind = btn.dataset.kind || 'conference';
+      kindBtns.forEach((item) => {
+        item.classList.toggle('is-active', item === btn);
+        item.setAttribute('aria-pressed', String(item === btn));
+      });
+      applyVenueFilter();
+    });
+  });
+  areaBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      area = btn.dataset.area || 'all';
+      areaBtns.forEach((item) => {
+        item.classList.toggle('is-active', item === btn);
+        item.setAttribute('aria-pressed', String(item === btn));
+      });
+      applyVenueFilter();
+    });
+  });
+  venueSearch?.addEventListener('input', applyVenueFilter);
+
+  syncSavedCount();
+  updateGlobalHint();
+  applyVenueFilter();
+</script>

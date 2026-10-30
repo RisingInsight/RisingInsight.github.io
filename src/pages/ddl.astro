@@ -26,34 +26,13 @@ const rows = ddl.entries
   .filter((e) => e.firstDate)
   .sort((a, b) => a.firstDate - b.firstDate);
 
-// 历年门户：有 dblp key 的会议，近 6 年
-const thisYear = new Date().getFullYear();
-const portal = [];
-const seenIds = new Set();
-for (const e of rows) {
-  if (!e.dblp || seenIds.has(e.dblp)) continue;
-  seenIds.add(e.dblp);
-  const years = [];
-  for (let y = thisYear + 1; y >= thisYear - 5; y--) years.push(y);
-  portal.push({
-    id: e.id,
-    title: e.title,
-    desc: e.description,
-    rank: e.rank,
-    dblp: e.dblp,
-    oa: e.openalexId || null,
-    years,
-  });
-}
-portal.sort((a, b) => (a.rank === b.rank ? a.title.localeCompare(b.title) : a.rank === 'A' ? -1 : 1));
-
 const rankBadge = (rank) =>
   rank === 'A'
     ? 'bg-accent text-[var(--accent-contrast)]'
     : 'border border-rule text-muted';
 ---
 
-<BaseLayout title="CCF DDL · 顶会门户 // RisingInsight" description="CCF-A/B 会议截稿日追踪与历年顶会论文门户">
+<BaseLayout title="CCF DDL · 顶会截稿日 // RisingInsight" description="CCF-A/B 会议截稿日追踪，完整顶会顶刊论文门户见 /papers/">
   <main id="main" class="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
     <header class="border-b border-rule pb-10">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -68,18 +47,19 @@ const rankBadge = (rank) =>
         </a>
       </div>
       <h1 class="mt-4 font-serif text-[2.1rem] font-semibold leading-[1.3] tracking-[.01em] text-ink sm:text-[2.5rem]">
-        CCF 截稿日 · 顶会门户
+        CCF 截稿日
       </h1>
       <p class="mt-4 max-w-2xl text-[14px] leading-7 text-muted">
-        追踪 CCF-A/B 会议的最近一届截稿时间，并按年份检索历年论文。
+        追踪 CCF-A/B 会议的最近一届截稿时间。
         数据来自 ccfddl 社区仓库（构建于 {fetchedDate}），<span class="text-muted-light">截稿时间以官网为准</span>。
+        历年中稿论文已移到独立的
+        <a href="/papers/" class="text-accent underline decoration-rule underline-offset-4 hover:decoration-accent">顶会顶刊论文门户</a>。
       </p>
       <p class="mt-4 font-mono text-[12px] text-muted-light">
         {ddl.count} conferences · A {rows.filter(r => r.rank === 'A').length} · B {rows.filter(r => r.rank === 'B').length}
       </p>
     </header>
 
-    <!-- DDL 列表 -->
     <section aria-labelledby="ddl-list-heading">
       <div class="flex flex-wrap items-center justify-between gap-3 pt-8 pb-4">
         <h2 id="ddl-list-heading" class="font-serif text-xl font-semibold text-ink">
@@ -146,6 +126,9 @@ const rankBadge = (rank) =>
                     官网 <span aria-hidden="true">↗</span>
                   </a>
                 )}
+                <a href={`/papers/#${e.id}`} class="transition-colors hover:text-accent">
+                  历年论文 <span aria-hidden="true">→</span>
+                </a>
               </div>
             </article>
           );
@@ -157,86 +140,27 @@ const rankBadge = (rank) =>
       </p>
     </section>
 
-    <!-- 历年论文门户（模仿 CV_Paper_Portal：按会 → 按年） -->
-    <section class="mt-16 border-t border-rule pt-10" aria-labelledby="portal-heading">
-      <div class="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id="portal-heading" class="font-serif text-xl font-semibold text-ink">
-          历年中稿论文
-        </h2>
-        <span class="font-mono text-[11px] text-muted-light">openalex · dblp</span>
-      </div>
-      <p class="mt-2 max-w-2xl text-[13.5px] leading-6 text-muted">
-        点年份加载该届中稿论文 —— 按被引排序，可搜标题、作者与摘要，摘要可就地展开，
-        收藏的论文会记在本地。数据实时取自 OpenAlex，论文集出版后会自动出现；
-        加载不到时走 DBLP 逐年入口。
-      </p>
-
-      <div class="mt-6 divide-y divide-rule-soft">
-        {portal.map((p) => (
-          <div class="py-4" data-conf={p.id}>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span class={`ddl-badge ${rankBadge(p.rank)}`}>{p.rank}</span>
-              <h3 class="font-mono text-[14px] font-bold text-ink">{p.title}</h3>
-              <a
-                href={`https://dblp.org/db/conf/${p.dblp}/index.html`}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="ml-auto font-mono text-[11px] text-muted-light transition-colors hover:text-accent"
-              >
-                全年索引 <span aria-hidden="true">↗</span>
-              </a>
-            </div>
-            <div class="mt-2 flex flex-wrap gap-1.5">
-              {p.years.map((y) => (
-                <button
-                  type="button"
-                  class="tag papers-year"
-                  data-title={p.title}
-                  data-desc={p.desc}
-                  data-oa={p.oa || ''}
-                  data-dblp={p.dblp}
-                  data-year={y}
-                  aria-expanded="false"
-                >
-                  {y}
-                </button>
-              ))}
-            </div>
-            <div class="papers-panel hidden">
-              <div class="papers-toolbar mt-3">
-                <input
-                  type="search"
-                  class="papers-search"
-                  placeholder="搜索标题 / 作者 / 摘要…"
-                  aria-label="在结果中搜索"
-                />
-                <div class="papers-filters" role="group" aria-label="论文筛选">
-                  <button type="button" class="papers-filter" data-paper-filter="fulltext" aria-pressed="false">有全文</button>
-                  <button type="button" class="papers-filter" data-paper-filter="saved" aria-pressed="false">收藏</button>
-                </div>
-                <span class="papers-status font-mono text-[11px] text-muted-light"></span>
-              </div>
-              <ol class="papers-list mt-2"></ol>
-              <div class="mt-3 flex flex-wrap items-center gap-3">
-                <button type="button" class="papers-more hidden">显示更多</button>
-                <a
-                  class="papers-dblp font-mono text-[11px] text-muted-light transition-colors hover:text-accent"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  在 DBLP 打开该届 <span aria-hidden="true">↗</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+    <section class="mt-14 border-t border-rule pt-8">
+      <a href="/papers/" class="group flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div class="mono-label">paper portal</div>
+          <h2 class="mt-2 font-serif text-xl font-semibold text-ink transition-colors group-hover:text-accent">
+            顶会顶刊论文
+          </h2>
+          <p class="mt-2 max-w-2xl text-[13.5px] leading-6 text-muted">
+            40+ 会议与期刊，按领域、会议/期刊与年份浏览中稿论文；
+            摘要展开、有全文筛选、收藏与 BibTeX 都在那里。
+          </p>
+        </div>
+        <span class="font-mono text-[12px] text-muted-light transition-colors group-hover:text-accent">
+          打开门户 <span aria-hidden="true">→</span>
+        </span>
+      </a>
     </section>
   </main>
 </BaseLayout>
 
 <style is:inline>
-  /* 页面私有样式：is:inline 绕过 Astro scoped 处理（此前该页 style 被静默丢弃） */
   .ddl-badge {
     display: inline-flex;
     align-items: center;
@@ -294,181 +218,6 @@ const rankBadge = (rank) =>
   .ddl-row[data-past='true'] .ddl-countdown {
     color: var(--muted-light);
   }
-
-  .papers-year {
-    cursor: pointer;
-  }
-  .papers-year.is-active {
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  .papers-panel {
-    padding: 10px 0 4px;
-  }
-  .papers-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 10px;
-  }
-  .papers-search {
-    flex: 1 1 260px;
-    max-width: 380px;
-    padding: 6px 12px;
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    background: var(--surface);
-    color: var(--ink);
-    font-size: 13px;
-  }
-  .papers-search:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-  .papers-filters {
-    display: flex;
-    gap: 6px;
-  }
-  .papers-filter {
-    padding: 4px 10px;
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--muted);
-    font-size: 12px;
-    cursor: pointer;
-    transition: color .2s, border-color .2s, background .2s;
-  }
-  .papers-filter:hover {
-    color: var(--ink);
-    border-color: var(--muted-light);
-  }
-  .papers-filter[aria-pressed='true'] {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-  .papers-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .papers-list .paper-item {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--rule-soft);
-  }
-  .papers-list .paper-head {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-  .paper-title {
-    flex: 1;
-    min-width: 0;
-    color: var(--ink-soft);
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.55;
-    text-decoration: none;
-    transition: color .2s;
-  }
-  .paper-title:hover {
-    color: var(--accent);
-  }
-  .paper-cites {
-    flex-shrink: 0;
-    padding: 0 7px;
-    border: 1px solid var(--rule-soft);
-    border-radius: 999px;
-    color: var(--muted-light);
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    white-space: nowrap;
-  }
-  .paper-authors {
-    max-width: 76ch;
-    margin-top: 3px;
-    color: var(--muted-light);
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .paper-abstract {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    max-width: 76ch;
-    margin-top: 7px;
-    color: var(--muted);
-    font-size: 12.8px;
-    line-height: 1.7;
-  }
-  .paper-abstract.is-expanded {
-    display: block;
-    overflow: visible;
-  }
-  .paper-abstract.is-empty {
-    color: var(--muted-light);
-    font-style: italic;
-  }
-  .paper-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    margin-top: 7px;
-  }
-  .paper-toggle,
-  .paper-save,
-  .paper-link {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--muted-light);
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: .04em;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color .2s;
-  }
-  .paper-toggle:hover,
-  .paper-save:hover,
-  .paper-link:hover {
-    color: var(--accent);
-  }
-  .paper-save[aria-pressed='true'] {
-    color: var(--accent);
-  }
-  .paper-link {
-    color: var(--muted);
-  }
-  @media (max-width: 640px) {
-    .papers-search { flex-basis: 100%; max-width: none; }
-    .paper-title { font-size: 13.5px; }
-    .paper-abstract { font-size: 12.5px; }
-  }
-  @media (pointer: coarse) {
-    .paper-toggle,
-    .paper-save,
-    .paper-link {
-      padding: 5px 0;
-    }
-  }
-  .papers-more {
-    padding: 4px 14px;
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--muted);
-    font-size: 12.5px;
-    cursor: pointer;
-    transition: color .2s, border-color .2s;
-  }
-  .papers-more:hover {
-    color: var(--ink);
-    border-color: var(--muted-light);
-  }
 </style>
 
 <script>
@@ -519,7 +268,6 @@ const rankBadge = (rank) =>
       if (isNaN(d.getTime())) return;
       const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
       const past = d.getTime() < Date.now();
-      // 构建期的 data-past 会随时间过期，客户端重算并同步筛选
       if (row.dataset.past !== String(past)) {
         row.dataset.past = String(past);
         const label = row.querySelector('.ddl-status-label');
@@ -531,412 +279,4 @@ const rankBadge = (rank) =>
   }
   refreshCountdown();
   window.setInterval(refreshCountdown, 30 * 60 * 1000);
-
-  // ===== 历年论文面板：点年份 → OpenAlex 级联加载（系列源 → 按年搜卷源 → DBLP 兜底）=====
-  const OA = 'https://api.openalex.org';
-  const OA_POLITE = '1668676243@qq.com';
-  const paperCache = new Map(); // key: `${title}:${year}` → state
-
-  async function oaFetch(url) {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(String(res.status));
-    return res.json();
-  }
-
-  // ---- 运行时源解析（与构建期同款匹配器）：访客 IP 自己解析，天然避开构建机限流 ----
-  const FILLER = { the: 1, a: 1, an: 1, of: 1, on: 1, in: 1, and: 1, for: 1, annual: 1,
-    international: 1, conference: 1, conferences: 1, symposium: 1, advances: 1,
-    proceedings: 1, joint: 1, acm: 1, ieee: 1, cvf: 1, sig: 1 };
-  // workshops/demos 是主会衍生场：全量需求下不作为主源（CVPR Workshops ≠ CVPR）
-  const EXCLUDE_RE = /workshops|demos/i;
-  function coreWords(s) {
-    return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-      .split(' ').filter(function (w) { return w && !FILLER[w]; });
-  }
-  function normName(s) {
-    return coreWords(s).join(' ');
-  }
-  // 缩写 → 全称词首拼接：CVPR = Computer Vision Pattern Recognition 的词首
-  function acronymOf(fullName) {
-    return coreWords(fullName).map(function (w) { return w[0]; }).join('');
-  }
-  function scoreSource(confTitle, src) {
-    const a = normName(confTitle);
-    const b = normName(src.display_name);
-    if (!a || !b) return 0;
-    if (a === b) return 100;
-    if (b.indexOf(a) !== -1 || a.indexOf(b) !== -1) return 70;
-    // 缩写匹配两种形态：精确词首拼接（EMNLP）或尾部子序列（CVPR ⊂ …Society CVPR）
-    if (a.length >= 3) {
-      const ac = acronymOf(src.display_name);
-      if (ac === a) return 90;
-      if (a.length >= 4 && ac.endsWith(a)) return 85;
-    }
-    const wa = a.split(' ');
-    const wb = b.split(' ');
-    let hit = 0;
-    wa.forEach(function (w) { if (wb.indexOf(w) !== -1) hit++; });
-    return wa.length ? (hit / wa.length) * 55 : 0;
-  }
-  const seriesCache = new Map(); // confTitle → sourceId | null
-  let lastOaCall = 0;
-  async function oaThrottled(url) {
-    // 浏览器同 IP 连发会被 OpenAlex 限流：全局节流 250ms + 指数退避（最多 3 次）
-    const wait = Math.max(0, 250 - (Date.now() - lastOaCall));
-    if (wait) await new Promise((r) => setTimeout(r, wait));
-    for (let attempt = 0; attempt < 3; attempt++) {
-      lastOaCall = Date.now();
-      try {
-        const res = await fetch(url, { headers: { Accept: 'application/json' } });
-        if (res.status === 429 || res.status === 403) {
-          if (attempt < 2) { await new Promise((r) => setTimeout(r, 1100 * (attempt + 1))); continue; }
-          throw new Error('rate');
-        }
-        if (!res.ok) throw new Error(String(res.status));
-        return await res.json();
-      } catch (err) {
-        if (attempt >= 2) throw err;
-      }
-    }
-  }
-  async function findSeriesSource(title, desc) {
-    if (seriesCache.has(title)) return seriesCache.get(title);
-    // 缩写标题最稳；display_name.search 是确定性过滤器（search= 行为飘忽）
-    const q = title;
-    try {
-      const data = await oaThrottled(OA + '/sources?filter=display_name.search:' + encodeURIComponent(q) + '&per-page=15&mailto=' + OA_POLITE);
-      const best = (data.results || [])
-        .filter(function (s) {
-          if ((s.works_count || 0) < 300) return false;
-          if (EXCLUDE_RE.test(String(s.display_name || ''))) return false;
-          return true;
-        })
-        .map(function (s) { return { s: s, score: scoreSource(title, s) }; })
-        .sort(function (x, y) { return y.score - x.score || (y.s.works_count || 0) - (x.s.works_count || 0); })[0];
-      const id = best && best.score >= 45 ? String(best.s.id).split('/').pop() : null;
-      seriesCache.set(title, id);
-      return id;
-    } catch (e) {
-      return null; // 网络问题不缓存，下次再试
-    }
-  }
-  // 卷源探测：像 NeurIPS 这类「每届一个 source」的会议，名字常带年份
-  async function findYearSource(title, desc, year) {
-    const queries = [title + ' ' + year, (desc || '') + ' ' + year];
-    for (const q of queries) {
-      if (!q.trim()) continue;
-      try {
-        const data = await oaThrottled(OA + '/sources?filter=display_name.search:' + encodeURIComponent(q) + '&per-page=15&mailto=' + OA_POLITE);
-        const lowerTitle = title.toLowerCase();
-        const pick = (data.results || []).find(function (s) {
-          const name = (s.display_name || '').toLowerCase();
-          return name.indexOf(String(year)) !== -1 &&
-            (name.indexOf(lowerTitle) !== -1 || (desc && name.indexOf(desc.toLowerCase()) !== -1));
-        });
-        if (pick) return String(pick.id).split('/').pop();
-      } catch (e) { /* 下一个查询 */ }
-    }
-    return null;
-  }
-
-  // ---- 摘要重建 / 转义 / 收藏（localStorage）----
-  function abstractText(inv) {
-    if (!inv) return '';
-    var max = 0;
-    Object.keys(inv).forEach(function (word) {
-      (inv[word] || []).forEach(function (pos) {
-        if (pos + 1 > max) max = pos + 1;
-      });
-    });
-    if (!max) return '';
-    var words = new Array(max);
-    Object.keys(inv).forEach(function (word) {
-      (inv[word] || []).forEach(function (pos) { words[pos] = word; });
-    });
-    return words.filter(Boolean).join(' ');
-  }
-
-  function escHtml(value) {
-    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
-      if (ch === '&') return '&amp;';
-      if (ch === '<') return '&lt;';
-      if (ch === '>') return '&gt;';
-      if (ch === '"') return '&quot;';
-      return '&#39;';
-    });
-  }
-
-  var SAVED_KEY = 'ddl-saved-papers';
-  function loadSaved() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
-      return Array.isArray(raw) ? raw : [];
-    } catch (e) { return []; }
-  }
-  function toggleSaved(id) {
-    var list = loadSaved();
-    var i = list.indexOf(id);
-    if (i === -1) list.push(id); else list.splice(i, 1);
-    try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch (e) {}
-    return i === -1;
-  }
-
-  var PAPERS_PER_BATCH = 150;
-
-  function activeState(panel) {
-    var conf = panel.closest('[data-conf]');
-    var btn = conf && conf.querySelector('.papers-year.is-active');
-    if (!btn) return null;
-    return paperCache.get(btn.dataset.title + ':' + btn.dataset.year) || null;
-  }
-
-  function renderCard(p, savedIds) {
-    var authors = p.authors.slice(0, 3).join(', ') + (p.more || p.authors.length > 3 ? ' et al.' : '');
-    var saved = savedIds.indexOf(p.id) !== -1;
-    var abstract = p.abstract
-      ? '<p class="paper-abstract">' + escHtml(p.abstract) + '</p>'
-      : '<p class="paper-abstract is-empty">摘要暂缺，打开原文查看</p>';
-    var toggle = p.abstract
-      ? '<button type="button" class="paper-toggle" aria-expanded="false">展开摘要</button>'
-      : '';
-    var links = '';
-    if (p.pdf) links += '<a class="paper-link" href="' + escHtml(p.pdf) + '" target="_blank" rel="noopener noreferrer">PDF ↗</a>';
-    if (p.oaUrl && p.oaUrl !== p.pdf) links += '<a class="paper-link" href="' + escHtml(p.oaUrl) + '" target="_blank" rel="noopener noreferrer">原文 ↗</a>';
-    if (p.doi) links += '<a class="paper-link" href="' + escHtml(p.doi) + '" target="_blank" rel="noopener noreferrer">DOI ↗</a>';
-    if (!p.pdf && !p.oaUrl && !p.doi && p.oa) links += '<a class="paper-link" href="https://openalex.org/' + escHtml(p.oa) + '" target="_blank" rel="noopener noreferrer">OpenAlex ↗</a>';
-    var save = '<button type="button" class="paper-save" aria-pressed="' + (saved ? 'true' : 'false') + '" data-id="' + escHtml(p.id) + '">' + (saved ? '已收藏' : '收藏') + '</button>';
-    return '<li class="paper-item" data-id="' + escHtml(p.id) + '">' +
-      '<div class="paper-head">' +
-      '<a class="paper-title" href="' + escHtml(p.link) + '" target="_blank" rel="noopener noreferrer">' + escHtml(p.title) + '</a>' +
-      '<span class="paper-cites">被引 ' + p.cites + '</span>' +
-      '</div>' +
-      (authors ? '<div class="paper-authors">' + escHtml(authors) + '</div>' : '') +
-      abstract +
-      '<div class="paper-actions">' + toggle + links + save + '</div>' +
-      '</li>';
-  }
-
-  function renderPapers(panel, state, loading) {
-    var status = panel.querySelector('.papers-status');
-    var list = panel.querySelector('.papers-list');
-    var more = panel.querySelector('.papers-more');
-    var search = panel.querySelector('.papers-search');
-    var q = ((search && search.value) || '').trim().toLowerCase();
-    var fulltextBtn = panel.querySelector('[data-paper-filter="fulltext"]');
-    var savedBtn = panel.querySelector('[data-paper-filter="saved"]');
-    var fulltextOnly = !!fulltextBtn && fulltextBtn.getAttribute('aria-pressed') === 'true';
-    var savedOnly = !!savedBtn && savedBtn.getAttribute('aria-pressed') === 'true';
-    var filtered = fulltextOnly || savedOnly;
-    var savedIds = loadSaved();
-
-    var shown = state.papers.filter(function (p) {
-      if (fulltextOnly && !p.fulltext) return false;
-      if (savedOnly && savedIds.indexOf(p.id) === -1) return false;
-      if (!q) return true;
-      return p.title.toLowerCase().indexOf(q) !== -1 ||
-        p.authors.join(' ').toLowerCase().indexOf(q) !== -1 ||
-        (p.abstract && p.abstract.toLowerCase().indexOf(q) !== -1);
-    });
-
-    // 分批渲染：每批 150 条，避免一届 2000+ 篇一次性塞进 DOM
-    var cap = state.visible || PAPERS_PER_BATCH;
-    var slice = shown.slice(0, cap);
-    list.innerHTML = slice.map(function (p) { return renderCard(p, savedIds); }).join('');
-
-    var loadingTag = loading || (!state.exhausted && state.papers.length > 0);
-    if (shown.length === 0) {
-      status.textContent = state.papers.length === 0 && loadingTag ? '加载中…' : '没有匹配的论文';
-    } else if (q) {
-      status.textContent = shown.length + ' / ' + state.papers.length + ' 篇匹配';
-    } else if (filtered) {
-      status.textContent = shown.length + ' 篇匹配' + (loadingTag ? '（加载中…）' : '');
-    } else if (state.total && loadingTag) {
-      status.textContent = '已加载 ' + state.papers.length + ' / ' + state.total + ' 篇…';
-    } else {
-      status.textContent = shown.length + ' 篇 · 按被引排序';
-    }
-
-    more.classList.toggle('hidden', shown.length <= cap);
-    more.textContent = '显示更多（还有 ' + Math.max(0, shown.length - cap) + ' 篇）';
-  }
-
-  // 单页拉取（page 分页：无需 API key；cursor 分页被 OpenAlex 锁 key 了）
-  async function fetchPage(state) {
-    var url = OA + '/works?filter=primary_location.source.id:' + state.sourceId +
-      ',publication_year:' + state.year +
-      '&sort=cited_by_count:desc&per-page=200&page=' + state.page +
-      '&select=title,authorships,doi,cited_by_count,open_access,id,abstract_inverted_index,best_oa_location&mailto=' + OA_POLITE;
-    var data = await oaThrottled(url);
-    var batch = (data.results || []).map(function (w) {
-      var oaId = w.id ? String(w.id).split('/').pop() : '';
-      var pdf = (w.best_oa_location && w.best_oa_location.pdf_url) || '';
-      var oaUrl = (w.open_access && w.open_access.oa_url) || '';
-      var doi = w.doi || '';
-      var link = pdf || oaUrl || doi || (oaId ? 'https://openalex.org/' + oaId : '#');
-      var abstract = abstractText(w.abstract_inverted_index);
-      return {
-        id: oaId,
-        oa: oaId,
-        title: w.title || '(untitled)',
-        authors: (w.authorships || []).slice(0, 6).map(function (a) { return a.author && a.author.display_name; }).filter(Boolean),
-        more: (w.authorships || []).length > 6,
-        cites: w.cited_by_count || 0,
-        link: link,
-        pdf: pdf,
-        oaUrl: oaUrl,
-        doi: doi,
-        fulltext: !!(pdf || oaUrl),
-        abstract: abstract,
-      };
-    });
-    state.papers.push.apply(state.papers, batch);
-    if (data.meta && data.meta.count) state.total = Math.max(state.total, data.meta.count);
-    // 唯一的停止条件：批次为空（page 越界）；否则翻到下一页
-    if (batch.length === 0) {
-      state.exhausted = true;
-    } else {
-      state.page += 1;
-    }
-  }
-
-  // 全量拉取：循环游标直到取完（CVPR 一届约 2000+ 篇 ≈ 11 页），边拉边渲染
-  async function drainAll(panel, state) {
-    var status = panel.querySelector('.papers-status');
-    var guard = 0;
-    var pauses = 0;
-    while (!state.exhausted && guard < 80) {
-      guard++;
-      try {
-        await fetchPage(state);
-      } catch (e) {
-        // 限流/抖动：等 1.5s 续传（最多 3 次）；仍失败则展示已到手的部分
-        pauses++;
-        if (pauses <= 3 && state.papers.length > 0) {
-          status.textContent = '限流中，稍候继续…';
-          await new Promise((r) => setTimeout(r, 1500));
-          continue;
-        }
-        break;
-      }
-      if (state.total) {
-        status.textContent = '加载中 ' + state.papers.length + ' / ' + state.total + ' 篇…';
-      } else {
-        status.textContent = '已加载 ' + state.papers.length + ' 篇…';
-      }
-      renderPapers(panel, state, true);
-    }
-    state.exhausted = true;
-    renderPapers(panel, state);
-  }
-
-  async function loadPapers(btn) {
-    var conf = btn.closest('[data-conf]');
-    var panel = conf && conf.querySelector('.papers-panel');
-    if (!panel) return;
-    var title = btn.dataset.title;
-    var year = Number(btn.dataset.year);
-    var dblp = btn.dataset.dblp;
-    var status = panel.querySelector('.papers-status');
-    var list = panel.querySelector('.papers-list');
-    var dblpLink = panel.querySelector('.papers-dblp');
-    dblpLink.href = 'https://dblp.org/db/conf/' + dblp + '/' + dblp + year + '.html';
-
-    var key = title + ':' + year;
-    if (paperCache.has(key)) { renderPapers(panel, paperCache.get(key)); return; }
-
-    panel.classList.remove('hidden');
-    status.textContent = '加载中…';
-    list.innerHTML = '';
-
-    var state = { papers: [], page: 1, sourceId: null, exhausted: true, total: 0, year: year, panel: panel, visible: PAPERS_PER_BATCH };
-    try {
-      var desc = btn.dataset.desc || '';
-      var sourceId = btn.dataset.oa || null;                       // ① 构建期 ID（可选加速）
-      if (!sourceId) sourceId = await findSeriesSource(title, desc); // ② 系列源（访客端解析）
-      if (!sourceId) sourceId = await findYearSource(title, desc, year); // ③ 当年卷源
-      if (!sourceId) throw new Error('no-source');
-      state.sourceId = sourceId; state.exhausted = false; state.page = 1;
-      paperCache.set(key, state);
-      await drainAll(panel, state);
-    } catch (e) {
-      // 完全没拿到数据才提示兜底；部分数据已渲染在面板上
-      if (state.papers.length === 0) {
-        status.textContent = '该届暂不可加载，走 DBLP：';
-        paperCache.delete(key);
-      }
-    }
-  }
-
-  document.querySelectorAll('.papers-year').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var group = btn.closest('[data-conf]');
-      group.querySelectorAll('.papers-year').forEach(function (b) {
-        b.classList.toggle('is-active', b === btn);
-        b.setAttribute('aria-expanded', String(b === btn));
-      });
-      loadPapers(btn);
-    });
-  });
-
-  document.querySelectorAll('.papers-panel').forEach(function (panel) {
-    var searchEl = panel.querySelector('.papers-search');
-    if (searchEl) searchEl.addEventListener('input', function () {
-      var state = activeState(panel);
-      // 加载中也可搜索：基于已到手的论文即时过滤，全量到位后自动补全
-      if (state) {
-        state.visible = PAPERS_PER_BATCH;
-        renderPapers(panel, state);
-      }
-    });
-    var moreEl = panel.querySelector('.papers-more');
-    if (moreEl) moreEl.addEventListener('click', function () {
-      var state = activeState(panel);
-      if (!state) return;
-      state.visible = (state.visible || PAPERS_PER_BATCH) + PAPERS_PER_BATCH;
-      renderPapers(panel, state);
-    });
-    panel.querySelectorAll('.papers-filter').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var pressed = btn.getAttribute('aria-pressed') === 'true';
-        btn.setAttribute('aria-pressed', String(!pressed));
-        var state = activeState(panel);
-        if (state) {
-          state.visible = PAPERS_PER_BATCH;
-          renderPapers(panel, state);
-        }
-      });
-    });
-  });
-
-  // 论文卡片交互：展开摘要 / 收藏（事件委托，重渲染后依然有效）
-  document.querySelectorAll('.papers-list').forEach(function (list) {
-    list.addEventListener('click', function (event) {
-      var el = event.target && event.target.closest ? event.target : null;
-      if (!el) return;
-      var toggle = el.closest('.paper-toggle');
-      if (toggle) {
-        var item = toggle.closest('.paper-item');
-        var abs = item && item.querySelector('.paper-abstract');
-        if (!abs) return;
-        var expanded = toggle.getAttribute('aria-expanded') === 'true';
-        abs.classList.toggle('is-expanded', !expanded);
-        toggle.setAttribute('aria-expanded', String(!expanded));
-        toggle.textContent = expanded ? '展开摘要' : '收起摘要';
-        return;
-      }
-      var save = el.closest('.paper-save');
-      if (!save) return;
-      var id = save.getAttribute('data-id') || '';
-      if (!id) return;
-      var saved = toggleSaved(id);
-      save.setAttribute('aria-pressed', String(saved));
-      save.textContent = saved ? '已收藏' : '收藏';
-      var panel = list.closest('.papers-panel');
-      var savedFilter = panel && panel.querySelector('[data-paper-filter="saved"]');
-      if (savedFilter && savedFilter.getAttribute('aria-pressed') === 'true') {
-        var state = activeState(panel);
-        if (state) renderPapers(panel, state);
-      }
-    });
-  });
 </script>
