@@ -18,12 +18,16 @@ export interface Paper {
   doi: string;
   pdf: string;
   oaUrl: string;
+  /** 论文官方代码仓库（从摘要提取，快照数据才有） */
+  code?: string;
+  /** arXiv id（CVF 快照） */
+  arxiv?: string;
   link: string;
   fulltext: boolean;
-  source: 'openalex' | 's2';
+  source: 'openalex' | 's2' | 'cvf' | 'pmlr' | 'iclr' | 'jmlr' | 'dblp';
 }
 
-export type PaperProgress = (loaded: number, total: number, provider: 'openalex' | 's2') => void;
+export type PaperProgress = (loaded: number, total: number, provider: Paper['source']) => void;
 
 const OA = 'https://api.openalex.org';
 const OA_MAILTO = '1668676243@qq.com';
@@ -34,6 +38,14 @@ const cache = new Map<string, Paper[]>();
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 let oaLast = 0;
 let s2Last = 0;
+
+// OpenAlex / S2 的 OA 字段里偶尔混入 sci-hub 镜像（多半已失效），一律丢弃，
+// 让链接回退到 DOI / 官方页
+const BAD_LINK_RE = /sci-hub/i;
+function cleanUrl(url?: string): string {
+  const value = String(url || '').trim();
+  return value && !BAD_LINK_RE.test(value) ? value : '';
+}
 
 function abstractFromIndex(inv: Record<string, number[]> | null | undefined): string {
   if (!inv) return '';
@@ -98,19 +110,25 @@ async function loadOpenAlex(venue: Venue, year: number, onProgress?: PaperProgre
   const sourceId = venue.oa.replace(/^https:\/\/openalex\.org\//, '');
   const papers: Paper[] = [];
   let total = 0;
-  for (let page = 1; page <= 20; page++) {
+  for (let page = 1; page <= 50; page++) {
     const url =
       `${OA}/works?filter=primary_location.source.id:${sourceId},publication_year:${year}` +
       `&sort=cited_by_count:desc&per-page=200&page=${page}` +
-      `&select=title,authorships,doi,cited_by_count,open_access,id,abstract_inverted_index,best_oa_location` +
+      `&select=title,authorships,doi,cited_by_count,open_access,id,abstract_inverted_index,best_oa_location,locations` +
       `&mailto=${OA_MAILTO}`;
     const data = await oaJson(url);
     total = Number(data.meta?.count) || total;
     const batch = (data.results || []).map((work: any): Paper => {
       const oaId = work.id ? String(work.id).split('/').pop() : '';
-      const pdf = (work.best_oa_location && work.best_oa_location.pdf_url) || '';
-      const oaUrl = (work.open_access && work.open_access.oa_url) || '';
+      const pdf = cleanUrl(work.best_oa_location && work.best_oa_location.pdf_url);
+      const oaUrl = cleanUrl(work.open_access && work.open_access.oa_url);
       const doi = work.doi || '';
+      // 出版商付费墙后面的论文通常有免费的 arXiv 版本，从 locations 里挖出来
+      const arxiv =
+        (work.locations || [])
+          .map((loc: any) => String(loc?.landing_page_url || ''))
+          .map((u: string) => u.match(/arxiv\.org\/abs\/([0-9]{4}\.[0-9]{4,5})/))
+          .find(Boolean)?.[1] || '';
       const authors = (work.authorships || [])
         .slice(0, 6)
         .map((a: any) => a.author && a.author.display_name)
@@ -126,8 +144,9 @@ async function loadOpenAlex(venue: Venue, year: number, onProgress?: PaperProgre
         doi,
         pdf,
         oaUrl,
+        arxiv,
         link: pdf || oaUrl || doi || (oaId ? `https://openalex.org/${oaId}` : '#'),
-        fulltext: Boolean(pdf || oaUrl),
+        fulltext: Boolean(pdf || oaUrl || arxiv),
         source: 'openalex',
       };
     });
@@ -151,7 +170,8 @@ async function loadS2(venue: Venue, year: number, onProgress?: PaperProgress): P
     total = Number(data.total) || total;
     const batch = (data.data || []).map((item: any): Paper => {
       const doi = item.externalIds?.DOI ? `https://doi.org/${item.externalIds.DOI}` : '';
-      const pdf = item.openAccessPdf?.url || '';
+      const pdf = cleanUrl(item.openAccessPdf?.url);
+      const arxiv = item.externalIds?.ArXiv || '';
       const paperId = item.paperId || `${venue.id}-${year}-${papers.length + 1}`;
       const authors = (item.authors || []).map((a: any) => a.name).filter(Boolean).slice(0, 6);
       return {
@@ -165,8 +185,9 @@ async function loadS2(venue: Venue, year: number, onProgress?: PaperProgress): P
         doi,
         pdf,
         oaUrl: '',
-        link: pdf || doi || `https://www.semanticscholar.org/paper/${paperId}`,
-        fulltext: Boolean(pdf || doi),
+        arxiv,
+        link: pdf || doi || arxiv || `https://www.semanticscholar.org/paper/${paperId}`,
+        fulltext: Boolean(pdf || doi || arxiv),
         source: 's2',
       };
     });
@@ -178,6 +199,53 @@ async function loadS2(venue: Venue, year: number, onProgress?: PaperProgress): P
   return papers;
 }
 
+async function loadSnapshot(
+  snapshotPath: string,
+  venue: Venue,
+  year: number,
+  onProgress?: PaperProgress
+): Promise<Paper[]> {
+  // 静态文件在烤制进程重写时可能读到半截 JSON，失败重试一次
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(snapshotPath);
+      if (!res.ok) throw new Error(`snapshot ${res.status}`);
+      const data = await res.json();
+      const source: Paper['source'] = data.provider || 'cvf';
+      const papers: Paper[] = (data.papers || []).map((paper: any) => ({
+        ...paper,
+        id: paper.id,
+        title: paper.title,
+        authors: paper.authors || [],
+        more: false,
+        abstract: paper.abstract || '',
+        cites: paper.cites || 0,
+        year,
+        venueId: venue.id,
+        venueShort: venue.short,
+        venueFull: venue.full,
+        venueType: venue.type,
+        doi: paper.doi || '',
+        pdf: cleanUrl(paper.pdf),
+        oaUrl: cleanUrl(paper.oaUrl || paper.url),
+        code: paper.code || '',
+        arxiv: paper.arxiv || '',
+        link: cleanUrl(paper.link) || cleanUrl(paper.pdf) || cleanUrl(paper.url) ||
+          (paper.doi ? `https://doi.org/${String(paper.doi).replace(/^https:\/\/doi\.org\//, '')}` : '#'),
+        fulltext: Boolean(cleanUrl(paper.pdf) || cleanUrl(paper.url) || paper.doi),
+        source,
+      }));
+      onProgress?.(papers.length, papers.length, source);
+      return papers;
+    } catch (error) {
+      lastError = error;
+      await sleep(400);
+    }
+  }
+  throw lastError;
+}
+
 export async function loadVenuePapers(
   venue: Venue,
   year: number,
@@ -186,15 +254,59 @@ export async function loadVenuePapers(
   const key = `${venue.id}:${year}:${venue.provider}`;
   const cached = cache.get(key);
   if (cached) {
-    onProgress?.(cached.length, cached.length, venue.provider);
+    const source = cached[0]?.source || venue.provider;
+    onProgress?.(cached.length, cached.length, source);
     return cached;
   }
-  const papers = venue.provider === 's2'
-    ? await loadS2(venue, year, onProgress)
-    : await loadOpenAlex(venue, year, onProgress);
+
+  let papers = await loadVenueYear(venue, year, onProgress);
+  if (papers.length === 0) {
+    // 主源没有收录（新会偏慢/源缺失）→ 换另一家 API 再试一次
+    const alt = venue.provider === 's2' ? loadOpenAlex : loadS2;
+    const hasAlt = venue.provider === 's2' ? Boolean(venue.oa) : Boolean(venue.s2);
+    if (hasAlt) {
+      try {
+        papers = await alt(venue, year, onProgress);
+      } catch {
+        papers = [];
+      }
+    }
+  }
+
   papers.sort((a, b) => b.cites - a.cites);
   cache.set(key, papers);
   return papers;
+}
+
+/** 快照优先，其次主 API；主 API 抛错时退到备 API，全失败才抛出。 */
+async function loadVenueYear(
+  venue: Venue,
+  year: number,
+  onProgress?: PaperProgress
+): Promise<Paper[]> {
+  const snapshot = venue.snapshots?.[year];
+  if (snapshot) {
+    try {
+      const papers = await loadSnapshot(snapshot, venue, year, onProgress);
+      if (papers.length > 0) return papers;
+    } catch {
+      // 快照缺失/网络失败 → 走 API
+    }
+  }
+
+  const primary = venue.provider === 's2' ? loadS2 : loadOpenAlex;
+  const secondary = venue.provider === 's2' ? loadOpenAlex : loadS2;
+  try {
+    return await primary(venue, year, onProgress);
+  } catch (error) {
+    const hasSecondary = venue.provider === 's2' ? Boolean(venue.oa) : Boolean(venue.s2);
+    if (!hasSecondary) throw error;
+    try {
+      return await secondary(venue, year, onProgress);
+    } catch {
+      throw error;
+    }
+  }
 }
 
 export function bibtexKey(paper: Paper): string {

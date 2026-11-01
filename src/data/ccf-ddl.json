@@ -1,7 +1,7 @@
 {
-  "fetchedAt": "2026-10-27T09:36:49.103Z",
+  "fetchedAt": "2026-11-01T13:37:49.371Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
-  "count": 28,
+  "count": 27,
   "entries": [
     {
       "id": "icml",
@@ -22,7 +22,8 @@
           "abstract": "2026-01-24 11:59:59",
           "deadline": "2026-01-29 11:59:59"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "cogsci",
@@ -326,18 +327,13 @@
       "confId": "coling27",
       "link": "https://2027.coling-iccl.org/",
       "timezone": "UTC-12",
-      "date": "May 9-14, 2027",
-      "place": "Macau SAR, China",
+      "date": "May 9-14 (in-person) and 6-7 (virtual), 2027",
+      "place": "Macau SAR, China / Online",
       "timelines": [
         {
-          "comment": "ARR Submission",
+          "comment": "",
           "abstract": null,
           "deadline": "2026-10-12 23:59:59"
-        },
-        {
-          "comment": "COLING commitment after ARR meta-reviews; reviewed papers only",
-          "abstract": null,
-          "deadline": "2026-12-23 23:59:59"
         }
       ],
       "openalexId": null
@@ -366,7 +362,8 @@
           "abstract": null,
           "deadline": "2026-12-23 23:59:59"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "www",
@@ -387,7 +384,8 @@
           "abstract": "2026-10-18 23:59:59",
           "deadline": "2026-10-25 23:59:59"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "recomb",
@@ -408,7 +406,8 @@
           "abstract": "2026-10-28 23:59:59",
           "deadline": "2026-11-04 23:59:59"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "cvpr",
@@ -429,7 +428,8 @@
           "abstract": "2026-11-10 23:59:59",
           "deadline": "2026-11-16 23:59:59"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "icaps",
@@ -450,28 +450,8 @@
           "abstract": "2026-12-07 23:59:59",
           "deadline": "2026-12-14 23:59:59"
         }
-      ]
-    },
-    {
-      "id": "acl",
-      "title": "ACL",
-      "description": "Annual Meeting of the Association for Computational Linguistics",
-      "sub": "AI",
-      "rank": "A",
-      "dblp": "acl",
-      "year": 2027,
-      "confId": "acl27",
-      "link": "https://2027.aclweb.org/",
-      "timezone": "UTC-12",
-      "date": "August 17-22, 2027",
-      "place": "Kyoto, Japan",
-      "timelines": [
-        {
-          "comment": "ARR Submission",
-          "abstract": null,
-          "deadline": "2027-01-04 23:59:59"
-        }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "ijcai",
@@ -492,7 +472,8 @@
           "abstract": "2027-01-04 23:59:00",
           "deadline": "2027-01-11 23:59:00"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "ismb",
@@ -513,7 +494,30 @@
           "abstract": null,
           "deadline": "2027-01-14 23:59:00"
         }
-      ]
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "colt",
+      "title": "COLT",
+      "description": "Annual Conference on Learning Theory",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "colt",
+      "year": 2027,
+      "confId": "colt27",
+      "link": "https://learningtheory.org/colt2027/",
+      "timezone": "AoE",
+      "date": "June 28 - July 2, 2027",
+      "place": "Tokyo, Japan",
+      "timelines": [
+        {
+          "comment": "Expected rebuttal March 29 - April 2; author notification on or before May 3.",
+          "abstract": null,
+          "deadline": "2027-01-29 23:59:59"
+        }
+      ],
+      "openalexId": null
     },
     {
       "id": "ecai",
@@ -534,7 +538,8 @@
           "abstract": null,
           "deadline": "2027-04-14 23:59:59"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "kr",
@@ -555,28 +560,8 @@
           "abstract": "2027-04-23 23:59:59",
           "deadline": "2027-04-28 23:59:59"
         }
-      ]
-    },
-    {
-      "id": "colt",
-      "title": "COLT",
-      "description": "Annual Conference on Learning Theory",
-      "sub": "AI",
-      "rank": "B",
-      "dblp": "colt",
-      "year": 2027,
-      "confId": "colt27",
-      "link": "https://learningtheory.org/colt2027/",
-      "timezone": "AoE",
-      "date": "June 28 - July 2, 2027",
-      "place": "Tokyo, Japan",
-      "timelines": [
-        {
-          "comment": "",
-          "abstract": null,
-          "deadline": "TBD"
-        }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "iccv",
@@ -597,7 +582,8 @@
           "abstract": null,
           "deadline": "TBD"
         }
-      ]
+      ],
+      "openalexId": null
     },
     {
       "id": "miccai",
@@ -618,7 +604,8 @@
           "abstract": "TBD",
           "deadline": "TBD"
         }
-      ]
+      ],
+      "openalexId": null
     }
   ]
 }

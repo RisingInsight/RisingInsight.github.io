@@ -23,6 +23,11 @@ function shiftHeadings() {
 export default defineConfig({
   site: 'https://risinginsight.github.io',
   integrations: [mdx(), sitemap()],
+  // 论文门户与截稿日已合并为 /ccf/，旧链接静态重定向
+  redirects: {
+    '/papers': '/ccf/',
+    '/ddl': '/ccf/',
+  },
   vite: {
     plugins: [tailwindcss()],
   },

@@ -18,8 +18,7 @@ export const SOCIALS = [
 export const NAV_ITEMS = [
   { label: '首页', href: '/' },
   { label: '文章', href: '/blog/' },
-  { label: '论文', href: '/papers/' },
-  { label: 'DDL', href: '/ddl/' },
+  { label: 'CCF', href: '/ccf/' },
   { label: '系列', href: '/series/' },
   { label: '归档', href: '/archives/' },
   { label: '留言', href: '/guestbook/' },
