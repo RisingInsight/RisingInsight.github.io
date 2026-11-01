@@ -1,0 +1,97 @@
+---
+// 悬浮滚动导航：一键到顶 / 一键到底，长列表与长文通用。
+// 页面不可滚动时整体隐藏；在顶部隐藏「到顶」、在底部隐藏「到底」。
+---
+<div id="scroll-nav" class="scroll-nav" hidden>
+  <button type="button" id="scroll-top" class="scroll-btn" aria-label="回到顶部" title="回到顶部" hidden>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 13V3M8 3L3.5 7.5M8 3l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+  <button type="button" id="scroll-bottom" class="scroll-btn" aria-label="跳到底部" title="跳到底部" hidden>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 3v10M8 13l4.5-4.5M8 13l-4.5-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+</div>
+
+<style>
+  .scroll-nav {
+    position: fixed;
+    right: 18px;
+    bottom: 24px;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .scroll-nav[hidden] {
+    display: none;
+  }
+  .scroll-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    box-shadow: var(--elev-2, 0 4px 14px rgba(0, 0, 0, .08));
+    transition: color .2s, border-color .2s, transform .2s;
+  }
+  .scroll-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .scroll-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .scroll-btn[hidden] {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .scroll-nav {
+      right: 12px;
+      bottom: 16px;
+    }
+    .scroll-btn {
+      width: 36px;
+      height: 36px;
+    }
+  }
+</style>
+
+<script>
+  const nav = document.getElementById('scroll-nav');
+  const topBtn = document.getElementById('scroll-top');
+  const bottomBtn = document.getElementById('scroll-bottom');
+  if (nav && topBtn && bottomBtn) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
+    const atTop = () => window.scrollY < 60;
+    const atBottom = () =>
+      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 60;
+    const scrollable = () => document.documentElement.scrollHeight - window.innerHeight > 400;
+
+    function sync() {
+      const show = scrollable();
+      nav.hidden = !show;
+      topBtn.hidden = !show || atTop();
+      bottomBtn.hidden = !show || atBottom();
+    }
+
+    topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior }));
+    bottomBtn.addEventListener('click', () =>
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior })
+    );
+    window.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+  }
+</script>
