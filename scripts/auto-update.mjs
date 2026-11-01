@@ -35,7 +35,8 @@ const run = (cmd, optional = false) => {
     return true;
   } catch (error) {
     log(`  ⚠ 命令失败: ${cmd.slice(0, 60)} — ${String(error.message).split('\n')[0].slice(0, 80)}`);
-    return optional ? false : process.exitCode !== undefined && (log('  （继续执行后续步骤）'), false);
+    if (optional) { log('  ⚠ 可选步骤失败（继续）: ' + cmd.slice(0, 60)); return false; }
+    throw new Error('必需步骤失败: ' + cmd.slice(0, 60)); // 让 CI 变红，绝不静默
   }
 };
 const exists = (p) => fs.existsSync(p);
@@ -184,10 +185,10 @@ if (!NO_ENRICH && !DRY) {
 log('== 代码链接提取');
 run('node scripts/augment-snapshots.mjs', true);
 log('== CCF 目录扩展（断点续跑）');
-run('node scripts/expand-ccf.mjs', true);
+run('node scripts/expand-ccf.mjs');
 log('== 生成接线文件');
-run('node scripts/generate-ccf-venues.mjs', true);
-run('node scripts/generate-snapshots.mjs', true);
+run('node scripts/generate-ccf-venues.mjs');
+run('node scripts/generate-snapshots.mjs');
 
 log(`\n✓ 自动更新${DRY ? '（dry-run）' : ''}完成；本轮触及快照 ${new Set(touched.map((f) => path.basename(f))).size} 份`);
 if (!DRY) {

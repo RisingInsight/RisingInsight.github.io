@@ -28,7 +28,10 @@ async function oaJson(url) {
 }
 
 // ---- 载入官方目录与现有 venue，求差集 ----
-const catalog = JSON.parse(fs.readFileSync('.tmp-patch/ccf7-official.json', 'utf8'));
+const CATALOG_FILE = fs.existsSync('scripts/data/ccf7-official.json')
+  ? 'scripts/data/ccf7-official.json'
+  : '.tmp-patch/ccf7-official.json'; // 本地旧路径兼容
+const catalog = JSON.parse(fs.readFileSync(CATALOG_FILE, 'utf8'));
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 // 从源码直接抽取现有 venue 的 id/简称/全名（避免 Node 导入 .ts 的麻烦）
 const venuesTs = fs.readFileSync('src/data/venues.ts', 'utf8');
