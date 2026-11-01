@@ -1,7 +1,7 @@
 {
-  "fetchedAt": "2026-11-01T13:37:49.371Z",
+  "fetchedAt": "2026-11-01T14:13:33.990Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
-  "count": 27,
+  "count": 30,
   "entries": [
     {
       "id": "icml",
@@ -273,6 +273,28 @@
       "openalexId": "https://openalex.org/S4363607730"
     },
     {
+      "id": "aaai",
+      "title": "AAAI",
+      "description": "AAAI Conference on Artificial Intelligence",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "aaai",
+      "year": 2027,
+      "confId": "aaai27",
+      "link": "https://aaai.org/conference/aaai/aaai-27/",
+      "timezone": "UTC-12",
+      "date": "February 16-23, 2027",
+      "place": "Montréal, Québec, Canada",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-07-21 23:59:59",
+          "deadline": "2026-07-28 23:59:59"
+        }
+      ],
+      "openalexId": "https://openalex.org/S4210191458"
+    },
+    {
       "id": "icra",
       "title": "ICRA",
       "description": "IEEE International Conference on Robotics and Automation",
@@ -312,6 +334,28 @@
           "comment": "",
           "abstract": "2026-09-18 23:59:59",
           "deadline": "2026-09-25 23:59:59"
+        }
+      ],
+      "openalexId": null
+    },
+    {
+      "id": "aamas",
+      "title": "AAMAS",
+      "description": "International Conference on Autonomous Agents and Multiagent Systems",
+      "sub": "AI",
+      "rank": "B",
+      "dblp": "ifaamas",
+      "year": 2027,
+      "confId": "aamas27",
+      "link": "https://warwick.ac.uk/fac/sci/dcs/aamas2027/",
+      "timezone": "AoE",
+      "date": "May 3-7, 2027",
+      "place": "Hanoi, Vietnam",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": "2026-10-01 23:59:59",
+          "deadline": "2026-10-08 23:59:59"
         }
       ],
       "openalexId": null
@@ -452,6 +496,28 @@
         }
       ],
       "openalexId": null
+    },
+    {
+      "id": "acl",
+      "title": "ACL",
+      "description": "Annual Meeting of the Association for Computational Linguistics",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "acl",
+      "year": 2027,
+      "confId": "acl27",
+      "link": "https://2027.aclweb.org/",
+      "timezone": "UTC-12",
+      "date": "August 17-22, 2027",
+      "place": "Kyoto, Japan",
+      "timelines": [
+        {
+          "comment": "ARR Submission",
+          "abstract": null,
+          "deadline": "2027-01-04 23:59:59"
+        }
+      ],
+      "openalexId": "https://openalex.org/S7407086083"
     },
     {
       "id": "ijcai",
