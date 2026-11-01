@@ -1,0 +1,52 @@
+name: 学术数据自动更新
+
+# 每周一 20:00 UTC（北京周一 04:00 / 周日 20:00 UTC）全量刷新学术数据：
+# 截稿日、官方 proceedings 快照（CVF/PMLR/ICLR/ACL/Crossref 新一届自动探测）、
+# S2 摘要/arXiv/PDF 补全、CCF 目录扩展断点续跑、快照自动接线。
+# 构建通过才提交；push 后 deploy-astro.yml 自动重新部署站点。
+# 也可在 Actions 页面手动触发（workflow_dispatch）。
+
+on:
+  schedule:
+    - cron: '0 20 * * 0'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 自动更新数据
+        run: node scripts/auto-update.mjs
+
+      - name: 构建校验（失败则不提交）
+        run: npx astro build
+
+      - name: 提交并推送
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add -A
+            git commit -m "chore(data): 学术数据自动更新 $(date -u +%F)"
+            git push
+          else
+            echo "没有数据变更"
+          fi

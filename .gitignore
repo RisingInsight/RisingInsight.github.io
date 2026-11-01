@@ -40,3 +40,8 @@ hugo-backup/resources/
 .tmp-frames/
 docs/
 deliverables/
+
+# 本地调研临时文件
+.tmp-patch/
+probe-report.json
+audit-report.txt
