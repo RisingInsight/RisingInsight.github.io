@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-01T14:13:33.990Z",
+  "fetchedAt": "2026-11-02T12:12:13.410Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
@@ -173,8 +173,8 @@
       "timelines": [
         {
           "comment": "",
-          "abstract": "2026-05-05 11:59:00",
-          "deadline": "2026-05-07 11:59:00"
+          "abstract": "2026-05-05 11:59:59",
+          "deadline": "2026-05-07 11:59:59"
         }
       ],
       "openalexId": null
@@ -535,8 +535,8 @@
       "timelines": [
         {
           "comment": "Separate satellite event: August 15-17, 2027, Hengqin, China",
-          "abstract": "2027-01-04 23:59:00",
-          "deadline": "2027-01-11 23:59:00"
+          "abstract": "2027-01-04 23:59:59",
+          "deadline": "2027-01-11 23:59:59"
         }
       ],
       "openalexId": null
