@@ -1,30 +1,8 @@
 {
-  "fetchedAt": "2026-11-02T12:12:13.410Z",
+  "fetchedAt": "2026-11-03T11:46:39.745Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
-    {
-      "id": "icml",
-      "title": "ICML",
-      "description": "International Conference on Machine Learning",
-      "sub": "AI",
-      "rank": "A",
-      "dblp": "icml",
-      "year": 2026,
-      "confId": "icml26",
-      "link": "https://icml.cc/Conferences/2026",
-      "timezone": "UTC+0",
-      "date": "July 6-11, 2026",
-      "place": "Seoul, Korea",
-      "timelines": [
-        {
-          "comment": "Paper Submissions Open on OpenReview Jan 08 2026 12:00AM UTC-0",
-          "abstract": "2026-01-24 11:59:59",
-          "deadline": "2026-01-29 11:59:59"
-        }
-      ],
-      "openalexId": null
-    },
     {
       "id": "cogsci",
       "title": "CogSci",
@@ -650,6 +628,28 @@
         }
       ],
       "openalexId": null
+    },
+    {
+      "id": "icml",
+      "title": "ICML",
+      "description": "International Conference on Machine Learning",
+      "sub": "AI",
+      "rank": "A",
+      "dblp": "icml",
+      "year": 2027,
+      "confId": "icml27",
+      "link": "https://icml.cc/Conferences/2027",
+      "timezone": "AoE",
+      "date": "July 31 - August 6, 2027",
+      "place": "Riocentro, Rio de Janeiro, Brazil",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "TBD"
+        }
+      ],
+      "openalexId": "https://openalex.org/S7407088508"
     },
     {
       "id": "miccai",
