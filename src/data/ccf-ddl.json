@@ -1,30 +1,8 @@
 {
-  "fetchedAt": "2026-11-04T11:58:43.459Z",
+  "fetchedAt": "2026-11-05T12:03:13.855Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
-    {
-      "id": "cogsci",
-      "title": "CogSci",
-      "description": "Annual Meeting of the Cognitive Science Society",
-      "sub": "MX",
-      "rank": "B",
-      "dblp": "cogsci",
-      "year": 2026,
-      "confId": "cogsci26",
-      "link": "https://cognitivesciencesociety.org/cogsci-2026/",
-      "timezone": "AoE",
-      "date": "July 23-25, 2026",
-      "place": "Rio de Janeiro, Brazil (Hybrid)",
-      "timelines": [
-        {
-          "comment": "",
-          "abstract": null,
-          "deadline": "2026-02-02 23:59:59"
-        }
-      ],
-      "openalexId": null
-    },
     {
       "id": "uai",
       "title": "UAI",
@@ -151,7 +129,7 @@
       "timelines": [
         {
           "comment": "",
-          "abstract": "2026-05-05 11:59:59",
+          "abstract": "2026-05-05 11:59:00",
           "deadline": "2026-05-07 11:59:59"
         }
       ],
@@ -650,6 +628,28 @@
         }
       ],
       "openalexId": "https://openalex.org/S7407088508"
+    },
+    {
+      "id": "cogsci",
+      "title": "CogSci",
+      "description": "Annual Meeting of the Cognitive Science Society",
+      "sub": "MX",
+      "rank": "B",
+      "dblp": "cogsci",
+      "year": 2027,
+      "confId": "cogsci27",
+      "link": "https://cognitivesciencesociety.org/cogsci-2027/",
+      "timezone": "AoE",
+      "date": "July 28-31, 2027",
+      "place": "Euskalduna Bilbao Convention Centre, Bilbao, Spain",
+      "timelines": [
+        {
+          "comment": "",
+          "abstract": null,
+          "deadline": "TBD"
+        }
+      ],
+      "openalexId": null
     },
     {
       "id": "miccai",
