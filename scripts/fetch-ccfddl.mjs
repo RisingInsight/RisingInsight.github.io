@@ -1,7 +1,7 @@
 /**
  * 抓取 ccfddl/ccf-deadlines 社区仓库的会议截稿数据（MIT 许可），
  * 取每个会议最近一届的轮次信息，筛 CCF-A / CCF-B，
- * 写入 src/data/ccf-ddl.json 供 /ddl/ 页面静态使用。
+ * 写入 src/data/ccf-ddl.json 供 /ccf/ 页面静态使用。
  *
  * 用法：npm run fetch:ddl
  * 失败时保留旧快照（构建不因网络中断）。

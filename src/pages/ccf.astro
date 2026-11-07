@@ -88,6 +88,33 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
       </div>
     </header>
 
+    <!-- 搜索优先：找论文是首要任务，截稿日收在下方折叠区 -->
+    <section class="paper-search-hero" aria-labelledby="find-heading">
+      <div class="sec-head">
+        <h2 id="find-heading" class="font-serif text-xl font-semibold text-ink">找论文</h2>
+        <span class="mono-label">标题 / 作者 / 关键词</span>
+      </div>
+      <input
+        id="global-search"
+        type="search"
+        class="venue-search global-search-main"
+        placeholder="输入论文标题、作者或关键词…"
+        aria-label="跨会议搜索论文"
+        autocomplete="off"
+      />
+      <span id="global-search-hint" class="global-hint">本地快照 + 收藏 + OpenAlex 在线检索</span>
+      <section id="global-panel" class="saved-panel" hidden aria-label="论文检索结果">
+        <div class="sec-head">
+          <h2 class="font-serif text-lg font-semibold text-ink">检索结果</h2>
+          <button id="global-close" type="button" class="papers-close">收起</button>
+        </div>
+        <ol id="global-list" class="papers-list mt-2"></ol>
+        <p id="global-empty" class="py-8 text-center text-[13px] text-muted">没有匹配的论文。</p>
+      </section>
+    </section>
+
+    <details class="ddl-fold">
+      <summary class="ddl-fold-summary">截稿日 <span>{ddlRows.length} 条 · 点击展开</span></summary>
     <section id="deadlines" aria-labelledby="ddl-heading">
       <div class="sec-head mt-9">
         <h2 id="ddl-heading" class="font-serif text-xl font-semibold text-ink">截稿日</h2>
@@ -164,6 +191,7 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
         没有匹配的会议 —— 放宽筛选试试。
       </p>
     </section>
+    </details>
 
     <div id="papers-root" class="mt-9">
       <div id="papers-cluster" class="papers-cluster">
@@ -196,25 +224,14 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
           <button type="button" class="area-btn" data-rank="other" aria-pressed="false">其他</button>
         </div>
 
-        <div class="global-search-row mt-3">
-          <input id="global-search" type="search" class="venue-search" placeholder="跨会议搜索：在本次已加载的论文中搜索…" aria-label="跨会议搜索论文" />
-          <span id="global-search-hint" class="global-hint">先打开任意会议/期刊年份，加载后即可跨会议搜索。</span>
-        </div>
       </div>
-
-      <section id="global-panel" class="saved-panel" hidden aria-label="跨会议搜索结果">
-        <div class="sec-head">
-          <h2 class="font-serif text-lg font-semibold text-ink">跨会议搜索</h2>
-          <button id="global-close" type="button" class="papers-close">收起</button>
-        </div>
-        <ol id="global-list" class="papers-list mt-2"></ol>
-        <p id="global-empty" class="py-8 text-center text-[13px] text-muted">没有匹配的论文。</p>
-      </section>
 
       <section id="saved-panel" class="saved-panel" hidden aria-label="我的收藏">
         <div class="sec-head">
           <h2 class="font-serif text-lg font-semibold text-ink">我的收藏</h2>
           <div class="saved-actions">
+            <span id="cloud-status" class="cloud-status">本机保存</span>
+            <button id="saved-note" type="button" class="papers-close">用收藏写笔记</button>
             <button id="saved-export" type="button" class="papers-close">导出全部 BibTeX</button>
             <button id="saved-clear" type="button" class="papers-close">清空</button>
             <button id="saved-close" type="button" class="papers-close">收起</button>
@@ -223,7 +240,8 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
         <input id="saved-search" type="search" class="papers-search mt-3" placeholder="在收藏中搜索标题 / 作者 / 摘要…" aria-label="搜索收藏的论文" />
         <ol id="saved-list" class="papers-list mt-2"></ol>
         <p id="saved-empty" class="py-10 text-center text-[13px] text-muted">
-          还没有收藏论文。点论文卡片上的“收藏”，就会保存在这台设备的浏览器里。
+          还没有收藏论文。点论文卡片上的「收藏」保存，可标记想读 / 在读 / 已读；
+          在 /write →「发布设置」配置 Worker 后，收藏会跨设备同步。
         </p>
       </section>
 
@@ -428,22 +446,61 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
     flex-wrap: wrap;
     gap: 6px;
   }
-  .global-search-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
+  /* 搜索优先：首屏主入口 */
+  .paper-search-hero {
+    margin-top: 1.5rem;
+    padding: 1rem 1.1rem 1.15rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    background: var(--surface);
   }
-  .global-search-row .venue-search {
-    flex: 1 1 320px;
-    max-width: 520px;
+  .paper-search-hero .sec-head { margin-top: 0; margin-bottom: .8rem; }
+  .global-search-main {
+    width: 100%;
+    padding: .7rem .9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-sm);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 15px;
   }
+  .global-search-main:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .global-hint {
+    display: block;
+    margin-top: .5rem;
     color: var(--muted-light);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 11px;
     letter-spacing: .03em;
   }
+  .paper-search-hero #global-panel { margin-top: 1rem; }
+
+  .ddl-fold {
+    margin-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .ddl-fold-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .9rem 0;
+    cursor: pointer;
+    list-style: none;
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .ddl-fold-summary::-webkit-details-marker { display: none; }
+  .ddl-fold-summary span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted-light);
+  }
+  .ddl-fold > #deadlines > .sec-head { margin-top: 0; }
+  .ddl-fold > #deadlines > .sec-head > h2 { display: none; }
   .area-btn {
     padding: 4px 10px;
     border: 1px solid var(--rule);
@@ -839,6 +896,8 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
   .paper-save,
   .paper-bib,
   .paper-detail,
+  .paper-note,
+  .paper-status,
   .paper-link,
   .paper-venue {
     padding: 0;
@@ -861,6 +920,29 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
   }
   .paper-save[aria-pressed='true'] {
     color: var(--accent);
+  }
+  .paper-note {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .paper-note:hover { text-decoration: underline; }
+  .paper-status {
+    padding: 2px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--muted);
+  }
+  .paper-status[data-status='reading'] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .paper-status[data-status='read'] { color: var(--muted-light); }
+  .cloud-status {
+    align-self: center;
+    margin-right: auto;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--muted-light);
   }
   .paper-link {
     color: var(--muted);
@@ -1041,6 +1123,8 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
     .paper-save,
     .paper-bib,
     .paper-detail,
+    .paper-note,
+    .paper-status,
     .paper-link {
       padding: 5px 0;
     }
@@ -1138,11 +1222,13 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
 
 <script>
   import { findVenue, dblpUrl, AREA_LABELS } from '../data/venues';
-  import { loadVenuePapers, toBibtex } from '../lib/papers';
+  import { loadVenuePapers, toBibtex, bibtexKey } from '../lib/papers';
 
   const SAVED_KEY = 'papers:saved:v1';
   const PER_BATCH = 150;
   const paperIndex = new Map();
+  // 远程检索（OpenAlex）命中的论文单独存，卡片按钮同样能取到完整元数据
+  const remoteIndex = new Map();
 
   const blocks = Array.from(document.querySelectorAll('.venue-block'));
   const groupsEl = Array.from(document.querySelectorAll('.venue-group'));
@@ -1175,6 +1261,72 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
   let rank = 'all';
   let active = null;
 
+  // ---- 收藏云端同步（可选）----
+  // 复用 /write 发布设置里的 Worker 地址与口令；没配置时完全不发请求。
+  const LIBRARY_WORKER_KEY = 'write:worker';
+  const LIBRARY_TOKEN_KEY = 'write:token';
+  let cloudTimer;
+
+  function cloudConfig() {
+    try {
+      const base = (localStorage.getItem(LIBRARY_WORKER_KEY) || '').trim().replace(/\/+$/, '');
+      const token = (localStorage.getItem(LIBRARY_TOKEN_KEY) || '').trim();
+      return base && token ? { base, token } : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setCloudStatus(text) {
+    const el = document.getElementById('cloud-status');
+    if (el) el.textContent = text;
+  }
+
+  function syncSavedToCloud() {
+    const cfg = cloudConfig();
+    if (!cfg) return;
+    window.clearTimeout(cloudTimer);
+    cloudTimer = window.setTimeout(() => {
+      fetch(cfg.base + '/library', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.token}` },
+        body: JSON.stringify({ library: saved }),
+      })
+        .then((res) => setCloudStatus(res.ok ? '已同步到云端' : '云端未就绪，本地已保存'))
+        .catch(() => setCloudStatus('云端未就绪，本地已保存'));
+    }, 1200);
+  }
+
+  async function pullSavedFromCloud() {
+    const cfg = cloudConfig();
+    if (!cfg) {
+      setCloudStatus('本机保存 · 配置 Worker 后可跨设备同步');
+      return;
+    }
+    try {
+      const res = await fetch(cfg.base + '/library', {
+        headers: { Authorization: `Bearer ${cfg.token}` },
+      });
+      if (!res.ok) {
+        setCloudStatus('云端未就绪，本地已保存');
+        return;
+      }
+      const data = await res.json();
+      if (data.library && typeof data.library === 'object') {
+        // 合并：以云端为基础，保留本机离线期间新增的条目
+        saved = { ...data.library, ...saved };
+        localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+        syncSavedCount();
+        if (!savedPanel.hidden) renderSaved();
+        if (!globalPanel.hidden) renderGlobal();
+        updateGlobalHint();
+      }
+      setCloudStatus('已与云端同步');
+    } catch (e) {
+      setCloudStatus('云端未就绪，本地已保存');
+    }
+  }
+
   function loadSaved() {
     try {
       const raw = JSON.parse(localStorage.getItem(SAVED_KEY) || '{}');
@@ -1187,6 +1339,7 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
 
   function persistSaved() {
     try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)); } catch (e) {}
+    syncSavedToCloud();
   }
   function syncSavedCount() {
     if (savedCount) savedCount.textContent = String(Object.keys(saved).length);
@@ -1242,6 +1395,35 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
       paper.source === 'dblp' || paper.source === 'aclanthology';
   }
 
+  // ---- 写成笔记：把论文元数据交给 /write 编辑器 ----
+  function toRef(paper) {
+    return {
+      key: bibtexKey(paper),
+      title: paper.title || '',
+      authors: Array.isArray(paper.authors) ? paper.authors : [],
+      year: String(paper.year || ''),
+      venue: paper.venueShort || paper.venueFull || '',
+      url: paper.link || paper.oaUrl || paper.pdf || '',
+      doi: paper.doi || '',
+      arxiv: paper.arxiv || '',
+      pdf: paper.pdf || '',
+      bibtex: toBibtex(paper),
+    };
+  }
+
+  function startNote(papers) {
+    const refs = papers.map(toRef).filter((r) => r.key && r.title);
+    if (!refs.length) return;
+    try {
+      localStorage.setItem('write:pending-refs', JSON.stringify(refs.slice(0, 30)));
+    } catch (e) {}
+    window.location.href = '/write/?from=ccf';
+  }
+
+  function findPaper(id) {
+    return paperIndex.get(id) || remoteIndex.get(id) || saved[id];
+  }
+
   function cardHtml(paper, mode, tokens) {
     const authorLine = paper.authors.slice(0, 3).join(', ') + (paper.more || paper.authors.length > 3 ? ' et al.' : '');
     const abstract = paper.abstract
@@ -1261,6 +1443,12 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
     const detail = `<button type="button" class="paper-detail" data-id="${esc(paper.id)}">详情</button>`;
     const saveLabel = mode === 'saved' ? '移除' : (saved[paper.id] ? '已收藏' : '收藏');
     const save = `<button type="button" class="paper-save" data-id="${esc(paper.id)}" aria-pressed="${saved[paper.id] ? 'true' : 'false'}">${saveLabel}</button>`;
+    const note = `<button type="button" class="paper-note" data-id="${esc(paper.id)}" title="用这篇论文开一篇笔记">写成笔记 ↗</button>`;
+    const statusLabels = { want: '想读', reading: '在读', read: '已读' };
+    const statusKey = paper.status && statusLabels[paper.status] ? paper.status : 'want';
+    const status = mode === 'saved'
+      ? `<button type="button" class="paper-status" data-id="${esc(paper.id)}" data-status="${statusKey}" title="点击切换阅读状态">${statusLabels[statusKey]}</button>`
+      : '';
     const venue = mode === 'panel' ? '' : `<span class="paper-venue">${esc(paper.venueShort)} ${paper.year}</span>`;
     // 官方 proceedings 快照没有被引数据，显示“被引 0”是噪音，直接不展示
     const citesBadge = isOfficialSource(paper) ? '' : `<span class="paper-cites">被引 ${paper.cites}</span>`;
@@ -1271,7 +1459,7 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
       </div>
       ${authorLine ? `<div class="paper-authors">${highlight(authorLine, tokens)}</div>` : ''}
       ${abstract}
-      <div class="paper-actions">${toggle}${links}${detail}${bib}${save}${venue}</div>
+      <div class="paper-actions">${toggle}${links}${detail}${bib}${save}${status}${note}${venue}</div>
     </li>`;
   }
 
@@ -1301,22 +1489,136 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
     detailClose?.focus();
   }
 
+  let remoteStatus = '';
+  let remoteSeq = 0;
+  let remoteTimer;
+
   function updateGlobalHint() {
     if (!globalHint) return;
-    const count = new Set([...paperIndex.keys(), ...Object.keys(saved)]).size;
-    globalHint.textContent = count
-      ? `可搜索 ${count} 篇已加载/收藏论文`
-      : '先打开任意会议/期刊年份，加载后即可跨会议搜索。';
+    const count = new Set([...paperIndex.keys(), ...Object.keys(saved), ...remoteIndex.keys()]).size;
+    globalHint.textContent = remoteStatus || (count
+      ? `可搜索 ${count} 篇已加载 / 收藏 / 在线论文`
+      : '输入标题或作者即可检索：本站快照 + 收藏 + OpenAlex 在线结果');
   }
 
-  function renderGlobal() {
+  // 在线检索：没点开任何会议年份时，也能直接按标题 / 作者找论文
+  function fromOpenAlex(work) {
+    const authors = (work.authorships || [])
+      .map((a) => (a.author && a.author.display_name) || '')
+      .filter(Boolean);
+    const loc = work.primary_location || {};
+    const src = loc.source || {};
+    const doi = work.doi || '';
+    const pdf = (work.open_access && work.open_access.oa_url) || '';
+    return {
+      id: 'oa:' + String(work.id || '').split('/').pop(),
+      title: work.title || '',
+      authors,
+      more: false,
+      abstract: '',
+      cites: work.cited_by_count || 0,
+      year: work.publication_year || 0,
+      venueId: '',
+      venueShort: src.display_name || 'OpenAlex',
+      venueFull: src.display_name || '',
+      venueType: src.type === 'journal' ? 'journal' : 'conference',
+      doi,
+      pdf,
+      oaUrl: pdf,
+      link: loc.landing_page_url || doi || work.id || '',
+      fulltext: Boolean(pdf),
+      source: 'openalex',
+    };
+  }
+
+  function currentQuery() {
+    return ((globalSearch && globalSearch.value) || '').trim();
+  }
+
+  async function fetchJsonWithTimeout(url) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function ingestRemote(papers) {
+    for (const paper of papers.slice(0, 25)) {
+      if (paper.id && paper.title) remoteIndex.set(paper.id, paper);
+    }
+  }
+
+  // Semantic Scholar 作为 OpenAlex 限流（429）时的第二数据源
+  function fromS2(item) {
+    const ext = item.externalIds || {};
+    const doi = ext.DOI ? `https://doi.org/${ext.DOI}` : '';
+    const arxiv = ext.ArXiv || '';
+    const pdf = (item.openAccessPdf && item.openAccessPdf.url) || '';
+    return {
+      id: 's2:' + String(item.paperId || ''),
+      title: item.title || '',
+      authors: (item.authors || []).map((a) => a.name).filter(Boolean),
+      more: false,
+      abstract: item.abstract || '',
+      cites: item.citationCount || 0,
+      year: item.year || 0,
+      venueId: '',
+      venueShort: item.venue || 'Semantic Scholar',
+      venueFull: item.venue || '',
+      venueType: 'conference',
+      doi,
+      pdf,
+      oaUrl: pdf,
+      arxiv,
+      link: arxiv ? `https://arxiv.org/abs/${arxiv}` : (doi || item.url || ''),
+      fulltext: Boolean(pdf),
+      source: 's2',
+    };
+  }
+
+  async function runRemoteSearch(q) {
+    if (!q || q.length < 3) return;
+    const seq = ++remoteSeq;
+    remoteStatus = '正在在线检索…';
+    updateGlobalHint();
+    const oaUrl = `https://api.openalex.org/works?search=${encodeURIComponent(q)}&per-page=25&select=id,doi,title,authorships,publication_year,primary_location,cited_by_count,open_access&mailto=1668676243@qq.com`;
+    try {
+      const data = await fetchJsonWithTimeout(oaUrl);
+      if (seq !== remoteSeq || q !== currentQuery()) return;
+      ingestRemote((data.results || []).map(fromOpenAlex));
+      remoteStatus = '';
+      renderGlobalResults();
+      return;
+    } catch (e) {
+      if (seq !== remoteSeq) return;
+    }
+    try {
+      const s2Url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(q)}&limit=20&fields=title,abstract,authors,year,venue,citationCount,externalIds,openAccessPdf`;
+      const data = await fetchJsonWithTimeout(s2Url);
+      if (seq !== remoteSeq || q !== currentQuery()) return;
+      ingestRemote((data.data || []).map(fromS2));
+      remoteStatus = 'OpenAlex 限流，在线结果来自 Semantic Scholar';
+      renderGlobalResults();
+    } catch (e) {
+      if (seq !== remoteSeq) return;
+      remoteStatus = '在线检索暂不可用，已显示本地与收藏结果';
+      updateGlobalHint();
+    }
+  }
+
+  function renderGlobalResults() {
     if (!globalSearch || !globalPanel) return;
     const tokens = queryTokens(globalSearch.value);
     if (tokens.length === 0) {
       globalPanel.hidden = true;
       return;
     }
-    const all = new Map([...paperIndex, ...Object.entries(saved)]);
+    const all = new Map([...paperIndex, ...Object.entries(saved), ...remoteIndex]);
     const shown = Array.from(all.values())
       .filter((paper) => paperMatches(paper, tokens))
       .sort((a, b) => (b.cites || 0) - (a.cites || 0))
@@ -1324,6 +1626,19 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
     globalList.innerHTML = shown.map((paper) => cardHtml(paper, 'global', tokens)).join('');
     if (globalEmpty) globalEmpty.hidden = shown.length > 0;
     globalPanel.hidden = false;
+    updateGlobalHint();
+  }
+
+  function renderGlobal() {
+    renderGlobalResults();
+    window.clearTimeout(remoteTimer);
+    const q = ((globalSearch && globalSearch.value) || '').trim();
+    if (q.length < 3) {
+      remoteStatus = '';
+      updateGlobalHint();
+      return;
+    }
+    remoteTimer = window.setTimeout(() => runRemoteSearch(q), 550);
   }
 
   function panelState(panel) {
@@ -1495,6 +1810,12 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
         block.scrollIntoView({ block: 'start', behavior: 'smooth' });
         return;
       }
+      const ddlLink = target.closest('.venue-ddl');
+      if (ddlLink) {
+        const fold = document.querySelector('.ddl-fold');
+        if (fold) fold.open = true; // 折叠区闭合时锚点跳转会静默失败，先展开
+        return; // 放开默认锚点行为
+      }
       const latest = target.closest('.papers-latest');
       if (latest) {
         const firstYear = block.querySelector('.year-btn');
@@ -1576,12 +1897,12 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
   });
 
   function toggleSave(id) {
-    const paper = paperIndex.get(id) || saved[id];
+    const paper = findPaper(id);
     if (!paper) return;
     if (saved[id]) {
       delete saved[id];
     } else {
-      saved[id] = paper;
+      saved[id] = { ...paper, status: 'want' };
     }
     persistSaved();
     syncSavedCount();
@@ -1625,6 +1946,25 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
         toggle.textContent = expanded ? '展开摘要' : '收起摘要';
         return;
       }
+      const statusBtn = target.closest('.paper-status');
+      if (statusBtn) {
+        const id = statusBtn.getAttribute('data-id') || '';
+        const paper = saved[id];
+        if (paper) {
+          const order = ['want', 'reading', 'read'];
+          const current = paper.status || 'want';
+          paper.status = order[(order.indexOf(current) + 1) % order.length];
+          persistSaved();
+          renderSaved();
+        }
+        return;
+      }
+      const note = target.closest('.paper-note');
+      if (note) {
+        const paper = findPaper(note.getAttribute('data-id') || '');
+        if (paper) startNote([paper]);
+        return;
+      }
       const save = target.closest('.paper-save');
       if (save) {
         toggleSave(save.getAttribute('data-id') || '');
@@ -1633,14 +1973,14 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
       const detail = target.closest('.paper-detail');
       if (detail) {
         const id = detail.getAttribute('data-id') || '';
-        const paper = paperIndex.get(id) || saved[id];
+        const paper = findPaper(id);
         if (paper) openDetail(paper);
         return;
       }
       const bib = target.closest('.paper-bib');
       if (bib) {
         const id = bib.getAttribute('data-id') || '';
-        const paper = paperIndex.get(id) || saved[id];
+        const paper = findPaper(id);
         if (!paper) return;
         const ok = await copyText(toBibtex(paper));
         bib.textContent = ok ? '已复制' : '复制失败';
@@ -1677,6 +2017,8 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
   globalClose?.addEventListener('click', () => {
     if (globalSearch) globalSearch.value = '';
     if (globalPanel) globalPanel.hidden = true;
+    remoteStatus = '';
+    updateGlobalHint();
   });
 
   detailClose?.addEventListener('click', () => detailDialog?.close());
@@ -1777,6 +2119,16 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
   const savedExport = document.getElementById('saved-export');
   const savedClear = document.getElementById('saved-clear');
 
+  const savedNote = document.getElementById('saved-note');
+  savedNote?.addEventListener('click', () => {
+    const list = Object.values(saved);
+    if (!list.length) {
+      window.alert('还没有收藏论文，先点论文卡片上的「收藏」。');
+      return;
+    }
+    startNote(list);
+  });
+
   savedExport?.addEventListener('click', () => {
     const papers = Object.values(saved);
     if (papers.length === 0) return;
@@ -1807,15 +2159,15 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
     if (!globalPanel.hidden) renderGlobal();
   });
 
-  // ---- 键盘：/ 聚焦会议搜索，Esc 逐层收起面板 ----
+  // ---- 键盘：/ 聚焦论文检索，Esc 逐层收起面板 ----
   document.addEventListener('keydown', (event) => {
     if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey) {
       const tag = document.activeElement ? document.activeElement.tagName : '';
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (detailDialog && detailDialog.open) return;
       event.preventDefault();
-      venueSearch?.focus();
-      venueSearch?.select();
+      globalSearch?.focus();
+      globalSearch?.select();
       return;
     }
     if (event.key === 'Escape') {
@@ -1980,6 +2332,11 @@ const venueYears = new Map(VENUES.map((venue) => [venue.id, buildVenueYears(venu
 
   syncSavedCount();
   updateGlobalHint();
+  pullSavedFromCloud();
   applyVenueFilter();
+  if (location.hash === '#deadlines') {
+    const fold = document.querySelector('.ddl-fold');
+    if (fold) fold.open = true;
+  }
   if (location.hash) applyHash();
 </script>
