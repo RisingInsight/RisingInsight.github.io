@@ -185,7 +185,17 @@ if (!NO_ENRICH && !DRY) {
 log('== 代码链接提取');
 run('node scripts/augment-snapshots.mjs', true);
 log('== CCF 目录扩展（断点续跑）');
+const countResolved = () => {
+  try { return JSON.parse(fs.readFileSync('.tmp-patch/ccf7-resolved.json', 'utf8')).length; } catch { return 0; }
+};
+const resolvedBefore = countResolved();
 run('node scripts/expand-ccf.mjs --max 120');
+const resolvedAfter = countResolved();
+const progressMade = resolvedAfter > resolvedBefore;
+log(`  扩展进度: ${resolvedBefore} → ${resolvedAfter}`);
+if (process.env.GITHUB_ENV) {
+  fs.appendFileSync(process.env.GITHUB_ENV, `PROGRESS_MADE=${progressMade ? 'true' : 'false'}`);
+}
 log('== 生成接线文件');
 run('node scripts/generate-ccf-venues.mjs');
 run('node scripts/generate-snapshots.mjs');

@@ -1,9 +1,10 @@
 name: 学术数据自动更新
 
-# 每周一 20:00 UTC（北京周一 04:00 / 周日 20:00 UTC）全量刷新学术数据：
+# 每周一 20:00 UTC（北京周一 04:00）全量刷新学术数据：
 # 截稿日、官方 proceedings 快照（CVF/PMLR/ICLR/ACL/Crossref 新一届自动探测）、
-# S2 摘要/arXiv/PDF 补全、CCF 目录扩展断点续跑、快照自动接线。
+# S2 摘要/arXiv/PDF 补全、CCF 目录扩展分块续跑（每次 120 个）、快照自动接线。
 # 构建通过才提交；push 后 deploy-astro.yml 自动重新部署站点。
+# 扩展未完成时失败会自动重试（有进展才重试，避免 OpenAlex 停服时空转）。
 # 也可在 Actions 页面手动触发（workflow_dispatch）。
 
 on:
@@ -20,6 +21,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: update-data
@@ -40,8 +42,36 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
+      - name: 恢复上次解析进度（跨运行续跑）
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          ART_ID=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/$REPO/actions/artifacts?name=ccf-resolved&per_page=1" \
+            | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log((j.artifacts||[])[0]?.id||'')}catch{console.log('')}})")
+          if [ -n "$ART_ID" ]; then
+            echo "恢复工件 $ART_ID"
+            curl -sL -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/$REPO/actions/artifacts/$ART_ID/zip" -o progress.zip
+            node -e "const {execSync}=require('child_process');execSync('unzip -o progress.zip -d .tmp-patch',{stdio:'inherit'})" || unzip -o progress.zip -d .tmp-patch || true
+            rm -f progress.zip
+          else
+            echo "没有可恢复的解析进度（首次运行或已完成）"
+          fi
+
       - name: 自动更新数据
         run: node scripts/auto-update.mjs
+
+      - name: 上传解析进度（失败也不丢）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccf-resolved
+          path: .tmp-patch/ccf7-resolved.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: 构建校验（失败则不提交）
         run: npx astro build
@@ -57,3 +87,16 @@ jobs:
           else
             echo "没有数据变更"
           fi
+
+      - name: 失败且有进展时自动重试
+        if: failure() && env.PROGRESS_MADE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "本轮取得进展但未完成，自动触发下一轮续跑"
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/actions/workflows/update-data.yml/dispatches" \
+            -d '{"ref":"main"}'
