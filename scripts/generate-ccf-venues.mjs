@@ -9,9 +9,18 @@ import fs from 'node:fs';
 const resolved = JSON.parse(fs.readFileSync('.tmp-patch/ccf7-resolved.json', 'utf8'));
 const ok = resolved.filter((r) => r.ok && r.oa);
 
+// 与手工目录（venues.ts HAND_VENUES）撞 id 或同刊不同 id 的条目一律跳过
+const venuesTs = fs.readFileSync('src/data/venues.ts', 'utf8');
+const handIds = new Set([...venuesTs.matchAll(/id: '([^']+)'/g)].map((m) => m[1]));
+const norm = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const handNames = new Set([...venuesTs.matchAll(/full: '([^']+)'/g)].map((m) => norm(m[1])));
 const usedIds = new Set();
 const lines = [];
 for (const r of ok) {
+  if (handIds.has(r.id) || handNames.has(norm(r.name))) {
+    console.log('- 跳过与手工目录冲突:', r.id);
+    continue;
+  }
   let id = r.id;
   if (usedIds.has(id)) id = `${id}-${r.kind === 'journal' ? 'j' : 'c'}`;
   if (usedIds.has(id)) continue;

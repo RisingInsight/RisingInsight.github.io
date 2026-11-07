@@ -2215,4 +2215,17 @@ export const CCF7_VENUES: Venue[] = [
     startYear: 2018,
     dblp: '',
   },
+  {
+    id: 'recsys',
+    short: 'RecSys',
+    full: 'ACM Conference on Recommender Systems',
+    type: 'conference',
+    area: 'data',
+    rank: 'B',
+    provider: 'openalex',
+    oa: 'S7407086088',
+    recurrence: 'annual',
+    startYear: 2018,
+    dblp: '',
+  },
 ];
