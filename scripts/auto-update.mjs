@@ -31,7 +31,7 @@ const run = (cmd, optional = false) => {
     return true;
   }
   try {
-    execSync(cmd, { stdio: 'pipe', encoding: 'utf8', timeout: 30 * 60 * 1000 });
+    execSync(cmd, { stdio: 'pipe', encoding: 'utf8', timeout: 90 * 60 * 1000 });
     return true;
   } catch (error) {
     log(`  ⚠ 命令失败: ${cmd.slice(0, 60)} — ${String(error.message).split('\n')[0].slice(0, 80)}`);

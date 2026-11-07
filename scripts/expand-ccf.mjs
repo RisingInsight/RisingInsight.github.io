@@ -9,6 +9,7 @@ import fs from 'node:fs';
 
 const STATE_DIR = '.tmp-patch';
 fs.mkdirSync(STATE_DIR, { recursive: true }); // CI 全新 checkout 没有该目录
+// 触发标记 2026-11-07：CI 全量扩展（OpenAlex 配额以 CI 出口 IP 计）
 const MAILTO = '1668676243%40qq.com';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let oaLast = 0;
