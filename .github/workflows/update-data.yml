@@ -10,6 +10,13 @@ on:
   schedule:
     - cron: '0 20 * * 0'
   workflow_dispatch: {}
+  # 数据/脚本变更时自动触发（幂等：无新数据时运行一次即收敛，不会循环）
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'src/data/**'
+      - 'public/data/**'
 
 permissions:
   contents: write
