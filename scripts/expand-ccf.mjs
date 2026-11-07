@@ -7,6 +7,8 @@
  */
 import fs from 'node:fs';
 
+const STATE_DIR = '.tmp-patch';
+fs.mkdirSync(STATE_DIR, { recursive: true }); // CI 全新 checkout 没有该目录
 const MAILTO = '1668676243%40qq.com';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let oaLast = 0;
@@ -82,7 +84,7 @@ worklist.sort((a, b) => {
   return a.kind === 'conference' ? -1 : 1; // 会议优先补全（顶会浏览为主）
 });
 console.log(`目录 ${catalog.journals.length + catalog.conferences.length} 条，已收录 ${skippedExisting.length} 条，待解析 ${worklist.length} 条`);
-fs.writeFileSync('.tmp-patch/ccf7-worklist.json', JSON.stringify(worklist, null, 1));
+fs.writeFileSync(STATE_DIR + '/ccf7-worklist.json', JSON.stringify(worklist, null, 1));
 
 // ---- 名称匹配打分（与 resolve-openalex.mjs 同思路）----
 const FILLER = new Set(['the', 'a', 'an', 'of', 'on', 'in', 'and', 'for', 'annual', 'international', 'conference', 'conferences', 'symposium', 'journal', 'journals', 'advances', 'proceedings', 'joint', 'acm', 'ieee', 'cvf', 'sig', 'european']);
@@ -105,12 +107,12 @@ function scoreMatch(query, display) {
 const results = [];
 const failed = [];
 // 断点续跑：之前解析过的直接沿用
-const RESULT_FILE = '.tmp-patch/ccf7-resolved.json';
+const RESULT_FILE = STATE_DIR + '/ccf7-resolved.json';
 const prevResults = fs.existsSync(RESULT_FILE) ? JSON.parse(fs.readFileSync(RESULT_FILE, 'utf8')) : [];
 const prevOk = new Map(prevResults.filter((r) => r.ok).map((r) => [r.id, r]));
 const prevDone = new Set(prevResults.map((r) => r.id).concat(
-  fs.existsSync('.tmp-patch/ccf7-failed.json')
-    ? JSON.parse(fs.readFileSync('.tmp-patch/ccf7-failed.json', 'utf8')).map((r) => r.id)
+  fs.existsSync(STATE_DIR + '/ccf7-failed.json')
+    ? JSON.parse(fs.readFileSync(STATE_DIR + '/ccf7-failed.json', 'utf8')).map((r) => r.id)
     : []
 ));
 results.push(...prevResults.filter((r) => r.ok));
@@ -150,6 +152,6 @@ for (const item of worklist) {
 }
 
 fs.writeFileSync(RESULT_FILE, JSON.stringify(results, null, 1));
-fs.writeFileSync('.tmp-patch/ccf7-failed.json', JSON.stringify(failed, null, 1));
+fs.writeFileSync(STATE_DIR + '/ccf7-failed.json', JSON.stringify(failed, null, 1));
 const okCount = results.filter((r) => r.ok).length;
 console.log(`\n✓ 解析完成：可用 ${okCount}，数据不足 ${results.length - okCount}，失败 ${failed.length}`);

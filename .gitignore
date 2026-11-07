@@ -1,6 +1,9 @@
 # build output
 dist/
 
+# 由 predev / prebuild 生成，不入库
+public/write-manifest.json
+
 # generated types
 .astro/
 
