@@ -9,6 +9,7 @@
 - Space Grotesk / Inter / JetBrains Mono
 - KaTeX（remark-math / rehype-katex）
 - Pagefind 全文搜索
+- 站内写作台 `/write`（marked + DOMPurify + KaTeX 预览，可选 Cloudflare Worker 发布桥接）
 - Giscus 评论与留言板（GitHub Discussions）
 - GitHub Pages + GitHub Actions
 
@@ -21,7 +22,9 @@
 ```sh
 npm install
 npm run dev       # http://localhost:4321
-npm run build     # 构建到 dist/，并生成 Pagefind 索引
+npm run build     # prebuild 写作清单 → astro build → postbuild 生成并校验 Pagefind 索引
+npm run write:manifest  # 单独重建 public/write-manifest.json
+npm run index:search    # 单独重建并校验 Pagefind 索引
 npm run preview   # 预览构建结果
 ```
 
@@ -41,29 +44,41 @@ featured: true             # 可选，首页置顶标记
 draft: true                # 可选，草稿不会构建
 heroImage: "/posts/my-post/cover.jpg"  # 可选
 ogImage: "/posts/my-post/og.png"       # 可选，分享图；默认 og-default.png
+references:                          # 可选，由 /write 或 CCF「写成笔记」生成
+  - key: vaswani2017attention
+    title: Attention Is All You Need
+    authors: [Ashish Vaswani, Noam Shazeer]
+    year: "2017"
+    venue: NeurIPS
+    url: https://arxiv.org/abs/1706.03762
+    bibtex: "@inproceedings{vaswani2017attention, ...}"
 ```
 
 文章图片放在 `public/posts/<slug>/` 下，正文中用绝对路径引用。
 
-## 灵宠与开屏
+**文献引用**：正文里写 `[@key]`，文章页会把它渲染成指向文末参考文献的上标，并按 `references` 顺序生成带原文 / PDF / DOI / BibTeX 复制的列表（`src/scripts/citations.ts`）。未登记的 key 保持原样，不影响阅读。
 
-- 每个会话首次进入时播放一次「终端唤醒」开屏：矢量橘猫从扫描线中出现，随后页面淡入；点击任意位置或按 Esc 可跳过，`prefers-reduced-motion` 下直接跳过。
-- 左下角橘猫灵宠可点击互动、可隐藏；隐藏后从页脚 System →「灵宠」唤回，状态保存在 localStorage。
-- 想重看开屏，在地址后加 `?intro=1`。
+## 首屏与灵鸮
 
-## 在线编辑与审核
+- 每会话首次进入时，首页首屏是**滚动驱动的「字幕擦洗」片头**（BUILD IT. → … → DOCUMENT IT.）：滚动距离即片头进度，可往返倒带；点击 / 滚轮 / Esc 可跳过，`prefers-reduced-motion` 下直接跳过。清掉 `sessionStorage['hero-intro-seen']` 可重看。
+- 桌面端播放 `hero-dawn.mp4` 一次并停在末帧；移动端与减动效偏好使用静态破晓图。右上角可开关环境音、REPLAY 重播。
+- 灵鸮是**静态品牌标记**（header logo / favicon / 404 页），没有漂浮挂件或跟随鼠标的灵宠。
 
-- 文章页右上角提供 `edit ↗` / `history`，指向 GitHub 网页编辑器和提交历史。
-- 非仓库协作者点击编辑会走 GitHub 的 fork + PR 流程；所有者审核并合并后自动部署。
-- 文章列表提供 `new post ↗`，可在 GitHub 网页端新建 Markdown/MDX 并上传图片。
-- 撤回已发布修改使用 GitHub 的 history/revert；未保存的编辑由浏览器/编辑器撤销。
+## 在线写作与发布
 
-留言板 `/guestbook/` 使用 Giscus（GitHub Discussions）。登录 GitHub 后可留言，所有者可在 GitHub 删除；先审后发与站内管理后台将使用 Cloudflare Worker + D1 实现。
+- `/write/` 是站内编辑器：双栏 Markdown / 实时预览（GFM 表格 + KaTeX 公式）、frontmatter 表单、拖入 `.md` 导入、图片拖拽或粘贴自动归集到 `public/posts/<slug>/`、草稿自动存 localStorage、`Ctrl/⌘+S` 保存，可复制或下载完整 Markdown 离线带走。
+- 入口：文章页「在站内编辑」、笔记列表「在站内写文章」、导航栏「写文章」；`?edit=<slug>` 直接打开已发布文章。构建期的 `npm run write:manifest` 生成 `public/write-manifest.json`（**只含非草稿文章**），编辑器据此离线载入原文。
+- **一键发布（可选增强）**：把 `workers/publish-worker.js` 部署到 Cloudflare Workers，配置 `GITHUB_TOKEN`（fine-grained PAT，只授本仓库 Contents 读写）、`EDITOR_TOKEN`、`GITHUB_REPO`，然后在 `/write/` →「发布设置」填 Worker 地址和口令。发布时 Worker 通过 GitHub Contents API 把 `.md` 与图片提交到 `main`，由既有 Actions 自动构建部署。详细步骤见 Worker 文件头注释；口令只存在浏览器，不进仓库。
+- **读文献 → 写笔记**：`/ccf/` 的每张论文卡片都有「写成笔记 ↗」，收藏面板有「用收藏写笔记」。点击后论文元数据与 BibTeX 会带到 `/write/`，自动生成含 `[@key]` 的笔记骨架。CCF 首屏的检索框搜本地快照 + 收藏，并在线查 OpenAlex（429 时自动降级到 Semantic Scholar）；截稿日已收进折叠区。
+- **收藏三态与云同步**：收藏可标记想读 / 在读 / 已读；默认只存本机。给 Worker 绑定名为 `LIBRARY` 的 KV namespace 后，`/ccf/` 会自动 PUT/GET `/library` 跨设备同步（未配置时零网络请求）。
+- 不部署 Worker 也能完整写作：用「下载 .md」/「复制」把内容放进仓库，或走文章页保留的 GitHub 编辑外链。撤回已发布修改用 GitHub 的 history/revert。
+
+留言板 `/guestbook/` 使用 Giscus（GitHub Discussions）。登录 GitHub 后可留言，所有者可在 GitHub 删除。
 
 ## 热力图与统计
 
 - 创作热力图在构建时读取 `git log`，按作者时区统计真实提交；Actions checkout 已设置 `fetch-depth: 0`。
-- 首页 traffic 条使用 Busuanzi 的站点 PV/UV（localhost 不加载，避免统计开发预览）；后续可用 Cloudflare Worker + D1 替换为自建计数。
+- 首页 traffic 条使用 Busuanzi 的站点 PV/UV（localhost 不加载，避免统计开发预览）；后续可在同一个 Worker 上接自建计数替换。
 - 首页展示文章数、字数、提交数与运行天数，均为构建时真实数据。
 
 ## 资源生成

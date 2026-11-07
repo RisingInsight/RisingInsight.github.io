@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/write.css';
+---
+
+<BaseLayout title="写文章 // RisingInsight" description="在线写作、修改与发布">
+  <main id="main" class="write-page" data-pagefind-ignore>
+    <div class="w-shell">
+      <div class="w-topbar">
+        <div class="w-topbar-left">
+          <span class="w-brand">~/write</span>
+          <select id="w-open" class="w-select" aria-label="打开已发布文章">
+            <option value="">打开已发布文章…</option>
+          </select>
+          <button type="button" id="w-new" class="w-btn">新建</button>
+          <button type="button" id="w-import" class="w-btn">导入 .md</button>
+          <button type="button" id="w-image" class="w-btn">插入图片</button>
+        </div>
+        <div class="w-topbar-right">
+          <button type="button" id="w-copy" class="w-btn">复制</button>
+          <button type="button" id="w-download" class="w-btn">下载 .md</button>
+          <button type="button" id="w-publish" class="w-btn w-btn-primary">发布</button>
+        </div>
+      </div>
+
+      <div id="w-draft-banner" class="w-banner" hidden>
+        <span>发现本机未发布的草稿（保存于 <span id="w-draft-time"></span>），要恢复吗？</span>
+        <button type="button" id="w-draft-restore" class="w-btn">恢复草稿</button>
+        <button type="button" id="w-draft-discard" class="w-btn">丢弃</button>
+      </div>
+
+      <details class="w-card" open>
+        <summary>元数据（frontmatter）</summary>
+        <div class="w-grid">
+          <div class="w-field">
+            <label for="w-title">标题 *</label>
+            <input type="text" id="w-title" placeholder="文章标题" />
+          </div>
+          <div class="w-field">
+            <label for="w-slug">文件名 slug</label>
+            <input type="text" id="w-slug" placeholder="自动生成，可修改" />
+          </div>
+          <div class="w-field">
+            <label for="w-description">摘要</label>
+            <input type="text" id="w-description" placeholder="留空则从正文截取" />
+          </div>
+          <div class="w-field">
+            <label for="w-pubdate">发布日期</label>
+            <input type="date" id="w-pubdate" />
+          </div>
+          <div class="w-field">
+            <label for="w-tags">标签（逗号分隔）</label>
+            <input type="text" id="w-tags" placeholder="扩散模型, DDPM" />
+          </div>
+          <div class="w-field">
+            <label for="w-categories">分类（逗号分隔）</label>
+            <input type="text" id="w-categories" placeholder="深度学习理论" />
+          </div>
+          <div class="w-field">
+            <label for="w-series">系列</label>
+            <input type="text" id="w-series" placeholder="可选" />
+          </div>
+          <div class="w-field">
+            <label for="w-hero">封面图路径</label>
+            <input type="text" id="w-hero" placeholder="/posts/&lt;slug&gt;/cover.jpg" />
+          </div>
+        </div>
+        <div class="w-checks">
+          <label><input type="checkbox" id="w-math" /> 含数学公式（KaTeX）</label>
+          <label><input type="checkbox" id="w-draft" /> 草稿（不发布）</label>
+          <label><input type="checkbox" id="w-featured" /> 首页置顶</label>
+        </div>
+      </details>
+
+      <div class="w-tabs" role="tablist" aria-label="编辑器视图">
+        <button type="button" id="w-tab-edit" class="w-btn is-active" role="tab" aria-selected="true">编辑</button>
+        <button type="button" id="w-tab-preview" class="w-btn" role="tab" aria-selected="false">预览</button>
+      </div>
+
+      <div id="w-editor" class="w-editor" data-tab="edit">
+        <div class="w-pane w-pane-edit">
+          <textarea id="w-body" spellcheck="false" placeholder={'# 从这里开始写\n\n支持 Markdown、GFM 表格、$E=mc^2$ 与 $$\n公式块\n$$。\n\n把图片拖进来，或按 Ctrl+V 粘贴截图。'}></textarea>
+        </div>
+        <div class="w-pane w-pane-preview">
+          <div id="w-preview" class="w-preview prose"><p class="w-empty">预览会显示在这里。</p></div>
+        </div>
+      </div>
+
+      <div class="w-bottom">
+        <span id="w-wordcount">0 字</span>
+        <span id="w-saved">草稿自动保存于本机</span>
+        <span id="w-status" data-kind="idle">就绪</span>
+      </div>
+
+      <div class="w-extra">
+        <details class="w-card" open>
+          <summary>文献引用（<span id="w-ref-count">0</span>）</summary>
+          <div id="w-refs"></div>
+          <textarea
+            id="w-bib-input"
+            class="w-bib-input"
+            rows="3"
+            placeholder={'粘贴 BibTeX：@inproceedings{vaswani2017attention, title={Attention Is All You Need}, ...}'}
+          ></textarea>
+          <button type="button" id="w-bib-add" class="w-btn">从 BibTeX 添加</button>
+          <p class="w-hint">
+            在 CCF 门户点论文卡片的「写成笔记」，会自动把文献和 BibTeX 带到这里。
+            正文用 <code>[@key]</code> 引用，发布后文章底部自动生成参考文献列表。
+          </p>
+        </details>
+
+        <details class="w-card" open>
+          <summary>本次会话的图片</summary>
+          <div id="w-images"></div>
+          <button type="button" id="w-download-images" class="w-btn">下载全部图片</button>
+          <p class="w-hint">发布时会自动提交到 <code>public/posts/&lt;slug&gt;/</code>；离线导出时请把图片放进同名目录。</p>
+        </details>
+
+        <details class="w-card" id="w-settings">
+          <summary>发布设置（可选）</summary>
+          <div class="w-settings-grid">
+            <label for="w-worker">Cloudflare Worker 地址</label>
+            <input type="text" id="w-worker" placeholder="https://your-worker.workers.dev" />
+            <label for="w-token">编辑器口令</label>
+            <input type="text" id="w-token" placeholder="部署 Worker 时设置的口令" />
+            <div><button type="button" id="w-settings-save" class="w-btn">保存到本机</button></div>
+          </div>
+          <p class="w-hint">不配置也能用：写好后可「复制」或「下载 .md」。配置后点「发布」会直接提交到 GitHub 并触发 Actions 部署。设置只存在当前浏览器。</p>
+        </details>
+
+        <div class="w-card">
+          <p class="w-help">
+            <strong>怎么用</strong><br />
+            1. 从文章页点「在站内编辑」，或在上方下拉里选一篇已发布文章。<br />
+            2. 写好的 <code>.md</code> 可以直接拖进页面；图片拖入 / 粘贴会自动插入引用。<br />
+            3. <code>Ctrl/⌘ + S</code> 存草稿，草稿只在本机；换设备请用「下载 .md」。<br />
+            4. 草稿勾上「草稿（不发布）」后发布，站点不会构建它。
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <input id="w-file" type="file" accept=".md,.mdx,.markdown,text/markdown" hidden />
+  <input id="w-image-file" type="file" accept="image/*" multiple hidden />
+
+  <script>
+    import '../scripts/write-editor';
+  </script>
+</BaseLayout>

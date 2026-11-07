@@ -29,6 +29,7 @@ const {
   categories,
   body,
   series,
+  references = [],
   prevPost = null,
   nextPost = null,
 } = Astro.props;
@@ -84,8 +85,11 @@ if (series) {
                 系列 · {series}
               </a>
             )}
+            <a href={`/write/?edit=${encodeURIComponent(postId)}`} class="font-medium text-accent transition-colors hover:text-accent-strong">
+              在站内编辑
+            </a>
             <a href={editUrl} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
-              编辑 <span aria-hidden="true">↗</span>
+              GitHub <span aria-hidden="true">↗</span>
             </a>
             <a href={historyUrl} target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-accent">
               历史
@@ -134,6 +138,32 @@ if (series) {
       <div class="prose mt-8 max-w-[68ch]" data-pagefind-body>
         <slot />
       </div>
+
+      {references.length > 0 && (
+        <section id="references" class="mt-14 border-t border-rule pt-8">
+          <div class="mono-label">参考文献 · {references.length}</div>
+          <ol id="references-list" class="ref-list">
+            {references.map((ref, i) => (
+              <li id={`ref-${ref.key}`} data-ref-key={ref.key}>
+                <span class="ref-num" aria-hidden="true">[{i + 1}]</span>
+                <div>
+                  <div class="ref-title">{ref.title}</div>
+                  <div class="ref-meta">
+                    {[ref.authors?.join(', '), ref.venue, ref.year].filter(Boolean).join(' · ')}
+                  </div>
+                  <div class="ref-links">
+                    {ref.url && <a href={ref.url} target="_blank" rel="noopener noreferrer">原文 ↗</a>}
+                    {ref.pdf && ref.pdf !== ref.url && <a href={ref.pdf} target="_blank" rel="noopener noreferrer">PDF ↗</a>}
+                    {ref.arxiv && <a href={`https://arxiv.org/abs/${ref.arxiv}`} target="_blank" rel="noopener noreferrer">arXiv ↗</a>}
+                    {ref.doi && <a href={ref.doi} target="_blank" rel="noopener noreferrer">DOI ↗</a>}
+                    {ref.bibtex && <button type="button" class="ref-bib" data-bib={ref.bibtex}>复制 BibTeX</button>}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {series && seriesPosts.length > 0 && (
         <section class="mt-14 border-t border-rule pt-8">
@@ -204,8 +234,8 @@ if (series) {
           </div>
         </div>
         <div class="ml-auto flex flex-col items-start gap-2 text-[13px] sm:items-end">
-          <a href={editUrl} target="_blank" rel="noopener noreferrer" class="text-muted transition-colors hover:text-accent">
-            在 GitHub 上编辑 <span aria-hidden="true">↗</span>
+          <a href={`/write/?edit=${encodeURIComponent(postId)}`} class="text-muted transition-colors hover:text-accent">
+            在站内编辑这篇 <span aria-hidden="true">→</span>
           </a>
           <a href="/about/" class="text-muted transition-colors hover:text-accent">
             关于我 <span aria-hidden="true">→</span>
@@ -476,4 +506,9 @@ if (series) {
       showToast('<kbd>T</kbd> 回到顶部');
     }
   });
+</script>
+
+<script>
+  // 文内 [@key] → 参考文献上标；独立模块，走打包产物而非内联脚本
+  import '../scripts/citations';
 </script>

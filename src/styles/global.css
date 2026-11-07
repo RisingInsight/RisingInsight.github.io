@@ -489,6 +489,11 @@ body {
 .prose img:hover {
   border-color: var(--muted-light);
 }
+/* 深色模式下白底示意图会变成刺眼的光斑；轻压亮度，夜间长文更耐读 */
+.dark .prose img {
+  background: var(--surface);
+  filter: brightness(.86) saturate(.94);
+}
 .prose img.img-lazy {
   opacity: 0;
 }
@@ -558,6 +563,63 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
 }
+
+/* ---- 文内引用与参考文献 ---- */
+.cite-ref {
+  font-size: .72em;
+  line-height: 0;
+  vertical-align: super;
+  margin: 0 .1em;
+}
+.cite-ref a {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  text-decoration: none;
+}
+.cite-ref a:hover { text-decoration: underline; }
+
+.ref-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+.ref-list li {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: .5rem;
+  padding: .75rem .35rem;
+  border-bottom: 1px solid var(--rule-soft);
+  font-size: 13px;
+  line-height: 1.7;
+  scroll-margin-top: 7rem;
+  border-radius: var(--r-sm);
+}
+.ref-list li:target { background: var(--accent-soft); }
+.ref-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+.ref-title { color: var(--ink); font-weight: 500; }
+.ref-meta { color: var(--muted); font-size: 12px; }
+.ref-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-top: .3rem;
+}
+.ref-links a,
+.ref-bib {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ref-links a:hover,
+.ref-bib:hover { text-decoration: underline; }
 
 /* 窄屏下超宽行内公式：允许在公式内部横向滚动，而不是撑破整页 */
 @media (max-width: 520px) {

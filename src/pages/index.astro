@@ -21,7 +21,7 @@ import {
 import { getCommitActivity } from '../utils/git';
 import ddlData from '../data/ccf-ddl.json';
 
-// 侧栏「最近截稿」：构建期取最近 3 个未截止的 CCF 会（倒计时为近似值，详情看 /ddl/）
+// 侧栏「最近截稿」：构建期取最近 3 个未截止的 CCF 会（倒计时为近似值，详情看 /ccf/）
 function parseDdlAtBuild(str, tz) {
   if (!str) return null;
   let offset = '-12:00';
@@ -139,9 +139,18 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
         </h1>
 
         <div class="hero-bar">
-          <p class="hero-desc">
-            这里记录生成模型、深度学习与工程实践：从推导、实验，到真正能跑起来的代码。
-          </p>
+          <div class="hero-bar-left">
+            <p class="hero-desc">
+              这里记录生成模型、深度学习与工程实践：从推导、实验，到真正能跑起来的代码。
+            </p>
+            {latestPosts.length > 0 && (
+              <a class="hero-latest" href={`/blog/${latestPosts[0].id}/`}>
+                <span class="hero-latest-label">最近一篇</span>
+                <span class="hero-latest-title">{latestPosts[0].data.title}</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            )}
+          </div>
           <div class="hero-actions">
             <a href="/blog/" class="hero-cta">开始阅读<span class="hero-cta-arrow" aria-hidden="true">→</span></a>
             <a
@@ -539,6 +548,42 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
     color: rgba(232, 222, 206, .78);
     animation: hero-up .7s var(--ease-out-expo) 1.68s both;
   }
+  .hero-bar-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+  }
+  /* 首屏给一条真实文章入口，而不是只有 slogan（Content-first） */
+  .hero-latest {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    max-width: 100%;
+    padding-bottom: 3px;
+    border-bottom: 1px solid rgba(246, 239, 228, .28);
+    color: #f6efe4;
+    font-size: 13px;
+    text-decoration: none;
+    animation: hero-up .7s var(--ease-out-expo) 1.76s both;
+    transition: border-color .2s;
+  }
+  .hero-latest:hover { border-color: #f6efe4; }
+  .hero-latest-label {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    color: rgba(246, 239, 228, .62);
+  }
+  .hero-latest-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 44ch;
+  }
+
   .hero-actions {
     display: flex;
     align-items: center;
@@ -773,14 +818,23 @@ const TITLE_BEATS = ['BUILD IT.', 'RUN IT.', 'BREAK IT.', 'FIX IT.', 'DOCUMENT I
   }
 
   @media (max-width: 767px) {
+    /* 底层也铺一张静态图：视差/动画层移开时不会露出纯黑空屏 */
+    .hero {
+      background: #10161e url('/media/hero-dawn-end.jpg') center 42% / cover no-repeat;
+      padding-bottom: clamp(56px, 9vh, 96px);
+    }
+    .hero::after { height: clamp(72px, 10vh, 112px); }
     .hero-video { display: none; }
     .hero-media {
+      inset: 0;
+      transform: none !important;
       background: url('/media/hero-dawn-end.jpg') center 42% / cover no-repeat;
       animation: hero-kb 34s ease-in-out infinite alternate;
     }
     .hero-hud { font-size: 10px; letter-spacing: .08em; }
     .hero-meta { display: none; }
     .hero-bar { align-items: flex-start; flex-direction: column; }
+    .hero-latest-title { max-width: 62vw; }
     .hero-ctrl-cluster { top: 70px; }
   }
 

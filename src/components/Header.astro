@@ -50,6 +50,16 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
         );
       })}
       <span class="h-4 w-px bg-rule" aria-hidden="true"></span>
+      <a
+        href="/write/"
+        class="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[13px] font-medium text-accent transition-colors hover:text-accent-strong"
+        title="在线写文章 / 修改已发布文章"
+      >
+        <svg class="h-[14px] w-[14px]" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        写文章
+      </a>
       <button
         data-search-trigger
         class="flex h-8 items-center gap-2 rounded-full border border-rule bg-surface px-3 text-[13px] text-muted transition-colors hover:border-muted-light hover:text-ink"
@@ -130,6 +140,13 @@ function isNavActive(currentPath: string, itemHref: string): boolean {
           </a>
         );
       })}
+      <a
+        href="/write/"
+        class="flex items-center justify-between border-b border-rule-soft py-3.5 text-[15px] font-medium text-accent"
+      >
+        <span>写文章</span>
+        <span class="text-[13px]" aria-hidden="true">→</span>
+      </a>
     </div>
   </div>
 </header>

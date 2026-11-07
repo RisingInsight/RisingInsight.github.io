@@ -116,14 +116,19 @@ const allCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
 
     <div class="mt-10 flex flex-wrap items-center justify-between gap-2 border-t border-rule pt-5 text-[12px] text-muted-light">
       <span>共 {sortedPosts.length} 篇 · 按时间倒序</span>
-      <a
-        href={`https://github.com/${GITHUB_REPO}/new/${GITHUB_BRANCH}/src/content/blog`}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="transition-colors hover:text-accent"
-      >
-        通过 GitHub 提交新文章 <span aria-hidden="true">↗</span>
-      </a>
+      <div class="flex flex-wrap items-center gap-4">
+        <a href="/write/" class="font-medium text-accent transition-colors hover:text-accent-strong">
+          在站内写文章 <span aria-hidden="true">→</span>
+        </a>
+        <a
+          href={`https://github.com/${GITHUB_REPO}/new/${GITHUB_BRANCH}/src/content/blog`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-colors hover:text-accent"
+        >
+          通过 GitHub 提交 <span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </div>
   </main>
 </BaseLayout>

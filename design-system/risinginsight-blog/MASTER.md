@@ -103,8 +103,9 @@
 - **主题切换图标**：hover 旋转 40°、按下 180°（ThemeToggle `.theme-toggle`）。
 - 禁止：跟随鼠标的光雾/光标替换、常驻循环动画、进入视口前的预动画。
 
-## CCF DDL 子系统（/ddl/，2026 追加）
-- **数据双源**：截稿日 = ccfddl/ccf-deadlines 社区仓库（MIT，`npm run fetch:ddl` 抓取
+## CCF 门户（/ccf/，2026 追加；原 /papers/ 与 /ddl/ 已合并）
+- **数据三源**：构建期快照（`public/data/*.json`，91 份 / 7.7 万篇，由 `scripts/` 下采集脚本产出）优先，
+  运行时 OpenAlex / Semantic Scholar 补全，最后走 DBLP 兜底。截稿日 = ccfddl/ccf-deadlines 社区仓库（MIT，`npm run fetch:ddl` 抓取
   AI+MX 领域、CCF-A/B，烤入 `src/data/ccf-ddl.json`；抓取失败保留旧快照）；
   中稿论文 = OpenAlex API（免 key、CORS 开放）**运行时实时拉取**——论文集出版后
   自动出现，零人工维护。
@@ -127,7 +128,11 @@
   运行时按访客 IP 解析 + 缓存才是正解；③ 程序化 scrollTo 不触发 wheel 事件，
   自动推进的接管判定不能依赖键盘（E2E 会误触发），wheel/touchstart 才可靠。
 - **首页侧栏**「截稿日」小卡：构建期取最近 3 个未截止的会（D-N 朱橙高亮 CCF-A），
-  链到 /ddl/。
+  链到 /ccf/。
+- **与写作台的关系（已打通）**：`/ccf/` 首屏为检索框，截稿日折叠；论文卡片「写成笔记 ↗」
+  与收藏面板「用收藏写笔记」把元数据 + BibTeX 交给 `/write/`，生成含 `[@key]` 的草稿。
+  文章 frontmatter 的 `references` 在文末生成参考文献列表，正文标记由上标脚本替换。
+  收藏支持想读 / 在读 / 已读，配置 Worker + `LIBRARY` KV 后跨设备同步。
 
 ## Content Rules（内容即设计）
 - 首屏永远给真实内容，不摆站点仪表；**禁止** uptime 天数这类自曝数字。
