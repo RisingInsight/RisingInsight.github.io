@@ -101,6 +101,27 @@ async function putFile(env, path, base64, message, branch) {
  */
 const LIBRARY_KEY = 'library:v1';
 
+// 简易内存限流：写操作每 IP 每 10 分钟最多 12 次（读操作不限）。
+// Worker isolate 是多份的，这只是近似拦截；更严格可再叠 Cloudflare WAF 速率限制。
+const RATE_BUCKETS = new Map();
+const RATE_MAX = 12;
+const RATE_WINDOW = 10 * 60 * 1000;
+function rateLimited(request) {
+  const ip =
+    request.headers.get('CF-Connecting-IP') ||
+    request.headers.get('X-Forwarded-For') ||
+    'unknown';
+  const now = Date.now();
+  const bucket = RATE_BUCKETS.get(ip) || { count: 0, reset: now + RATE_WINDOW };
+  if (now > bucket.reset) {
+    bucket.count = 0;
+    bucket.reset = now + RATE_WINDOW;
+  }
+  bucket.count += 1;
+  RATE_BUCKETS.set(ip, bucket);
+  return bucket.count > RATE_MAX;
+}
+
 async function handleLibrary(request, env) {
   let payload = {};
   if (request.method === 'PUT') {
@@ -151,6 +172,12 @@ export default {
     }
 
     const url = new URL(request.url);
+    const isWrite =
+      (url.pathname === '/publish' && request.method === 'POST') ||
+      (url.pathname === '/library' && request.method === 'PUT');
+    if (isWrite && rateLimited(request)) {
+      return json({ error: '请求过于频繁，请稍后再试' }, 429);
+    }
     if (url.pathname === '/health') {
       return json({
         ok: true,
