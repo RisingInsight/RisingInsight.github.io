@@ -185,7 +185,7 @@ if (!NO_ENRICH && !DRY) {
 log('== 代码链接提取');
 run('node scripts/augment-snapshots.mjs', true);
 log('== CCF 目录扩展（断点续跑）');
-run('node scripts/expand-ccf.mjs');
+run('node scripts/expand-ccf.mjs --max 120');
 log('== 生成接线文件');
 run('node scripts/generate-ccf-venues.mjs');
 run('node scripts/generate-snapshots.mjs');

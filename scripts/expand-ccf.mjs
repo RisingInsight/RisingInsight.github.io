@@ -10,6 +10,11 @@ import fs from 'node:fs';
 const STATE_DIR = '.tmp-patch';
 fs.mkdirSync(STATE_DIR, { recursive: true }); // CI 全新 checkout 没有该目录
 // 触发标记 2026-11-07：CI 全量扩展（OpenAlex 配额以 CI 出口 IP 计）
+// --max N：单次最多解析 N 个新条目（CI 分块跑，超时也能保住进度）
+const MAX_NEW = (() => {
+  const i = process.argv.indexOf('--max');
+  return i > -1 ? Number(process.argv[i + 1]) || Infinity : Infinity;
+})();
 const MAILTO = '1668676243%40qq.com';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let oaLast = 0;
@@ -145,6 +150,12 @@ for (const item of worklist) {
     console.log(`✗ ${item.id.padEnd(20)} ${error.message.slice(0, 40)}`);
   }
   done++;
+  const newDone = done - prevDone.size;
+  if (newDone >= MAX_NEW) {
+    console.log(`---- 达到单次上限 ${MAX_NEW}，剩余下次续跑`);
+    fs.writeFileSync(RESULT_FILE, JSON.stringify(results, null, 1));
+    break;
+  }
   if (done % 25 === 0) {
     console.log(`---- ${done} / ${worklist.length}`);
     fs.writeFileSync(RESULT_FILE, JSON.stringify(results, null, 1));
