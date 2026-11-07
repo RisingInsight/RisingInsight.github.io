@@ -59,10 +59,18 @@
     .scroll-nav {
       right: 12px;
       bottom: 16px;
+      flex-direction: row;
+      transition: opacity .3s ease;
     }
+    /* 静止阅读时淡出，避免固定按钮压住正文；滚动或触碰时恢复 */
+    .scroll-nav.is-idle { opacity: .3; }
+    .scroll-nav:hover,
+    .scroll-nav:focus-within { opacity: 1; }
     .scroll-btn {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
+      background: color-mix(in srgb, var(--surface) 86%, transparent);
+      backdrop-filter: blur(6px);
     }
   }
 </style>
@@ -90,8 +98,15 @@
     bottomBtn.addEventListener('click', () =>
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior })
     );
-    window.addEventListener('scroll', sync, { passive: true });
+    let idleTimer: number | undefined;
+    const markActive = () => {
+      nav.classList.remove('is-idle');
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => nav.classList.add('is-idle'), 1000);
+    };
+    window.addEventListener('scroll', () => { sync(); markActive(); }, { passive: true });
     window.addEventListener('resize', sync);
     sync();
+    nav.classList.add('is-idle');
   }
 </script>
