@@ -9,6 +9,9 @@
 - Space Grotesk / Inter / JetBrains Mono
 - KaTeX（remark-math / rehype-katex）
 - Pagefind 全文搜索
+- **CCF 论文门户 `/ccf`**：按 CCF 第七版官方目录浏览会议/期刊全卷论文——17 个领域分组、
+  等级排序、摘要/被引/代码链接、收藏（想读/在读/已读）云同步、BibTeX 导出、写成笔记；
+  数据来自 OpenAlex + Semantic Scholar + 官方 proceedings 快照，GitHub Actions 每周自动更新
 - 站内写作台 `/write`（marked + DOMPurify + KaTeX 预览，可选 Cloudflare Worker 发布桥接）
 - Giscus 评论与留言板（GitHub Discussions）
 - GitHub Pages + GitHub Actions
