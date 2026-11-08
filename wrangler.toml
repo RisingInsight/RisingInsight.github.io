@@ -1,0 +1,11 @@
+name = "risinginsight-write"
+main = "workers/publish-worker.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+GITHUB_REPO = "RisingInsight/RisingInsight.github.io"
+ALLOWED_ORIGIN = "https://risinginsight.github.io"
+
+[[kv_namespaces]]
+binding = "LIBRARY"
+id = "88a2a5cf86ed4c7cb1f2ece5bf82bdd1"
