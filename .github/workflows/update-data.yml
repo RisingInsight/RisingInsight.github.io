@@ -1,6 +1,6 @@
 name: 学术数据自动更新
 
-# 每周一 20:00 UTC（北京周一 04:00）全量刷新学术数据：
+# 每天 20:00 UTC（北京次日 04:00）自动更新学术数据：
 # 截稿日、官方 proceedings 快照（CVF/PMLR/ICLR/ACL/Crossref 新一届自动探测）、
 # S2 摘要/arXiv/PDF 补全、CCF 目录扩展分块续跑（每次 120 个）、快照自动接线。
 # 构建通过才提交；push 后 deploy-astro.yml 自动重新部署站点。
@@ -9,7 +9,7 @@ name: 学术数据自动更新
 
 on:
   schedule:
-    - cron: '0 20 * * 0'
+    - cron: '0 20 * * *'
   workflow_dispatch: {}
   # 数据/脚本变更时自动触发（幂等：无新数据时运行一次即收敛，不会循环）
   push:
