@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-10T12:24:26.253Z",
+  "fetchedAt": "2026-11-11T00:30:28.424Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
@@ -309,9 +309,14 @@
       "place": "Hanoi, Vietnam",
       "timelines": [
         {
-          "comment": "",
+          "comment": "Main track",
           "abstract": "2026-10-01 23:59:59",
           "deadline": "2026-10-08 23:59:59"
+        },
+        {
+          "comment": "AAAI fast track; eligible AAAI-27 Main Technical Track resubmissions only",
+          "abstract": null,
+          "deadline": "2026-12-11 23:59:59"
         }
       ],
       "openalexId": null
@@ -420,7 +425,7 @@
       "confId": "cvpr27",
       "link": "https://cvpr.thecvf.com/Conferences/2027",
       "timezone": "UTC-12",
-      "date": "June 20-25, 2027",
+      "date": "June 22-25, 2027",
       "place": "Seattle, WA, United States",
       "timelines": [
         {
@@ -464,7 +469,7 @@
       "confId": "acl27",
       "link": "https://2027.aclweb.org/",
       "timezone": "UTC-12",
-      "date": "August 17-22, 2027",
+      "date": "August 20-22, 2027",
       "place": "Kyoto, Japan",
       "timelines": [
         {
