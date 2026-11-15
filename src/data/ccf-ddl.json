@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-14T11:19:51.158Z",
+  "fetchedAt": "2026-11-14T23:47:18.990Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
@@ -339,6 +339,11 @@
           "comment": "",
           "abstract": null,
           "deadline": "2026-10-12 23:59:59"
+        },
+        {
+          "comment": "Commitment deadline for long and short research papers reviewed by ARR",
+          "abstract": null,
+          "deadline": "2026-12-23 23:59:59"
         }
       ],
       "openalexId": null
