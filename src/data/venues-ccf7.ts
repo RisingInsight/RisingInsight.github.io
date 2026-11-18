@@ -2566,4 +2566,17 @@ export const CCF7_VENUES: Venue[] = [
     startYear: 2018,
     dblp: '',
   },
+  {
+    id: 'dai',
+    short: 'DAI',
+    full: 'International Conference on Distributed Artificial Intelligence',
+    type: 'conference',
+    area: 'ai',
+    rank: 'C',
+    provider: 'openalex',
+    oa: 'S7407088785',
+    recurrence: 'annual',
+    startYear: 2018,
+    dblp: '',
+  },
 ];
