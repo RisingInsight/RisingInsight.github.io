@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-20T12:41:14.992Z",
+  "fetchedAt": "2026-11-21T01:16:11.851Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
@@ -452,7 +452,7 @@
       "confId": "icaps27",
       "link": "https://icaps27.icaps-conference.org/",
       "timezone": "UTC-12",
-      "date": "June 27 - July 2, 2027",
+      "date": "June 30 - July 2, 2027",
       "place": "Columbia, SC, USA",
       "timelines": [
         {
@@ -584,7 +584,7 @@
       "confId": "ecai27",
       "link": "https://ecai2027.org/",
       "timezone": "AoE",
-      "date": "October 2-7, 2027",
+      "date": "October 4-7, 2027",
       "place": "Athens, Greece",
       "timelines": [
         {
