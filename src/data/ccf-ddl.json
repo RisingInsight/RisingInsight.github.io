@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-21T12:22:28.766Z",
+  "fetchedAt": "2026-11-22T00:13:11.014Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
@@ -129,7 +129,7 @@
       "timelines": [
         {
           "comment": "",
-          "abstract": "2026-05-05 11:59:00",
+          "abstract": "2026-05-05 11:59:59",
           "deadline": "2026-05-07 11:59:59"
         }
       ],
