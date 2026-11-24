@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-23T00:42:23.255Z",
+  "fetchedAt": "2026-11-24T14:41:50.306Z",
   "source": "https://github.com/ccfddl/ccf-deadlines",
   "count": 30,
   "entries": [
@@ -430,7 +430,7 @@
       "confId": "cvpr27",
       "link": "https://cvpr.thecvf.com/Conferences/2027",
       "timezone": "UTC-12",
-      "date": "June 22-25, 2027",
+      "date": "June 22-24, 2027",
       "place": "Seattle, WA, United States",
       "timelines": [
         {
