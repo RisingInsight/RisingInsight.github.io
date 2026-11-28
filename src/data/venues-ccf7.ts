@@ -2670,4 +2670,17 @@ export const CCF7_VENUES: Venue[] = [
     startYear: 2018,
     dblp: '',
   },
+  {
+    id: 'mmasia',
+    short: 'MMAsia',
+    full: 'ACM Multimedia Asia',
+    type: 'conference',
+    area: 'multimedia',
+    rank: 'C',
+    provider: 'openalex',
+    oa: 'S7407087938',
+    recurrence: 'annual',
+    startYear: 2018,
+    dblp: '',
+  },
 ];
